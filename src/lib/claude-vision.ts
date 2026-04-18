@@ -1,24 +1,25 @@
 import Anthropic from "@anthropic-ai/sdk";
-import { lookupGI } from "./turkish-gi-data";
+import { lookupGI } from "./gi-database";
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
-const SYSTEM_PROMPT = `Sen GlucoLens AI'sın. Türk mutfağı uzmanı glukoz analiz asistanısın.
-Fotoğraftaki yiyecekleri analiz et. SADECE JSON döndür, başka hiçbir metin ekleme.
+const SYSTEM_PROMPT = `You are GlucoLens AI, an expert glucose analysis assistant with global cuisine knowledge.
+Analyze the food in the photo. Return ONLY valid JSON, no other text.
 
-Kurallar:
-- Her yiyeceği ayrı tespit et, porsiyon gramını tahmin et
-- Pişirme yöntemini belirle (haşlama GI düşürür, kızartma artırır)
-- Gizli yağ/sos/şekeri tahmin et
+Rules:
+- Identify each food item separately, estimate portion in grams
+- Determine cooking method (boiling lowers GI, frying raises it)
+- Account for hidden fats/sauces/sugars
 - net_carb_g = carbohydrate_g - fiber_g
 - glycemic_load = (glycemic_index * net_carb_g) / 100
 - glucose_risk: "low" GL<10, "medium" GL 10-20, "high" GL>20
+- Support all cuisines: Turkish, Italian, Japanese, Chinese, Indian, Mexican, American, Mediterranean, Middle Eastern, etc.
 
-JSON formatı:
+JSON format:
 {
   "food_items": [{
     "name": "English name",
-    "name_tr": "Türkçe ad",
+    "name_tr": "Turkish name",
     "portion_g": 150,
     "total_sugar_g": 5.2,
     "added_sugar_g": 0.5,
@@ -28,7 +29,7 @@ JSON formatı:
     "glycemic_index": 52,
     "glycemic_load": 13.0,
     "gi_confidence": 0.85,
-    "cooking_method": "haşlama"
+    "cooking_method": "boiled"
   }],
   "total_sugar_g": 12.4,
   "total_added_sugar_g": 1.5,
@@ -37,9 +38,9 @@ JSON formatı:
   "avg_glycemic_index": 55,
   "total_glycemic_load": 24.8,
   "glucose_risk": "medium",
-  "glucose_peak_estimate": "1-1.5 saat içinde ~140-160 mg/dL",
-  "glucose_curve_description": "Orta hızlı yükseliş, 2 saatte normale dönüş",
-  "recommendations": ["Limon eklemek GI düşürür"],
+  "glucose_peak_estimate": "~140-160 mg/dL within 1-1.5 hours",
+  "glucose_curve_description": "Moderate rise, returns to baseline in ~2 hours",
+  "recommendations": ["Adding lemon juice lowers GI"],
   "warnings": [],
   "confidence_score": 0.82,
   "hidden_ingredients_note": null
@@ -69,10 +70,10 @@ export async function analyzeMealImage(
   mealContext?: string
 ): Promise<MealAnalysis> {
   const profileNote = userType === "diabetic"
-    ? "\n\nKULLANICI: Diyabetik. GL>15 için kesin uyar."
+    ? "\n\nUSER: Diabetic. Warn strictly for GL>15."
     : userType === "pre_diabetic"
-    ? "\n\nKULLANICI: Pre-diyabetik. GL>18 için uyar."
-    : "\n\nKULLANICI: Sağlıklı.";
+    ? "\n\nUSER: Pre-diabetic. Warn for GL>18."
+    : "\n\nUSER: Healthy.";
 
   const response = await client.messages.create({
     model: "claude-sonnet-4-6",
@@ -82,7 +83,7 @@ export async function analyzeMealImage(
       role: "user",
       content: [
         { type: "image", source: { type: "base64", media_type: "image/jpeg", data: imageBase64 } },
-        { type: "text", text: `Bu yemeği analiz et.${mealContext ? ` Ek bilgi: ${mealContext}` : ""}` }
+        { type: "text", text: `Analyze this meal.${mealContext ? ` Context: ${mealContext}` : ""}` }
       ]
     }]
   });
