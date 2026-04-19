@@ -1,9 +1,5 @@
 // GlucoLens — Local Storage Manager
-// Meal history, user profile, streaks, insights
-
 import type { MealAnalysis } from "./claude-vision";
-
-// ─── Types ───────────────────────────────────────────────────────────────────
 
 export type UserType = "healthy" | "pre_diabetic" | "diabetic";
 
@@ -32,7 +28,10 @@ export interface DailyStats {
   highRiskCount: number;
 }
 
-// ─── Constants ───────────────────────────────────────────────────────────────
+export interface GLInsight {
+  type: "warning" | "success" | "info";
+  message: string;
+}
 
 const KEYS = {
   PROFILE: "glucolens_profile",
@@ -41,7 +40,7 @@ const KEYS = {
 
 const MAX_MEALS = 90;
 
-// ─── GL Targets by user type ─────────────────────────────────────────────────
+// ─── GL Targets ───────────────────────────────────────────────────────────────
 
 export function getGLTargets(userType: UserType) {
   switch (userType) {
@@ -87,7 +86,6 @@ export function getMeals(): MealRecord[] {
 
 export function saveMeal(
   analysis: MealAnalysis,
-  thumbnail?: string,
   mealType?: MealRecord["mealType"]
 ): MealRecord {
   const meals = getMeals();
@@ -95,7 +93,6 @@ export function saveMeal(
     id: `meal_${Date.now()}`,
     timestamp: new Date().toISOString(),
     analysis,
-    thumbnail,
     mealType,
   };
   const updated = [record, ...meals].slice(0, MAX_MEALS);
@@ -128,6 +125,7 @@ export function getTodayStats(): DailyStats {
 export function getLast7DaysStats(): DailyStats[] {
   const meals = getMeals();
   const result: DailyStats[] = [];
+  // i=6 (6 gün önce) → i=0 (bugün) — eskiden yeniye sıralı
   for (let i = 6; i >= 0; i--) {
     const date = new Date();
     date.setDate(date.getDate() - i);
@@ -142,14 +140,16 @@ export function getLast7DaysStats(): DailyStats[] {
       highRiskCount: dayMeals.filter((m) => m.analysis.glucose_risk === "high").length,
     });
   }
-  return result;
+  return result; // index 0 = 6 gün önce, index 6 = bugün
 }
 
 export function getStreak(dailyGLTarget: number): number {
-  const stats = getLast7DaysStats().reverse();
+  // getLast7DaysStats: index 6 = bugün — bugünden geriye sayıyoruz
+  const stats = getLast7DaysStats();
   let streak = 0;
-  for (const day of stats) {
-    if (day.mealCount === 0) break;
+  for (let i = stats.length - 1; i >= 0; i--) {
+    const day = stats[i];
+    if (day.mealCount === 0) break; // veri yok = streak bitti
     if (day.totalGL <= dailyGLTarget) streak++;
     else break;
   }
@@ -169,11 +169,6 @@ export function getRecentMeals(limit = 10): MealRecord[] {
 }
 
 // ─── Insights ─────────────────────────────────────────────────────────────────
-
-export interface GLInsight {
-  type: "warning" | "success" | "info";
-  message: string;
-}
 
 export function generateInsights(todayStats: DailyStats, profile: UserProfile): GLInsight[] {
   const insights: GLInsight[] = [];

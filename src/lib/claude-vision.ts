@@ -8,7 +8,7 @@ const SYSTEM_PROMPT = `You are GlucoLens AI — a precise glucose and glycemic a
 Analyze the food in the photo. Return ONLY valid JSON, no markdown, no extra text.
 
 Rules:
-- Identify each food item separately, estimate portion in grams based on visual cues (plate size, serving vessel, portion relative to known objects)
+- Identify each food item separately, estimate portion in grams based on visual cues
 - Detect cooking method (boiling lowers GI ~10%, frying raises GI ~10-15%)
 - Estimate hidden ingredients (oil, sauce, sugar, breading)
 - net_carb_g = carbohydrate_g - fiber_g
@@ -42,10 +42,7 @@ Return exactly this JSON structure:
   "glucose_risk": "medium",
   "glucose_peak_estimate": "Blood sugar may peak at ~140-160 mg/dL within 1-1.5 hours",
   "glucose_curve_description": "Moderate rise, returning to baseline within 2 hours",
-  "recommendations": [
-    "Adding lemon juice or vinegar can lower GI by 10-15%",
-    "Eating protein and vegetables before carbs slows glucose absorption"
-  ],
+  "recommendations": ["Adding lemon juice or vinegar can lower GI by 10-15%"],
   "warnings": [],
   "confidence_score": 0.82,
   "hidden_ingredients_note": null
@@ -83,6 +80,15 @@ export interface MealAnalysis {
   hidden_ingredients_note?: string;
 }
 
+// Detect image type from base64 header
+function detectMediaType(base64: string): "image/jpeg" | "image/png" | "image/webp" | "image/gif" {
+  if (base64.startsWith("/9j/")) return "image/jpeg";
+  if (base64.startsWith("iVBOR")) return "image/png";
+  if (base64.startsWith("UklGR")) return "image/webp";
+  if (base64.startsWith("R0lGO")) return "image/gif";
+  return "image/jpeg"; // fallback
+}
+
 export async function analyzeMealImage(
   imageBase64: string,
   userType = "healthy",
@@ -90,55 +96,59 @@ export async function analyzeMealImage(
 ): Promise<MealAnalysis> {
   const profileNote =
     userType === "diabetic"
-      ? "\n\nUSER PROFILE: Diabetic patient. Warn clearly for GL > 15. Emphasize high-risk items and suggest alternatives."
+      ? "\n\nUSER PROFILE: Diabetic patient. Warn clearly for GL > 15. Emphasize high-risk items."
       : userType === "pre_diabetic"
-      ? "\n\nUSER PROFILE: Pre-diabetic. Warn for GL > 18. Suggest lower-GI alternatives where possible."
+      ? "\n\nUSER PROFILE: Pre-diabetic. Warn for GL > 18. Suggest lower-GI alternatives."
       : "\n\nUSER PROFILE: Healthy individual. Provide general wellness guidance.";
+
+  const mediaType = detectMediaType(imageBase64);
 
   const response = await client.messages.create({
     model: "claude-sonnet-4-6",
     max_tokens: 2000,
     system: SYSTEM_PROMPT + profileNote,
-    messages: [
-      {
-        role: "user",
-        content: [
-          {
-            type: "image",
-            source: {
-              type: "base64",
-              media_type: "image/jpeg",
-              data: imageBase64,
-            },
-          },
-          {
-            type: "text",
-            text: `Analyze this meal and return JSON only.${mealContext ? ` Additional context from user: ${mealContext}` : ""}`,
-          },
-        ],
-      },
-    ],
+    messages: [{
+      role: "user",
+      content: [
+        {
+          type: "image",
+          source: { type: "base64", media_type: mediaType, data: imageBase64 },
+        },
+        {
+          type: "text",
+          text: `Analyze this meal and return JSON only.${mealContext ? ` Context: ${mealContext}` : ""}`,
+        },
+      ],
+    }],
   });
 
   let raw = (response.content[0] as { type: string; text: string }).text.trim();
 
-  // Strip markdown code fences if present
+  // Strip markdown code fences
   if (raw.startsWith("```")) {
     const parts = raw.split("```");
     raw = parts[1] || parts[0];
     if (raw.startsWith("json")) raw = raw.slice(4);
   }
 
-  const data: MealAnalysis = JSON.parse(raw.trim());
+  let data: MealAnalysis;
+  try {
+    data = JSON.parse(raw.trim());
+  } catch {
+    throw new Error("AI returned invalid JSON. Please try again.");
+  }
 
-  // Enrich with GI database — 500+ foods, multi-language
+  // Validate required fields
+  if (!data.food_items || !Array.isArray(data.food_items)) {
+    throw new Error("AI response missing food items. Please try again.");
+  }
+
+  // Enrich with GI database
   for (const item of data.food_items) {
     const db = lookupGI(item.name_tr || item.name);
     if (db && item.gi_confidence < 0.9) {
       item.glycemic_index = db.gi;
       item.gi_confidence = db.confidence;
-
-      // Use database fiber/carb data if available and more precise
       if (db.fiber_per_100g && item.portion_g) {
         const dbFiber = parseFloat(((db.fiber_per_100g * item.portion_g) / 100).toFixed(1));
         if (Math.abs(dbFiber - item.fiber_g) > 2) {
@@ -146,18 +156,13 @@ export async function analyzeMealImage(
           item.net_carb_g = parseFloat((item.carbohydrate_g - item.fiber_g).toFixed(1));
         }
       }
-
-      item.glycemic_load = parseFloat(
-        ((db.gi * item.net_carb_g) / 100).toFixed(1)
-      );
+      item.glycemic_load = parseFloat(((db.gi * item.net_carb_g) / 100).toFixed(1));
     }
   }
 
-  // Recalculate totals from enriched items
+  // Recalculate totals
   data.total_glycemic_load = parseFloat(
-    data.food_items
-      .reduce((s, i) => s + (i.glycemic_load || 0), 0)
-      .toFixed(1)
+    data.food_items.reduce((s, i) => s + (i.glycemic_load || 0), 0).toFixed(1)
   );
   data.total_fiber_g = parseFloat(
     data.food_items.reduce((s, i) => s + (i.fiber_g || 0), 0).toFixed(1)
@@ -165,13 +170,9 @@ export async function analyzeMealImage(
   data.total_net_carb_g = parseFloat(
     data.food_items.reduce((s, i) => s + (i.net_carb_g || 0), 0).toFixed(1)
   );
-
   data.glucose_risk =
-    data.total_glycemic_load < 10
-      ? "low"
-      : data.total_glycemic_load <= 20
-      ? "medium"
-      : "high";
+    data.total_glycemic_load < 10 ? "low" :
+    data.total_glycemic_load <= 20 ? "medium" : "high";
 
   return data;
 }

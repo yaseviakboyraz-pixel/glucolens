@@ -19,15 +19,17 @@ export default function Home() {
     setLang(detectBrowserLang());
     const p = getProfile();
     setProfile(p);
-    if (!p || !p.setupComplete) {
-      setView("setup");
-    }
+    if (!p || !p.setupComplete) setView("setup");
     setLoaded(true);
   }, []);
 
-  function handleSetupComplete() {
+  function refreshProfile() {
     const p = getProfile();
     setProfile(p);
+  }
+
+  function handleSetupComplete() {
+    refreshProfile();
     setView("analyze");
   }
 
@@ -45,18 +47,24 @@ export default function Home() {
 
   return (
     <main className="min-h-screen bg-gray-950 text-white">
-      {/* Header */}
-      <div className="bg-gradient-to-b from-gray-900 to-gray-950 border-b border-gray-800 sticky top-0 z-10">
-        <div className="max-w-2xl mx-auto px-6 py-4 flex items-center justify-between">
-          <div>
-            <h1 className="text-xl font-bold bg-gradient-to-r from-teal-400 to-emerald-400 bg-clip-text text-transparent">
-              GlucoLens
-            </h1>
+      {/* Sticky Header */}
+      <div className="bg-gray-900/80 backdrop-blur border-b border-gray-800 sticky top-0 z-10">
+        <div className="max-w-2xl mx-auto px-4 py-3 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => setView(view === "history" ? "analyze" : "history")}
+              className="flex items-center gap-2"
+            >
+              <span className="text-xl font-bold bg-gradient-to-r from-teal-400 to-emerald-400 bg-clip-text text-transparent">
+                GlucoLens
+              </span>
+            </button>
             {profile?.name && (
-              <p className="text-xs text-gray-500">Hi, {profile.name} 👋</p>
+              <span className="text-xs text-gray-600 hidden sm:block">Hi, {profile.name}</span>
             )}
           </div>
-          <div className="flex items-center gap-3">
+
+          <div className="flex items-center gap-2">
             <LangSwitcher current={lang} onChange={setLang} />
             <button
               onClick={() => setView(view === "history" ? "analyze" : "history")}
@@ -70,26 +78,15 @@ export default function Home() {
             </button>
           </div>
         </div>
-
-        {/* Tab indicator */}
-        {view === "analyze" && (
-          <div className="max-w-2xl mx-auto px-6 pb-3">
-            <p className="text-xs text-gray-500">
-              Upload a meal photo — instantly see sugar &amp; glycemic load
-            </p>
-          </div>
-        )}
       </div>
 
       {/* Content */}
-      <div className="max-w-2xl mx-auto px-6 py-6">
+      <div className="max-w-2xl mx-auto px-4 py-6">
         {view === "analyze" ? (
           <UploadAnalyzer
             userType={profile?.userType || "healthy"}
             lang={lang}
-            onAnalysisComplete={() => {
-              // After analysis, optionally switch to history
-            }}
+            onAnalysisComplete={refreshProfile}
           />
         ) : (
           profile && (
@@ -97,13 +94,13 @@ export default function Home() {
               profile={profile}
               lang={lang}
               onNewMeal={() => setView("analyze")}
+              onEditProfile={() => setView("setup")}
             />
           )
         )}
       </div>
 
-      {/* Footer */}
-      <div className="border-t border-gray-800 mt-8 py-4 text-center">
+      <div className="border-t border-gray-800 py-4 text-center mt-8">
         <p className="text-gray-700 text-xs">
           GlucoLens © 2026 · Powered by Claude AI · Not medical advice
         </p>

@@ -1,8 +1,8 @@
 "use client";
 import { useState, useEffect } from "react";
 import {
-  getMeals, getTodayStats, getLast7DaysStats, getStreak,
-  getWeeklyAvgGL, generateInsights, deleteMeal,
+  getMeals, getTodayStats, getStreak, getWeeklyAvgGL,
+  generateInsights, deleteMeal,
   type MealRecord, type UserProfile,
 } from "@/lib/storage";
 import { GLChart } from "./gl-chart";
@@ -12,36 +12,43 @@ interface Props {
   profile: UserProfile;
   lang: Lang;
   onNewMeal: () => void;
+  onEditProfile: () => void;
 }
 
-export function HistoryDashboard({ profile, lang, onNewMeal }: Props) {
+export function HistoryDashboard({ profile, lang, onNewMeal, onEditProfile }: Props) {
   const [meals, setMeals] = useState<MealRecord[]>([]);
   const [activeTab, setActiveTab] = useState<"today" | "history">("today");
+  const [todayStats, setTodayStats] = useState(getTodayStats());
+  const [weeklyAvg, setWeeklyAvg] = useState(0);
+  const [streak, setStreak] = useState(0);
 
   useEffect(() => {
-    setMeals(getMeals());
-  }, []);
+    const m = getMeals();
+    setMeals(m);
+    setTodayStats(getTodayStats());
+    setWeeklyAvg(getWeeklyAvgGL());
+    setStreak(getStreak(profile.dailyGLTarget));
+  }, [profile.dailyGLTarget]);
 
-  const todayStats = getTodayStats();
-  const weeklyAvg = getWeeklyAvgGL();
-  const streak = getStreak(profile.dailyGLTarget);
   const insights = generateInsights(todayStats, profile);
-  const last7 = getLast7DaysStats();
 
   const riskColor = (risk: string) =>
     risk === "low" ? "text-green-400" : risk === "medium" ? "text-amber-400" : "text-red-400";
-
   const riskBg = (risk: string) =>
     risk === "low" ? "bg-green-500" : risk === "medium" ? "bg-amber-500" : "bg-red-500";
 
   function handleDelete(id: string) {
     deleteMeal(id);
-    setMeals(getMeals());
+    const m = getMeals();
+    setMeals(m);
+    setTodayStats(getTodayStats());
+    setWeeklyAvg(getWeeklyAvgGL());
+    setStreak(getStreak(profile.dailyGLTarget));
   }
 
-  const todayMeals = meals.filter(
-    (m) => m.timestamp.slice(0, 10) === new Date().toISOString().slice(0, 10)
-  );
+  const today = new Date().toISOString().slice(0, 10);
+  const todayMeals = meals.filter((m) => m.timestamp.slice(0, 10) === today);
+  const displayMeals = activeTab === "today" ? todayMeals : meals;
 
   return (
     <div className="max-w-xl mx-auto space-y-4">
@@ -49,17 +56,17 @@ export function HistoryDashboard({ profile, lang, onNewMeal }: Props) {
       <div className="grid grid-cols-3 gap-3">
         <div className="bg-gray-900 rounded-xl p-3 text-center border border-gray-800">
           <div className={`text-2xl font-bold ${todayStats.totalGL > profile.dailyGLTarget ? "text-red-400" : "text-teal-400"}`}>
-            {todayStats.totalGL}
+            {todayStats.totalGL || 0}
           </div>
           <div className="text-xs text-gray-500 mt-1">Today&apos;s GL</div>
-          <div className="text-xs text-gray-600">target: {profile.dailyGLTarget}</div>
+          <div className="text-xs text-gray-600">/ {profile.dailyGLTarget}</div>
         </div>
         <div className="bg-gray-900 rounded-xl p-3 text-center border border-gray-800">
           <div className="text-2xl font-bold text-blue-400">{weeklyAvg || "—"}</div>
           <div className="text-xs text-gray-500 mt-1">7-Day Avg</div>
         </div>
         <div className="bg-gray-900 rounded-xl p-3 text-center border border-gray-800">
-          <div className="text-2xl font-bold text-amber-400">{streak}🔥</div>
+          <div className="text-2xl font-bold text-amber-400">{streak > 0 ? `${streak}🔥` : "0"}</div>
           <div className="text-xs text-gray-500 mt-1">Day Streak</div>
         </div>
       </div>
@@ -72,11 +79,9 @@ export function HistoryDashboard({ profile, lang, onNewMeal }: Props) {
         <div
           key={i}
           className={`rounded-xl p-3 text-sm border ${
-            insight.type === "success"
-              ? "bg-green-950 border-green-500/30 text-green-300"
-              : insight.type === "warning"
-              ? "bg-amber-950 border-amber-500/30 text-amber-300"
-              : "bg-blue-950 border-blue-500/30 text-blue-300"
+            insight.type === "success" ? "bg-green-950 border-green-500/30 text-green-300"
+            : insight.type === "warning" ? "bg-amber-950 border-amber-500/30 text-amber-300"
+            : "bg-blue-950 border-blue-500/30 text-blue-300"
           }`}
         >
           {insight.type === "success" ? "✅ " : insight.type === "warning" ? "⚠️ " : "ℹ️ "}
@@ -84,14 +89,23 @@ export function HistoryDashboard({ profile, lang, onNewMeal }: Props) {
         </div>
       ))}
 
+      {/* Profile info + edit */}
+      <div className="flex items-center justify-between bg-gray-900 rounded-xl px-4 py-3 border border-gray-800">
+        <div className="text-xs text-gray-500">
+          Profile: <span className="text-gray-300 capitalize">{profile.userType.replace("_", "-")}</span>
+          <span className="text-gray-600 ml-2">· Daily target: GL {profile.dailyGLTarget}</span>
+        </div>
+        <button onClick={onEditProfile} className="text-xs text-teal-500 hover:text-teal-400 transition-colors">
+          Edit
+        </button>
+      </div>
+
       {/* Tabs */}
       <div className="flex gap-2">
         <button
           onClick={() => setActiveTab("today")}
           className={`flex-1 py-2 rounded-xl text-sm font-medium transition-all ${
-            activeTab === "today"
-              ? "bg-teal-600 text-white"
-              : "bg-gray-900 text-gray-400 hover:bg-gray-800"
+            activeTab === "today" ? "bg-teal-600 text-white" : "bg-gray-900 text-gray-400 hover:bg-gray-800"
           }`}
         >
           Today ({todayMeals.length})
@@ -99,21 +113,19 @@ export function HistoryDashboard({ profile, lang, onNewMeal }: Props) {
         <button
           onClick={() => setActiveTab("history")}
           className={`flex-1 py-2 rounded-xl text-sm font-medium transition-all ${
-            activeTab === "history"
-              ? "bg-teal-600 text-white"
-              : "bg-gray-900 text-gray-400 hover:bg-gray-800"
+            activeTab === "history" ? "bg-teal-600 text-white" : "bg-gray-900 text-gray-400 hover:bg-gray-800"
           }`}
         >
-          History ({meals.length})
+          All Meals ({meals.length})
         </button>
       </div>
 
       {/* Meal list */}
       <div className="space-y-2">
-        {(activeTab === "today" ? todayMeals : meals).length === 0 ? (
+        {displayMeals.length === 0 ? (
           <div className="text-center py-12 text-gray-600">
             <div className="text-4xl mb-3">🍽️</div>
-            <div>No meals logged yet.</div>
+            <div>{activeTab === "today" ? "No meals logged today." : "No meals yet."}</div>
             <button
               onClick={onNewMeal}
               className="mt-4 px-6 py-2 bg-teal-600 hover:bg-teal-500 text-white rounded-xl text-sm transition-all"
@@ -122,12 +134,12 @@ export function HistoryDashboard({ profile, lang, onNewMeal }: Props) {
             </button>
           </div>
         ) : (
-          (activeTab === "today" ? todayMeals : meals).map((meal) => (
+          displayMeals.map((meal) => (
             <div key={meal.id} className="bg-gray-900 rounded-xl p-4 border border-gray-800">
               <div className="flex justify-between items-start">
-                <div className="flex-1">
+                <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1">
-                    <div className={`w-2 h-2 rounded-full ${riskBg(meal.analysis.glucose_risk)}`} />
+                    <div className={`w-2 h-2 rounded-full shrink-0 ${riskBg(meal.analysis.glucose_risk)}`} />
                     <span className={`text-sm font-medium ${riskColor(meal.analysis.glucose_risk)}`}>
                       GL {meal.analysis.total_glycemic_load} · {meal.analysis.glucose_risk} risk
                     </span>
@@ -138,20 +150,19 @@ export function HistoryDashboard({ profile, lang, onNewMeal }: Props) {
                     })}
                     {meal.mealType && <span className="ml-2 capitalize">· {meal.mealType}</span>}
                   </div>
-                  <div className="text-xs text-gray-500 mt-1.5">
+                  <div className="text-xs text-gray-500 mt-1.5 truncate">
                     {meal.analysis.food_items.slice(0, 3).map((f) => f.name_tr || f.name).join(", ")}
-                    {meal.analysis.food_items.length > 3 && ` +${meal.analysis.food_items.length - 3} more`}
+                    {meal.analysis.food_items.length > 3 && ` +${meal.analysis.food_items.length - 3}`}
                   </div>
                 </div>
-                <div className="flex flex-col items-end gap-2 ml-3">
-                  <div className="text-xs text-gray-600">
-                    {meal.analysis.total_sugar_g}g sugar
-                  </div>
+                <div className="flex flex-col items-end gap-2 ml-3 shrink-0">
+                  <div className="text-xs text-gray-500">{meal.analysis.total_sugar_g}g sugar</div>
                   <button
                     onClick={() => handleDelete(meal.id)}
                     className="text-gray-700 hover:text-red-400 text-xs transition-colors"
+                    aria-label="Delete meal"
                   >
-                    delete
+                    ✕
                   </button>
                 </div>
               </div>
@@ -160,8 +171,7 @@ export function HistoryDashboard({ profile, lang, onNewMeal }: Props) {
         )}
       </div>
 
-      {/* New meal button */}
-      {(activeTab === "today" ? todayMeals : meals).length > 0 && (
+      {displayMeals.length > 0 && (
         <button
           onClick={onNewMeal}
           className="w-full py-3 rounded-xl font-semibold text-white bg-teal-600 hover:bg-teal-500 transition-all text-sm"
