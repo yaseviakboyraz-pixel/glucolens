@@ -19,32 +19,49 @@ export function UploadAnalyzer({ userType = "healthy", lang, onAnalysisComplete 
   const [error, setError] = useState<string | null>(null);
   const [mealContext, setMealContext] = useState("");
   const [saved, setSaved] = useState(false);
-  const fileRef = useRef<HTMLInputElement>(null);
+
+  // İki ayrı input: biri kamera, biri galeri
+  const cameraRef = useRef<HTMLInputElement>(null);
+  const galleryRef = useRef<HTMLInputElement>(null);
 
   const tx = t[lang];
 
   const handleFile = useCallback((file: File) => {
     if (!file.type.startsWith("image/")) { setError(tx.error_image); return; }
-    if (file.size > 10 * 1024 * 1024) { setError("Image must be under 10MB"); return; }
+    if (file.size > 20 * 1024 * 1024) { setError("Image must be under 20MB"); return; }
     setError(null); setResult(null); setSaved(false);
     const reader = new FileReader();
     reader.onload = (e) => {
       const url = e.target?.result as string;
       setPreview(url);
-      // Strip data URL prefix for API
       setImage(url.includes(",") ? url.split(",")[1] : url);
     };
     reader.readAsDataURL(file);
   }, [tx]);
 
-  const analyze = async () => {
-    if (!image) return;
+  // Fotoğraf çekildikten sonra otomatik analiz başlat
+  const handleCameraCapture = useCallback((file: File) => {
+    if (!file.type.startsWith("image/")) { setError(tx.error_image); return; }
+    setError(null); setResult(null); setSaved(false);
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+      const url = e.target?.result as string;
+      setPreview(url);
+      const base64 = url.includes(",") ? url.split(",")[1] : url;
+      setImage(base64);
+      // Otomatik analiz başlat
+      await runAnalysis(base64);
+    };
+    reader.readAsDataURL(file);
+  }, [tx]); // eslint-disable-line
+
+  const runAnalysis = async (base64: string) => {
     setLoading(true); setError(null); setResult(null); setSaved(false);
     try {
       const res = await fetch("/api/analyze", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ imageBase64: image, userType, mealContext }),
+        body: JSON.stringify({ imageBase64: base64, userType, mealContext }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || tx.error_failed);
@@ -59,6 +76,11 @@ export function UploadAnalyzer({ userType = "healthy", lang, onAnalysisComplete 
     }
   };
 
+  const analyze = async () => {
+    if (!image) return;
+    await runAnalysis(image);
+  };
+
   const reset = () => {
     setImage(null); setPreview(null); setResult(null);
     setError(null); setSaved(false); setMealContext("");
@@ -69,74 +91,140 @@ export function UploadAnalyzer({ userType = "healthy", lang, onAnalysisComplete 
 
   return (
     <div className="max-w-xl mx-auto space-y-4">
-      {/* Upload Area */}
-      <div
-        onClick={() => !preview && fileRef.current?.click()}
-        onDrop={(e) => { e.preventDefault(); const f = e.dataTransfer.files[0]; if (f) handleFile(f); }}
-        onDragOver={(e) => e.preventDefault()}
-        className={`border-2 border-dashed rounded-2xl p-6 text-center transition-colors bg-gray-900 ${
-          preview ? "border-gray-700 cursor-default" : "border-gray-700 cursor-pointer hover:border-teal-500"
-        }`}
-      >
-        {preview ? (
+
+      {/* Görsel seçilmemişse — iki buton göster */}
+      {!preview && !loading && (
+        <div className="space-y-3">
+          {/* Kamera ile çek */}
+          <button
+            onClick={() => cameraRef.current?.click()}
+            className="w-full py-5 rounded-2xl font-semibold text-white bg-teal-600 hover:bg-teal-500 active:scale-95 transition-all flex items-center justify-center gap-3 text-lg"
+          >
+            <span className="text-2xl">📸</span>
+            Take Photo
+          </button>
+          {/* Gizli kamera input — capture="environment" arka kamerayı açar */}
+          <input
+            ref={cameraRef}
+            type="file"
+            accept="image/*"
+            capture="environment"
+            className="hidden"
+            onChange={(e) => {
+              const f = e.target.files?.[0];
+              if (f) handleCameraCapture(f);
+              e.target.value = ""; // reset so same file can be selected again
+            }}
+          />
+
+          {/* Galeriden seç */}
+          <button
+            onClick={() => galleryRef.current?.click()}
+            className="w-full py-4 rounded-2xl font-semibold text-gray-300 bg-gray-900 hover:bg-gray-800 active:scale-95 transition-all flex items-center justify-center gap-3 border border-gray-700"
+          >
+            <span className="text-xl">🖼️</span>
+            Choose from Gallery
+          </button>
+          {/* Gizli galeri input — capture olmadan açılır */}
+          <input
+            ref={galleryRef}
+            type="file"
+            accept="image/jpeg,image/png,image/webp,image/heic"
+            className="hidden"
+            onChange={(e) => {
+              const f = e.target.files?.[0];
+              if (f) handleFile(f);
+              e.target.value = "";
+            }}
+          />
+
+          {/* Drag & drop alanı — masaüstü için */}
+          <div
+            onDrop={(e) => { e.preventDefault(); const f = e.dataTransfer.files[0]; if (f) handleFile(f); }}
+            onDragOver={(e) => e.preventDefault()}
+            className="border-2 border-dashed border-gray-800 rounded-2xl py-6 text-center text-gray-600 text-sm hover:border-gray-700 transition-colors"
+          >
+            or drag & drop here
+          </div>
+        </div>
+      )}
+
+      {/* Yükleme göstergesi (kamera sonrası otomatik analiz) */}
+      {loading && (
+        <div className="text-center py-12 space-y-4">
+          <div className="text-5xl animate-bounce">🔬</div>
+          <p className="text-teal-400 font-medium text-lg">{tx.analyzing}</p>
+          <p className="text-gray-500 text-sm">Analyzing nutrients & glycemic load...</p>
+          {preview && (
+            <img src={preview} alt="analyzing" className="max-h-40 mx-auto rounded-xl object-contain opacity-50" />
+          )}
+        </div>
+      )}
+
+      {/* Görsel seçildi — galeri için manuel analiz */}
+      {preview && !loading && !result && (
+        <div className="space-y-4">
           <div className="relative">
-            <img src={preview} alt="food" className="max-h-56 mx-auto rounded-xl object-contain" />
+            <img src={preview} alt="food" className="w-full max-h-64 rounded-2xl object-contain bg-gray-900" />
             <button
-              onClick={(e) => { e.stopPropagation(); reset(); }}
-              className="absolute top-2 right-2 bg-gray-800 hover:bg-gray-700 text-white rounded-full w-7 h-7 flex items-center justify-center text-xs transition-colors"
+              onClick={reset}
+              className="absolute top-2 right-2 bg-gray-800/90 hover:bg-gray-700 text-white rounded-full w-8 h-8 flex items-center justify-center text-sm transition-colors"
               aria-label="Remove image"
             >
               ✕
             </button>
           </div>
-        ) : (
-          <div className="space-y-2 py-4">
-            <div className="text-5xl">📷</div>
-            <p className="text-gray-300 font-medium">{tx.upload}</p>
-            <p className="text-gray-500 text-sm">{tx.drop}</p>
-            <p className="text-gray-600 text-xs">JPEG, PNG, WebP · Max 10MB</p>
-          </div>
-        )}
-        <input
-          ref={fileRef} type="file" accept="image/jpeg,image/png,image/webp,image/heic"
-          className="hidden"
-          onChange={(e) => { const f = e.target.files?.[0]; if (f) handleFile(f); }}
-        />
-      </div>
 
-      {/* Context input */}
-      <input
-        type="text"
-        placeholder={tx.context_placeholder}
-        value={mealContext}
-        onChange={(e) => setMealContext(e.target.value)}
-        className="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-gray-200 placeholder-gray-600 focus:outline-none focus:border-teal-500"
-      />
+          {/* Ek bilgi */}
+          <input
+            type="text"
+            placeholder={tx.context_placeholder}
+            value={mealContext}
+            onChange={(e) => setMealContext(e.target.value)}
+            className="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-gray-200 placeholder-gray-600 focus:outline-none focus:border-teal-500"
+          />
 
-      {/* Analyze button */}
-      <button
-        onClick={analyze}
-        disabled={!image || loading}
-        className="w-full py-4 rounded-xl font-semibold text-white bg-teal-600 hover:bg-teal-500 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
-      >
-        {loading ? tx.analyzing : tx.analyze_btn}
-      </button>
-
-      {/* Error */}
-      {error && (
-        <div className="bg-red-950 border border-red-500/40 rounded-xl p-4 text-red-300 text-sm">{error}</div>
+          <button
+            onClick={analyze}
+            className="w-full py-4 rounded-xl font-semibold text-white bg-teal-600 hover:bg-teal-500 active:scale-95 transition-all"
+          >
+            {tx.analyze_btn}
+          </button>
+        </div>
       )}
 
-      {/* Saved */}
-      {saved && (
+      {/* Hata */}
+      {error && (
+        <div className="bg-red-950 border border-red-500/40 rounded-xl p-4 text-red-300 text-sm">
+          {error}
+          <button onClick={reset} className="ml-3 underline text-red-400 hover:text-red-300">Try again</button>
+        </div>
+      )}
+
+      {/* Kaydedildi */}
+      {saved && !loading && (
         <div className="bg-green-950 border border-green-500/30 rounded-xl p-3 text-green-400 text-sm text-center">
           ✓ Saved to history
         </div>
       )}
 
-      {/* Results */}
-      {result && (
+      {/* Sonuçlar */}
+      {result && !loading && (
         <div className="space-y-4">
+          {/* Önizleme küçük */}
+          {preview && (
+            <div className="flex items-center gap-3 bg-gray-900 rounded-xl p-3 border border-gray-800">
+              <img src={preview} alt="meal" className="w-16 h-16 rounded-lg object-cover shrink-0" />
+              <div>
+                <div className="text-xs text-gray-500">Analyzed meal</div>
+                <div className="text-sm text-gray-300 mt-0.5">
+                  {result.food_items.slice(0, 2).map(f => foodName(f)).join(", ")}
+                  {result.food_items.length > 2 && ` +${result.food_items.length - 2} more`}
+                </div>
+              </div>
+            </div>
+          )}
+
           <GlucoseMeter risk={result.glucose_risk} gl={result.total_glycemic_load} lang={lang} />
 
           <div className="grid grid-cols-3 gap-3">
@@ -175,8 +263,8 @@ export function UploadAnalyzer({ userType = "healthy", lang, onAnalysisComplete 
               <div key={i} className="flex justify-between items-center py-2 border-b border-gray-800 last:border-0">
                 <div className="min-w-0 flex-1">
                   <span className="text-gray-200 text-sm truncate block">{foodName(item)}</span>
-                  <span className="text-gray-600 text-xs">{item.portion_g}g
-                    {item.cooking_method && ` · ${item.cooking_method}`}
+                  <span className="text-gray-600 text-xs">
+                    {item.portion_g}g{item.cooking_method ? ` · ${item.cooking_method}` : ""}
                   </span>
                 </div>
                 <div className="text-right ml-2 shrink-0">
@@ -204,12 +292,12 @@ export function UploadAnalyzer({ userType = "healthy", lang, onAnalysisComplete 
 
           <p className="text-xs text-gray-600 text-center">{tx.disclaimer}</p>
 
-          {/* Analyze another */}
+          {/* Yeni analiz */}
           <button
             onClick={reset}
-            className="w-full py-3 rounded-xl text-gray-400 bg-gray-900 hover:bg-gray-800 transition-all text-sm border border-gray-800"
+            className="w-full py-4 rounded-xl font-semibold text-white bg-teal-600 hover:bg-teal-500 active:scale-95 transition-all"
           >
-            📷 Analyze another meal
+            📸 Analyze Another Meal
           </button>
         </div>
       )}
