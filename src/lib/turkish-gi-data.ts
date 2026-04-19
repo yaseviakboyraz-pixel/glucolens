@@ -402,7 +402,6 @@ export const GI_DATABASE: Record<string, GIEntry> = {
   "udon": { gi: 55, confidence: 0.82, source: "Sydney GI DB" },
   "soba": { gi: 46, confidence: 0.85, source: "Sydney GI DB" },
   "miso soup": { gi: 10, confidence: 0.88, source: "Sydney GI DB" },
-  "edamame": { gi: 18, confidence: 0.90, source: "Sydney GI DB" },
   "tempura": { gi: 55, confidence: 0.78, source: "Sydney GI DB" },
   "teriyaki": { gi: 45, confidence: 0.78, source: "Sydney GI DB" },
 
@@ -577,3 +576,4 @@ export function lookupGI(name: string): GIEntry | null {
 // Legacy export for backward compatibility
 export const TURKISH_GI_DATA: Record<string, { gi: number; confidence: number; source: string }> = 
   Object.fromEntries(Object.entries(GI_DATABASE).map(([k, v]) => [k, { gi: v.gi, confidence: v.confidence, source: v.source }]));
+
