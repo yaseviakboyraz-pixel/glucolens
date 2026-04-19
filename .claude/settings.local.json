@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm *)",
+      "Bash(npx *)",
+      "Bash(vercel *)",
+      "Bash(git *)",
+      "Bash(node *)",
+      "Bash(code tunnel *)",
+      "Bash(where code *)",
+      "Bash(code --version)"
+    ]
+  }
+}
