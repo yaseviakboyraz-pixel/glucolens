@@ -6,10 +6,11 @@ import { UserProfileSetup } from "@/components/user-profile-setup";
 import { LangSwitcher } from "@/components/lang-switcher";
 import { SingleIngredientAnalyzer } from "@/components/single-ingredient";
 import { QRMenuAnalyzer } from "@/components/qr-menu-analyzer";
+import { DrinkAnalyzer } from "@/components/drink-analyzer";
 import { getProfile, type UserProfile } from "@/lib/storage";
 import { detectBrowserLang, type Lang } from "@/lib/i18n";
 
-type View = "setup" | "analyze" | "history" | "ingredient" | "menu";
+type View = "setup" | "analyze" | "history" | "ingredient" | "menu" | "drink";
 
 export default function Home() {
   const [lang, setLang] = useState<Lang>("en");
@@ -48,8 +49,9 @@ export default function Home() {
   }
 
   const TABS = [
-    { key: "analyze",    icon: "📷", label: "Analyze" },
-    { key: "ingredient", icon: "🔬", label: "Ingredient" },
+    { key: "analyze",    icon: "📷", label: "Meal" },
+    { key: "drink",      icon: "🥤", label: "Drink" },
+    { key: "ingredient", icon: "🔬", label: "Search" },
     { key: "menu",       icon: "🍽️", label: "Menu" },
     { key: "history",    icon: "📊", label: "History" },
   ] as { key: View; icon: string; label: string }[];
@@ -70,8 +72,8 @@ export default function Home() {
           <LangSwitcher current={lang} onChange={setLang} />
         </div>
 
-        {/* Nav tabs */}
-        <div className="max-w-2xl mx-auto px-4 pb-2 grid grid-cols-4 gap-1.5">
+        {/* Nav tabs — 5 tabs */}
+        <div className="max-w-2xl mx-auto px-4 pb-2 grid grid-cols-5 gap-1">
           {TABS.map(tab => (
             <button key={tab.key} onClick={() => setView(tab.key)}
               className={`py-1.5 rounded-lg text-xs font-medium transition-all ${
@@ -79,7 +81,8 @@ export default function Home() {
                   ? "bg-teal-600 text-white"
                   : "bg-gray-800/50 text-gray-500 hover:text-gray-300"
               }`}>
-              {tab.icon} {tab.label}
+              <div className="text-sm">{tab.icon}</div>
+              <div className="text-xs">{tab.label}</div>
             </button>
           ))}
         </div>
@@ -93,6 +96,9 @@ export default function Home() {
             lang={lang}
             onAnalysisComplete={refreshProfile}
           />
+        )}
+        {view === "drink" && (
+          <DrinkAnalyzer lang={lang} userType={profile?.userType || "healthy"} />
         )}
         {view === "ingredient" && (
           <SingleIngredientAnalyzer lang={lang} onSaved={refreshProfile} />
