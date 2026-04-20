@@ -59,13 +59,11 @@ export default function Home() {
               <span className="text-xs text-gray-600 hidden sm:block">· {profile.name}</span>
             )}
           </div>
-          <div className="flex items-center gap-2">
-            <LangSwitcher current={lang} onChange={setLang} />
-          </div>
+          <LangSwitcher current={lang} onChange={setLang} />
         </div>
 
         {/* Nav tabs */}
-        <div className="max-w-2xl mx-auto px-4 pb-2 grid grid-cols-4 gap-1.5">
+        <div className="max-w-2xl mx-auto px-4 pb-2 grid grid-cols-3 gap-1.5">
           {([
             { key: "analyze",    icon: "📷", label: "Analyze" },
             { key: "ingredient", icon: "🔬", label: "Ingredient" },
@@ -73,15 +71,13 @@ export default function Home() {
           ] as { key: View; icon: string; label: string }[]).map((tab) => (
             <button key={tab.key} onClick={() => setView(tab.key)}
               className={`py-1.5 rounded-lg text-xs font-medium transition-all ${
-                view === tab.key ? "bg-teal-600 text-white" : "bg-gray-800/50 text-gray-500 hover:text-gray-300"
+                view === tab.key
+                  ? "bg-teal-600 text-white"
+                  : "bg-gray-800/50 text-gray-500 hover:text-gray-300"
               }`}>
               {tab.icon} {tab.label}
             </button>
           ))}
-          <button onClick={() => setView(view === "history" ? "analyze" : "history")}
-            className="py-1.5 rounded-lg text-xs font-medium bg-gray-800/50 text-gray-500 hover:text-gray-300 transition-all">
-            {profile?.userType === "diabetic" ? "🩺" : profile?.userType === "pre_diabetic" ? "⚠️" : "✅"} Profile
-          </button>
         </div>
       </div>
 

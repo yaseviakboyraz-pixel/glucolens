@@ -10,9 +10,8 @@ interface Props {
   onSaved?: () => void;
 }
 
-// Popular ingredients for quick access
 const POPULAR_INGREDIENTS = [
-  "beyaz pirinç", "bulgur", "makarna", "ekmek", "patates",
+  "beyaz pirinç", "bulgur", "makarna", "beyaz ekmek", "patates",
   "elma", "muz", "domates", "yumurta", "yoğurt",
   "nohut", "mercimek", "tavuk", "beyaz peynir", "badem",
 ];
@@ -38,8 +37,7 @@ export function SingleIngredientAnalyzer({ lang, onSaved }: Props) {
   function selectIngredient(name: string) {
     setQuery(name);
     setSuggestions([]);
-    const entry = lookupIngredient(name);
-    setResult(entry);
+    setResult(lookupIngredient(name));
     setSaved(false);
   }
 
@@ -64,30 +62,19 @@ export function SingleIngredientAnalyzer({ lang, onSaved }: Props) {
     const risk: "low" | "medium" | "high" = p.gl < 10 ? "low" : p.gl <= 20 ? "medium" : "high";
     const analysis: MealAnalysis = {
       food_items: [{
-        name: query,
-        name_tr: query,
-        portion_g: portionG,
-        total_sugar_g: 0,
-        added_sugar_g: 0,
-        carbohydrate_g: p.carbs,
-        fiber_g: p.fiber,
-        net_carb_g: p.netCarb,
-        glycemic_index: p.gi,
-        glycemic_load: p.gl,
-        gi_confidence: result.confidence,
-        cooking_method: "raw",
+        name: query, name_tr: query, portion_g: portionG,
+        total_sugar_g: 0, added_sugar_g: 0,
+        carbohydrate_g: p.carbs, fiber_g: p.fiber, net_carb_g: p.netCarb,
+        glycemic_index: p.gi, glycemic_load: p.gl,
+        gi_confidence: result.confidence, cooking_method: "raw",
       }],
-      total_sugar_g: 0,
-      total_added_sugar_g: 0,
-      total_net_carb_g: p.netCarb,
-      total_fiber_g: p.fiber,
-      avg_glycemic_index: p.gi,
-      total_glycemic_load: p.gl,
+      total_sugar_g: 0, total_added_sugar_g: 0,
+      total_net_carb_g: p.netCarb, total_fiber_g: p.fiber,
+      avg_glycemic_index: p.gi, total_glycemic_load: p.gl,
       glucose_risk: risk,
       glucose_peak_estimate: "",
       glucose_curve_description: `${portionG}g ${query} — from GI database (${result.source})`,
-      recommendations: [],
-      warnings: [],
+      recommendations: [], warnings: [],
       confidence_score: result.confidence,
     };
     saveMeal(analysis);
@@ -112,13 +99,9 @@ export function SingleIngredientAnalyzer({ lang, onSaved }: Props) {
 
       {/* Search */}
       <div className="relative">
-        <input
-          type="text"
-          value={query}
-          onChange={(e) => handleSearch(e.target.value)}
+        <input type="text" value={query} onChange={(e) => handleSearch(e.target.value)}
           placeholder="e.g. bulgur, elma, beyaz pirinç..."
-          className="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-gray-200 placeholder-gray-600 focus:outline-none focus:border-teal-500"
-        />
+          className="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-gray-200 placeholder-gray-600 focus:outline-none focus:border-teal-500" />
         {suggestions.length > 0 && (
           <div className="absolute top-full left-0 right-0 bg-gray-900 border border-gray-700 rounded-xl mt-1 z-10 overflow-hidden shadow-xl">
             {suggestions.map((s) => (
@@ -131,7 +114,7 @@ export function SingleIngredientAnalyzer({ lang, onSaved }: Props) {
         )}
       </div>
 
-      {/* Popular quick picks */}
+      {/* Popular picks */}
       {!result && (
         <div>
           <p className="text-xs text-gray-600 mb-2">Popular ingredients</p>
@@ -149,19 +132,16 @@ export function SingleIngredientAnalyzer({ lang, onSaved }: Props) {
       {/* Result */}
       {result && p && (
         <div className="space-y-4">
-          {/* Header */}
           <div className="flex items-start justify-between">
             <div>
               <h3 className="text-white font-semibold capitalize">{query}</h3>
-              {result.category && (
-                <span className="text-xs text-gray-500 capitalize">{result.category.replace("_", " ")}</span>
-              )}
+              {result.category && <span className="text-xs text-gray-500 capitalize">{result.category.replace("_", " ")}</span>}
             </div>
             {confidenceLabel && (
               <div className={`text-xs ${confidenceLabel.color} flex items-center gap-1`}>
                 <span>{confidenceLabel.icon}</span>
                 <span>{confidenceLabel.label}</span>
-                <span className="text-gray-600">· {result.source}</span>
+                <span className="text-gray-600 ml-1">· {result.source}</span>
               </div>
             )}
           </div>
@@ -172,10 +152,10 @@ export function SingleIngredientAnalyzer({ lang, onSaved }: Props) {
               <label className="text-sm text-gray-400">Portion size</label>
               <div className="flex items-center gap-2">
                 <button onClick={() => setPortionG(Math.max(5, portionG - 10))}
-                  className="w-8 h-8 bg-gray-800 hover:bg-gray-700 rounded-lg text-white transition-colors">−</button>
+                  className="w-8 h-8 bg-gray-800 hover:bg-gray-700 rounded-lg text-white">−</button>
                 <span className="text-white font-bold w-16 text-center">{portionG}g</span>
                 <button onClick={() => setPortionG(portionG + 10)}
-                  className="w-8 h-8 bg-gray-800 hover:bg-gray-700 rounded-lg text-white transition-colors">+</button>
+                  className="w-8 h-8 bg-gray-800 hover:bg-gray-700 rounded-lg text-white">+</button>
               </div>
             </div>
             <div className="flex gap-2">
@@ -188,16 +168,14 @@ export function SingleIngredientAnalyzer({ lang, onSaved }: Props) {
             </div>
           </div>
 
-          {/* GL result — big display */}
+          {/* GL result */}
           <div className="bg-gray-900 rounded-xl p-4 border border-gray-800 text-center">
             <div className="text-xs text-gray-500 mb-1">Glycemic Load for {portionG}g</div>
             <div className={`text-5xl font-bold ${riskColor}`}>{p.gl}</div>
             <div className={`text-sm mt-1 ${riskColor}`}>
               {p.gl < 10 ? "✅ Low" : p.gl <= 20 ? "⚠️ Medium" : "🔴 High"} glycemic impact
             </div>
-            <div className="text-xs text-gray-600 mt-2">
-              GI: {p.gi} · Net carbs: {p.netCarb}g
-            </div>
+            <div className="text-xs text-gray-600 mt-2">GI: {p.gi} · Net carbs: {p.netCarb}g</div>
           </div>
 
           {/* Full nutrition */}
@@ -217,14 +195,6 @@ export function SingleIngredientAnalyzer({ lang, onSaved }: Props) {
             ))}
           </div>
 
-          {/* Per 100g reference */}
-          {portionG !== 100 && (
-            <div className="bg-gray-900 rounded-xl p-3 border border-gray-800 text-xs text-gray-500">
-              Per 100g: GI {result.gi} · Carbs {result.carb_per_100g || 0}g · Fiber {result.fiber_per_100g || 0}g · GL {((result.gi * Math.max(0, (result.carb_per_100g || 0) - (result.fiber_per_100g || 0))) / 100).toFixed(1)}
-            </div>
-          )}
-
-          {/* Save + new */}
           <div className="flex gap-2">
             <button onClick={() => { setResult(null); setQuery(""); setSuggestions([]); setSaved(false); }}
               className="flex-1 py-3 rounded-xl text-gray-400 bg-gray-900 border border-gray-800 text-sm">

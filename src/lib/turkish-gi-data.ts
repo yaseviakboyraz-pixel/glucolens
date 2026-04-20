@@ -1,47 +1,40 @@
 // GlucoLens GI Database v3.0
 // Sources: TürKomp (645 TR foods), Sydney GI DB, USDA FoodData Central,
-//          Atkinson et al. (2008) Int Tables of GI, Foster-Powell et al. (2002),
-//          Türk Diyabet Cemiyeti, Osmanlı Mutfağı Araştırmaları
+//          Atkinson et al. (2008) Int Tables of GI, Foster-Powell et al. (2002)
 // Coverage: Turkish, Ottoman, Mediterranean, Middle East, Asian, Western, Latin, Single Ingredients
-// Last updated: 2026-04
 
 export interface GIEntry {
   gi: number;
-  confidence: number; // 0.0-1.0
+  confidence: number;
   source: string;
   fiber_per_100g?: number;
   carb_per_100g?: number;
   protein_per_100g?: number;
   fat_per_100g?: number;
   cal_per_100g?: number;
-  category?: string; // for single ingredient mode
+  category?: string;
 }
 
 export const GI_DATABASE: Record<string, GIEntry> = {
 
-  // ════════════════════════════════════════════════
-  // TEKLİ BESİNLER — Single Ingredients
-  // Raw, unprocessed foods measured individually
-  // ════════════════════════════════════════════════
-
-  // Tahıllar / Grains — raw
+  // ── TAHILLAR / GRAINS ──────────────────────────
   "beyaz pirinç": { gi: 72, confidence: 0.95, source: "Sydney GI DB", carb_per_100g: 79, fiber_per_100g: 0.4, cal_per_100g: 360, category: "grain" },
-  "white rice": { gi: 72, confidence: 0.95, source: "Sydney GI DB", carb_per_100g: 79, fiber_per_100g: 0.4, cal_per_100g: 360, category: "grain" },
+  "white rice": { gi: 72, confidence: 0.95, source: "Sydney GI DB", category: "grain" },
   "esmer pirinç": { gi: 55, confidence: 0.92, source: "Sydney GI DB", carb_per_100g: 77, fiber_per_100g: 3.5, cal_per_100g: 362, category: "grain" },
-  "brown rice": { gi: 55, confidence: 0.92, source: "Sydney GI DB", carb_per_100g: 77, fiber_per_100g: 3.5, cal_per_100g: 362, category: "grain" },
+  "brown rice": { gi: 55, confidence: 0.92, source: "Sydney GI DB", category: "grain" },
   "basmati pirinç": { gi: 57, confidence: 0.92, source: "Sydney GI DB", carb_per_100g: 78, fiber_per_100g: 1.0, cal_per_100g: 356, category: "grain" },
-  "basmati rice": { gi: 57, confidence: 0.92, source: "Sydney GI DB", carb_per_100g: 78, fiber_per_100g: 1.0, cal_per_100g: 356, category: "grain" },
+  "basmati rice": { gi: 57, confidence: 0.92, source: "Sydney GI DB", category: "grain" },
   "bulgur": { gi: 46, confidence: 0.92, source: "Sydney GI DB", carb_per_100g: 76, fiber_per_100g: 18.3, cal_per_100g: 342, category: "grain" },
-  "bulgur wheat": { gi: 46, confidence: 0.92, source: "Sydney GI DB", carb_per_100g: 76, fiber_per_100g: 18.3, cal_per_100g: 342, category: "grain" },
+  "bulgur wheat": { gi: 46, confidence: 0.92, source: "Sydney GI DB", category: "grain" },
   "yulaf ezmesi": { gi: 55, confidence: 0.95, source: "Sydney GI DB", carb_per_100g: 66, fiber_per_100g: 10.1, cal_per_100g: 379, category: "grain" },
-  "rolled oats": { gi: 55, confidence: 0.95, source: "Sydney GI DB", carb_per_100g: 66, fiber_per_100g: 10.1, cal_per_100g: 379, category: "grain" },
+  "rolled oats": { gi: 55, confidence: 0.95, source: "Sydney GI DB", category: "grain" },
   "oats": { gi: 55, confidence: 0.95, source: "Sydney GI DB", carb_per_100g: 66, fiber_per_100g: 10.1, cal_per_100g: 379, category: "grain" },
   "arpa": { gi: 25, confidence: 0.95, source: "Sydney GI DB", carb_per_100g: 73, fiber_per_100g: 17.3, cal_per_100g: 354, category: "grain" },
-  "barley": { gi: 25, confidence: 0.95, source: "Sydney GI DB", carb_per_100g: 73, fiber_per_100g: 17.3, cal_per_100g: 354, category: "grain" },
+  "barley": { gi: 25, confidence: 0.95, source: "Sydney GI DB", category: "grain" },
   "çavdar": { gi: 34, confidence: 0.90, source: "Sydney GI DB", carb_per_100g: 69, fiber_per_100g: 15.1, cal_per_100g: 338, category: "grain" },
-  "rye": { gi: 34, confidence: 0.90, source: "Sydney GI DB", carb_per_100g: 69, fiber_per_100g: 15.1, cal_per_100g: 338, category: "grain" },
+  "rye": { gi: 34, confidence: 0.90, source: "Sydney GI DB", category: "grain" },
   "buğday": { gi: 41, confidence: 0.88, source: "Sydney GI DB", carb_per_100g: 71, fiber_per_100g: 12.2, cal_per_100g: 339, category: "grain" },
-  "wheat": { gi: 41, confidence: 0.88, source: "Sydney GI DB", carb_per_100g: 71, fiber_per_100g: 12.2, cal_per_100g: 339, category: "grain" },
+  "wheat": { gi: 41, confidence: 0.88, source: "Sydney GI DB", category: "grain" },
   "mısır unu": { gi: 70, confidence: 0.85, source: "Sydney GI DB", carb_per_100g: 79, fiber_per_100g: 2.4, cal_per_100g: 361, category: "grain" },
   "cornmeal": { gi: 70, confidence: 0.85, source: "Sydney GI DB", category: "grain" },
   "quinoa": { gi: 53, confidence: 0.90, source: "Sydney GI DB", carb_per_100g: 64, fiber_per_100g: 7.0, protein_per_100g: 14, cal_per_100g: 368, category: "grain" },
@@ -56,7 +49,7 @@ export const GI_DATABASE: Record<string, GIEntry> = {
   "darı": { gi: 71, confidence: 0.85, source: "Sydney GI DB", category: "grain" },
   "sorghum": { gi: 62, confidence: 0.82, source: "Sydney GI DB", category: "grain" },
 
-  // Un Çeşitleri / Flours
+  // ── UN / FLOUR ─────────────────────────────────
   "beyaz un": { gi: 85, confidence: 0.88, source: "Sydney GI DB", carb_per_100g: 76, fiber_per_100g: 2.7, cal_per_100g: 364, category: "flour" },
   "all-purpose flour": { gi: 85, confidence: 0.88, source: "Sydney GI DB", category: "flour" },
   "tam buğday unu": { gi: 60, confidence: 0.88, source: "Sydney GI DB", carb_per_100g: 72, fiber_per_100g: 10.7, cal_per_100g: 340, category: "flour" },
@@ -68,7 +61,7 @@ export const GI_DATABASE: Record<string, GIEntry> = {
   "hindistan cevizi unu": { gi: 51, confidence: 0.82, source: "Sydney GI DB", carb_per_100g: 60, fiber_per_100g: 39, cal_per_100g: 466, category: "flour" },
   "coconut flour": { gi: 51, confidence: 0.82, source: "Sydney GI DB", category: "flour" },
 
-  // Makarnalar / Pastas
+  // ── MAKARNA / PASTA ────────────────────────────
   "spaghetti": { gi: 49, confidence: 0.95, source: "Sydney GI DB", carb_per_100g: 75, fiber_per_100g: 2.5, cal_per_100g: 371, category: "pasta" },
   "makarna": { gi: 49, confidence: 0.92, source: "Sydney GI DB", carb_per_100g: 75, fiber_per_100g: 2.5, cal_per_100g: 371, category: "pasta" },
   "pasta": { gi: 49, confidence: 0.92, source: "Sydney GI DB", category: "pasta" },
@@ -82,7 +75,7 @@ export const GI_DATABASE: Record<string, GIEntry> = {
   "rice noodles": { gi: 61, confidence: 0.85, source: "Sydney GI DB", category: "pasta" },
   "glass noodles": { gi: 39, confidence: 0.82, source: "Sydney GI DB", category: "pasta" },
 
-  // Ekmekler / Breads
+  // ── EKMEK / BREAD ──────────────────────────────
   "beyaz ekmek": { gi: 75, confidence: 0.95, source: "Sydney GI DB", carb_per_100g: 49, fiber_per_100g: 2.7, cal_per_100g: 265, category: "bread" },
   "white bread": { gi: 75, confidence: 0.95, source: "Sydney GI DB", category: "bread" },
   "tam buğday ekmeği": { gi: 51, confidence: 0.95, source: "Sydney GI DB", carb_per_100g: 41, fiber_per_100g: 6.9, cal_per_100g: 247, category: "bread" },
@@ -108,17 +101,13 @@ export const GI_DATABASE: Record<string, GIEntry> = {
   "bagel": { gi: 72, confidence: 0.90, source: "Sydney GI DB", category: "bread" },
   "tortilla": { gi: 52, confidence: 0.88, source: "Sydney GI DB", category: "bread" },
   "croissant": { gi: 67, confidence: 0.85, source: "Sydney GI DB", category: "bread" },
+  "pogaça": { gi: 65, confidence: 0.78, source: "TürKomp", carb_per_100g: 45, category: "bread" },
+  "açma": { gi: 68, confidence: 0.75, source: "TürKomp", category: "bread" },
 
-  // ════════════════════════════════════════════════
-  // TÜRK MUTFAĞI — Turkish Cuisine
-  // ════════════════════════════════════════════════
-
-  // Kahvaltı / Breakfast
+  // ── TÜRK MUTFAĞI / TURKISH CUISINE ────────────
   "sucuk yumurta": { gi: 8, confidence: 0.80, source: "TürKomp", category: "turkish" },
   "menemen": { gi: 22, confidence: 0.78, source: "TürKomp", category: "turkish" },
   "çılbır": { gi: 10, confidence: 0.75, source: "TürKomp", category: "turkish" },
-  "pogaça": { gi: 65, confidence: 0.78, source: "TürKomp", carb_per_100g: 45, category: "turkish_bread" },
-  "açma": { gi: 68, confidence: 0.75, source: "TürKomp", category: "turkish_bread" },
   "börekler": { gi: 60, confidence: 0.72, source: "TürKomp", category: "turkish" },
   "su böreği": { gi: 58, confidence: 0.75, source: "TürKomp", category: "turkish" },
   "sigara böreği": { gi: 62, confidence: 0.75, source: "TürKomp", category: "turkish" },
@@ -137,7 +126,7 @@ export const GI_DATABASE: Record<string, GIEntry> = {
   "zeytin": { gi: 0, confidence: 0.99, source: "General", fat_per_100g: 15, cal_per_100g: 145, category: "fat" },
   "olive": { gi: 0, confidence: 0.99, source: "General", category: "fat" },
 
-  // Çorbalar / Soups
+  // Çorbalar
   "mercimek çorbası": { gi: 44, confidence: 0.88, source: "TürKomp", category: "turkish_soup" },
   "lentil soup": { gi: 44, confidence: 0.88, source: "Sydney GI DB", category: "soup" },
   "ezogelin çorbası": { gi: 42, confidence: 0.82, source: "TürKomp", category: "turkish_soup" },
@@ -153,7 +142,7 @@ export const GI_DATABASE: Record<string, GIEntry> = {
   "sütlü çorba": { gi: 35, confidence: 0.72, source: "TürKomp", category: "soup" },
   "mercimek köftesi çorbası": { gi: 38, confidence: 0.72, source: "TürKomp", category: "turkish_soup" },
 
-  // Kebaplar / Kebabs
+  // Kebaplar
   "adana kebap": { gi: 5, confidence: 0.88, source: "TürKomp", protein_per_100g: 18, fat_per_100g: 20, cal_per_100g: 255, category: "turkish_meat" },
   "adana kebabı": { gi: 5, confidence: 0.88, source: "TürKomp", category: "turkish_meat" },
   "urfa kebap": { gi: 5, confidence: 0.85, source: "TürKomp", category: "turkish_meat" },
@@ -173,7 +162,7 @@ export const GI_DATABASE: Record<string, GIEntry> = {
   "fırın kebap": { gi: 5, confidence: 0.85, source: "TürKomp", category: "turkish_meat" },
   "tas kebabı": { gi: 12, confidence: 0.72, source: "TürKomp", category: "turkish_meat" },
 
-  // Köfteler / Meatballs
+  // Köfteler
   "köfte": { gi: 12, confidence: 0.82, source: "TürKomp", protein_per_100g: 17, fat_per_100g: 15, cal_per_100g: 210, category: "turkish_meat" },
   "meatball": { gi: 12, confidence: 0.82, source: "TürKomp", category: "meat" },
   "izgara köfte": { gi: 8, confidence: 0.82, source: "TürKomp", category: "turkish_meat" },
@@ -183,7 +172,7 @@ export const GI_DATABASE: Record<string, GIEntry> = {
   "akçaabat köftesi": { gi: 10, confidence: 0.78, source: "TürKomp", category: "turkish_meat" },
   "inegöl köftesi": { gi: 10, confidence: 0.78, source: "TürKomp", category: "turkish_meat" },
 
-  // Ana Yemekler / Main Dishes
+  // Ana Yemekler
   "mantı": { gi: 52, confidence: 0.80, source: "TürKomp", carb_per_100g: 29, protein_per_100g: 8, cal_per_100g: 218, category: "turkish" },
   "lahmacun": { gi: 62, confidence: 0.80, source: "TürKomp", carb_per_100g: 32, cal_per_100g: 255, category: "turkish" },
   "pide": { gi: 70, confidence: 0.80, source: "TürKomp", category: "turkish_bread" },
@@ -220,25 +209,25 @@ export const GI_DATABASE: Record<string, GIEntry> = {
   "patlıcan kızartma": { gi: 25, confidence: 0.78, source: "TürKomp", category: "turkish" },
   "kabak kızartma": { gi: 22, confidence: 0.75, source: "TürKomp", category: "turkish" },
   "mücver": { gi: 48, confidence: 0.75, source: "TürKomp", category: "turkish" },
+  "kısır": { gi: 42, confidence: 0.80, source: "TürKomp", carb_per_100g: 28, fiber_per_100g: 6.2, cal_per_100g: 165, category: "turkish" },
+  "mercimek salatası": { gi: 30, confidence: 0.80, source: "TürKomp", category: "turkish" },
+  "piyaz": { gi: 32, confidence: 0.78, source: "TürKomp", category: "turkish" },
+  "ezme": { gi: 15, confidence: 0.82, source: "TürKomp", category: "turkish" },
+  "acuka": { gi: 15, confidence: 0.78, source: "TürKomp", category: "turkish" },
+  "haydari": { gi: 15, confidence: 0.80, source: "TürKomp", category: "turkish" },
+  "cacık": { gi: 15, confidence: 0.85, source: "TürKomp", category: "turkish" },
+  "tarator": { gi: 12, confidence: 0.78, source: "TürKomp", category: "turkish" },
 
-  // ════════════════════════════════════════════════
-  // OSMANLI MUTFAĞI — Ottoman Cuisine
-  // ════════════════════════════════════════════════
-
-  // Çorbalar / Soups
+  // ── OSMANLI MUTFAĞI / OTTOMAN CUISINE ─────────
   "tarhana": { gi: 52, confidence: 0.78, source: "TürKomp", carb_per_100g: 68, fiber_per_100g: 4.2, cal_per_100g: 335, category: "ottoman_soup" },
   "aşurelik buğday çorbası": { gi: 42, confidence: 0.72, source: "TürKomp", category: "ottoman_soup" },
   "toyga çorbası": { gi: 30, confidence: 0.70, source: "TürKomp", category: "ottoman_soup" },
   "keşkek çorbası": { gi: 45, confidence: 0.70, source: "TürKomp", category: "ottoman_soup" },
-
-  // Pilavlar / Rice Dishes
   "keşkek": { gi: 52, confidence: 0.75, source: "TürKomp", carb_per_100g: 25, protein_per_100g: 12, cal_per_100g: 185, category: "ottoman" },
   "hamsili pilav": { gi: 62, confidence: 0.75, source: "TürKomp", category: "ottoman" },
   "iç pilav": { gi: 60, confidence: 0.75, source: "TürKomp", category: "ottoman" },
   "domatesli pilav": { gi: 62, confidence: 0.75, source: "TürKomp", category: "ottoman" },
   "meyhane pilavı": { gi: 58, confidence: 0.70, source: "TürKomp", category: "ottoman" },
-
-  // Et Yemekleri / Meat Dishes
   "kuzu haşlama": { gi: 0, confidence: 0.88, source: "TürKomp", protein_per_100g: 22, fat_per_100g: 12, cal_per_100g: 196, category: "ottoman_meat" },
   "kuzu kapama": { gi: 5, confidence: 0.78, source: "TürKomp", category: "ottoman_meat" },
   "kuzu incik": { gi: 5, confidence: 0.82, source: "TürKomp", category: "ottoman_meat" },
@@ -252,8 +241,6 @@ export const GI_DATABASE: Record<string, GIEntry> = {
   "mumbar dolması": { gi: 35, confidence: 0.70, source: "TürKomp", category: "ottoman" },
   "arnavut ciğeri": { gi: 5, confidence: 0.80, source: "TürKomp", category: "ottoman_meat" },
   "ciğer sarma": { gi: 8, confidence: 0.75, source: "TürKomp", category: "ottoman_meat" },
-
-  // Sebze Yemekleri / Vegetable Dishes  
   "zeytinyağlı pırasa": { gi: 18, confidence: 0.78, source: "TürKomp", category: "ottoman_veg" },
   "zeytinyağlı kereviz": { gi: 18, confidence: 0.75, source: "TürKomp", category: "ottoman_veg" },
   "zeytinyağlı enginar": { gi: 15, confidence: 0.75, source: "TürKomp", category: "ottoman_veg" },
@@ -263,8 +250,14 @@ export const GI_DATABASE: Record<string, GIEntry> = {
   "zeytinyağlı ıspanak": { gi: 12, confidence: 0.78, source: "TürKomp", category: "ottoman_veg" },
   "patates oturtma": { gi: 65, confidence: 0.72, source: "TürKomp", category: "ottoman_veg" },
   "kabak mücveri": { gi: 45, confidence: 0.72, source: "TürKomp", category: "ottoman_veg" },
+  "tirit": { gi: 55, confidence: 0.72, source: "TürKomp", category: "ottoman" },
+  "perde pilavı": { gi: 62, confidence: 0.72, source: "TürKomp", category: "ottoman" },
+  "hamsi tava": { gi: 8, confidence: 0.80, source: "TürKomp", category: "ottoman_meat" },
+  "hamsi pilavı": { gi: 58, confidence: 0.75, source: "TürKomp", category: "ottoman" },
+  "mıhlama": { gi: 35, confidence: 0.72, source: "TürKomp", category: "ottoman" },
+  "karalahana sarma": { gi: 42, confidence: 0.72, source: "TürKomp", category: "ottoman" },
 
-  // Hamur İşleri / Pastries
+  // Osmanlı Tatlıları
   "baklava": { gi: 55, confidence: 0.82, source: "TürKomp", carb_per_100g: 45, fat_per_100g: 22, cal_per_100g: 432, category: "ottoman_dessert" },
   "fıstıklı baklava": { gi: 52, confidence: 0.80, source: "TürKomp", category: "ottoman_dessert" },
   "fındıklı baklava": { gi: 53, confidence: 0.78, source: "TürKomp", category: "ottoman_dessert" },
@@ -291,36 +284,11 @@ export const GI_DATABASE: Record<string, GIEntry> = {
   "turkish delight": { gi: 65, confidence: 0.82, source: "TürKomp", category: "dessert" },
   "profiterol": { gi: 68, confidence: 0.75, source: "TürKomp", category: "dessert" },
 
-  // Bölgesel Türk Yemekleri / Regional Turkish
-  "tirit": { gi: 55, confidence: 0.72, source: "TürKomp", category: "ottoman" },
-  "perde pilavı": { gi: 62, confidence: 0.72, source: "TürKomp", category: "ottoman" },
-  "çiğ börek": { gi: 58, confidence: 0.72, source: "TürKomp", category: "ottoman" },
-  "hamsi tava": { gi: 8, confidence: 0.80, source: "TürKomp", category: "ottoman_meat" },
-  "hamsi pilavı": { gi: 58, confidence: 0.75, source: "TürKomp", category: "ottoman" },
-  "mıhlama": { gi: 35, confidence: 0.72, source: "TürKomp", category: "ottoman" },
-  "karalahana sarma": { gi: 42, confidence: 0.72, source: "TürKomp", category: "ottoman" },
-  "kısır": { gi: 42, confidence: 0.80, source: "TürKomp", carb_per_100g: 28, fiber_per_100g: 6.2, cal_per_100g: 165, category: "turkish" },
-  "taboule": { gi: 42, confidence: 0.80, source: "Sydney GI DB", category: "mediterranean" },
-  "tabbouleh": { gi: 42, confidence: 0.80, source: "Sydney GI DB", category: "mediterranean" },
-  "mercimek salatası": { gi: 30, confidence: 0.80, source: "TürKomp", category: "turkish" },
-  "piyaz": { gi: 32, confidence: 0.78, source: "TürKomp", category: "turkish" },
-  "kisir": { gi: 42, confidence: 0.80, source: "TürKomp", category: "turkish" },
-  "ezme": { gi: 15, confidence: 0.82, source: "TürKomp", category: "turkish" },
-  "acuka": { gi: 15, confidence: 0.78, source: "TürKomp", category: "turkish" },
-  "haydari": { gi: 15, confidence: 0.80, source: "TürKomp", category: "turkish" },
-  "cacık": { gi: 15, confidence: 0.85, source: "TürKomp", category: "turkish" },
-  "tarator": { gi: 12, confidence: 0.78, source: "TürKomp", category: "turkish" },
-
-  // ════════════════════════════════════════════════
-  // SEBZELER — Vegetables (single ingredients)
-  // ════════════════════════════════════════════════
-
-  // Yüksek GI sebzeler
-  "patates": { gi: 82, confidence: 0.92, source: "Sydney GI DB", carb_per_100g: 17, fiber_per_100g: 2.2, cal_per_100g: 77, category: "vegetable" },
-  "potato": { gi: 82, confidence: 0.92, source: "Sydney GI DB", category: "vegetable" },
+  // ── SEBZELER / VEGETABLES ──────────────────────
+  "patates": { gi: 82, confidence: 0.95, source: "Sydney GI DB", carb_per_100g: 17, fiber_per_100g: 2.2, cal_per_100g: 77, category: "vegetable" },
+  "potato": { gi: 82, confidence: 0.95, source: "Sydney GI DB", category: "vegetable" },
   "tatlı patates": { gi: 44, confidence: 0.92, source: "Sydney GI DB", carb_per_100g: 20, fiber_per_100g: 3.0, cal_per_100g: 86, category: "vegetable" },
   "sweet potato": { gi: 44, confidence: 0.92, source: "Sydney GI DB", category: "vegetable" },
-  "mor patates": { gi: 77, confidence: 0.85, source: "Sydney GI DB", category: "vegetable" },
   "pancar": { gi: 64, confidence: 0.90, source: "Sydney GI DB", carb_per_100g: 10, fiber_per_100g: 2.8, cal_per_100g: 43, category: "vegetable" },
   "beet": { gi: 64, confidence: 0.90, source: "Sydney GI DB", category: "vegetable" },
   "havuç": { gi: 35, confidence: 0.92, source: "Sydney GI DB", carb_per_100g: 10, fiber_per_100g: 2.8, cal_per_100g: 41, category: "vegetable" },
@@ -331,8 +299,6 @@ export const GI_DATABASE: Record<string, GIEntry> = {
   "corn": { gi: 52, confidence: 0.90, source: "Sydney GI DB", category: "vegetable" },
   "bezelye": { gi: 48, confidence: 0.90, source: "Sydney GI DB", carb_per_100g: 14, fiber_per_100g: 5.1, cal_per_100g: 81, category: "vegetable" },
   "peas": { gi: 48, confidence: 0.90, source: "Sydney GI DB", category: "vegetable" },
-
-  // Düşük GI sebzeler
   "domates": { gi: 15, confidence: 0.95, source: "Sydney GI DB", carb_per_100g: 3.9, fiber_per_100g: 1.2, cal_per_100g: 18, category: "vegetable" },
   "tomato": { gi: 15, confidence: 0.95, source: "Sydney GI DB", category: "vegetable" },
   "salatalık": { gi: 15, confidence: 0.95, source: "Sydney GI DB", carb_per_100g: 3.6, fiber_per_100g: 0.5, cal_per_100g: 16, category: "vegetable" },
@@ -373,10 +339,7 @@ export const GI_DATABASE: Record<string, GIEntry> = {
   "salça": { gi: 20, confidence: 0.85, source: "TürKomp", category: "condiment" },
   "tomato paste": { gi: 20, confidence: 0.85, source: "Sydney GI DB", category: "condiment" },
 
-  // ════════════════════════════════════════════════
-  // MEYVELER — Fruits (single ingredients)
-  // ════════════════════════════════════════════════
-
+  // ── MEYVELER / FRUITS ──────────────────────────
   "elma": { gi: 36, confidence: 0.97, source: "Sydney GI DB", carb_per_100g: 14, fiber_per_100g: 2.4, cal_per_100g: 52, category: "fruit" },
   "apple": { gi: 36, confidence: 0.97, source: "Sydney GI DB", category: "fruit" },
   "muz": { gi: 51, confidence: 0.97, source: "Sydney GI DB", carb_per_100g: 23, fiber_per_100g: 2.6, cal_per_100g: 89, category: "fruit" },
@@ -414,7 +377,7 @@ export const GI_DATABASE: Record<string, GIEntry> = {
   "ananas": { gi: 59, confidence: 0.90, source: "Sydney GI DB", carb_per_100g: 13, fiber_per_100g: 1.4, cal_per_100g: 50, category: "fruit" },
   "pineapple": { gi: 59, confidence: 0.90, source: "Sydney GI DB", category: "fruit" },
   "mango": { gi: 51, confidence: 0.90, source: "Sydney GI DB", carb_per_100g: 15, fiber_per_100g: 1.6, cal_per_100g: 60, category: "fruit" },
-  "papaya": { gi: 60, confidence: 0.88, source: "Sydney GI DB", carb_per_100g: 11, fiber_per_100g: 1.8, cal_per_100g: 43, category: "fruit" },
+  "papaya": { gi: 60, confidence: 0.88, source: "Sydney GI DB", category: "fruit" },
   "greyfurt": { gi: 25, confidence: 0.92, source: "Sydney GI DB", carb_per_100g: 11, fiber_per_100g: 1.6, cal_per_100g: 42, category: "fruit" },
   "grapefruit": { gi: 25, confidence: 0.92, source: "Sydney GI DB", category: "fruit" },
   "limon": { gi: 20, confidence: 0.92, source: "Sydney GI DB", carb_per_100g: 9.3, fiber_per_100g: 2.8, cal_per_100g: 29, category: "fruit" },
@@ -430,10 +393,7 @@ export const GI_DATABASE: Record<string, GIEntry> = {
   "böğürtlen": { gi: 25, confidence: 0.85, source: "Sydney GI DB", carb_per_100g: 10, fiber_per_100g: 5.3, cal_per_100g: 43, category: "fruit" },
   "blackberry": { gi: 25, confidence: 0.85, source: "Sydney GI DB", category: "fruit" },
 
-  // ════════════════════════════════════════════════
-  // BAKLAGILLER — Legumes (single ingredients)
-  // ════════════════════════════════════════════════
-
+  // ── BAKLAGİLLER / LEGUMES ──────────────────────
   "kırmızı mercimek": { gi: 29, confidence: 0.97, source: "Sydney GI DB", carb_per_100g: 60, fiber_per_100g: 10.7, protein_per_100g: 24, cal_per_100g: 352, category: "legume" },
   "red lentil": { gi: 29, confidence: 0.97, source: "Sydney GI DB", category: "legume" },
   "yeşil mercimek": { gi: 30, confidence: 0.95, source: "Sydney GI DB", carb_per_100g: 60, fiber_per_100g: 10.7, protein_per_100g: 24, cal_per_100g: 353, category: "legume" },
@@ -458,10 +418,7 @@ export const GI_DATABASE: Record<string, GIEntry> = {
   "black beans": { gi: 30, confidence: 0.92, source: "Sydney GI DB", category: "legume" },
   "siyah fasulye": { gi: 30, confidence: 0.90, source: "TürKomp", category: "legume" },
 
-  // ════════════════════════════════════════════════
-  // PROTEIN KAYNAKLARI — Proteins
-  // ════════════════════════════════════════════════
-
+  // ── PROTEIN KAYNAKLARI ─────────────────────────
   "tavuk": { gi: 0, confidence: 0.99, source: "General", protein_per_100g: 27, fat_per_100g: 3.6, cal_per_100g: 165, category: "protein" },
   "chicken": { gi: 0, confidence: 0.99, source: "General", category: "protein" },
   "grilled chicken": { gi: 0, confidence: 0.99, source: "General", category: "protein" },
@@ -502,10 +459,7 @@ export const GI_DATABASE: Record<string, GIEntry> = {
   "ciğer": { gi: 3, confidence: 0.85, source: "TürKomp", protein_per_100g: 20, fat_per_100g: 5, cal_per_100g: 135, category: "protein" },
   "liver": { gi: 3, confidence: 0.85, source: "General", category: "protein" },
 
-  // ════════════════════════════════════════════════
-  // SÜT ÜRÜNLERİ — Dairy
-  // ════════════════════════════════════════════════
-
+  // ── SÜT ÜRÜNLERİ / DAIRY ──────────────────────
   "süt": { gi: 27, confidence: 0.95, source: "Sydney GI DB", carb_per_100g: 4.8, protein_per_100g: 3.2, fat_per_100g: 3.5, cal_per_100g: 61, category: "dairy" },
   "milk": { gi: 27, confidence: 0.95, source: "Sydney GI DB", category: "dairy" },
   "yağsız süt": { gi: 32, confidence: 0.92, source: "Sydney GI DB", carb_per_100g: 5.1, cal_per_100g: 34, category: "dairy" },
@@ -530,10 +484,7 @@ export const GI_DATABASE: Record<string, GIEntry> = {
   "dondurma": { gi: 51, confidence: 0.90, source: "Sydney GI DB", carb_per_100g: 24, fat_per_100g: 11, cal_per_100g: 207, category: "dairy" },
   "ice cream": { gi: 51, confidence: 0.90, source: "Sydney GI DB", category: "dairy" },
 
-  // ════════════════════════════════════════════════
-  // YAĞLAR & SOSLAR — Fats & Condiments
-  // ════════════════════════════════════════════════
-
+  // ── YAĞLAR & SOSLAR / FATS & CONDIMENTS ───────
   "zeytin yağı": { gi: 0, confidence: 0.99, source: "General", fat_per_100g: 100, cal_per_100g: 884, category: "fat" },
   "olive oil": { gi: 0, confidence: 0.99, source: "General", category: "fat" },
   "ayçiçek yağı": { gi: 0, confidence: 0.99, source: "General", fat_per_100g: 100, cal_per_100g: 884, category: "fat" },
@@ -552,10 +503,7 @@ export const GI_DATABASE: Record<string, GIEntry> = {
   "acı sos": { gi: 5, confidence: 0.88, source: "TürKomp", category: "condiment" },
   "hot sauce": { gi: 5, confidence: 0.88, source: "Sydney GI DB", category: "condiment" },
 
-  // ════════════════════════════════════════════════
-  // FINDIK & TOHUMLAR — Nuts & Seeds
-  // ════════════════════════════════════════════════
-
+  // ── FINDIK & TOHUMLAR / NUTS & SEEDS ──────────
   "badem": { gi: 0, confidence: 0.97, source: "Sydney GI DB", carb_per_100g: 22, fiber_per_100g: 12.5, fat_per_100g: 50, protein_per_100g: 21, cal_per_100g: 579, category: "nut" },
   "almond": { gi: 0, confidence: 0.97, source: "Sydney GI DB", category: "nut" },
   "ceviz": { gi: 15, confidence: 0.92, source: "Sydney GI DB", carb_per_100g: 14, fiber_per_100g: 6.7, fat_per_100g: 65, protein_per_100g: 15, cal_per_100g: 654, category: "nut" },
@@ -581,10 +529,7 @@ export const GI_DATABASE: Record<string, GIEntry> = {
   "susam": { gi: 35, confidence: 0.82, source: "TürKomp", carb_per_100g: 23, fiber_per_100g: 11.8, fat_per_100g: 50, protein_per_100g: 18, cal_per_100g: 573, category: "seed" },
   "sesame": { gi: 35, confidence: 0.82, source: "Sydney GI DB", category: "seed" },
 
-  // ════════════════════════════════════════════════
-  // İÇECEKLER — Beverages
-  // ════════════════════════════════════════════════
-
+  // ── İÇECEKLER / BEVERAGES ─────────────────────
   "çay": { gi: 0, confidence: 0.99, source: "General", cal_per_100g: 1, category: "beverage" },
   "tea": { gi: 0, confidence: 0.99, source: "General", category: "beverage" },
   "kahve": { gi: 0, confidence: 0.99, source: "General", cal_per_100g: 1, category: "beverage" },
@@ -605,10 +550,7 @@ export const GI_DATABASE: Record<string, GIEntry> = {
   "boza": { gi: 60, confidence: 0.78, source: "TürKomp", carb_per_100g: 13, cal_per_100g: 55, category: "beverage" },
   "salep": { gi: 55, confidence: 0.75, source: "TürKomp", carb_per_100g: 20, cal_per_100g: 90, category: "beverage" },
 
-  // ════════════════════════════════════════════════
-  // TATLILAR & ATIŞTIRMAlik — Snacks & Sweets
-  // ════════════════════════════════════════════════
-
+  // ── TATLILAR & ATIŞTIRIMLAR / SNACKS & SWEETS ─
   "çikolata": { gi: 40, confidence: 0.90, source: "Sydney GI DB", carb_per_100g: 60, fat_per_100g: 30, cal_per_100g: 546, category: "sweet" },
   "chocolate": { gi: 40, confidence: 0.90, source: "Sydney GI DB", category: "sweet" },
   "bitter çikolata": { gi: 23, confidence: 0.92, source: "Sydney GI DB", carb_per_100g: 46, fat_per_100g: 43, cal_per_100g: 598, category: "sweet" },
@@ -630,7 +572,6 @@ export const GI_DATABASE: Record<string, GIEntry> = {
   "waffle": { gi: 76, confidence: 0.85, source: "Sydney GI DB", category: "sweet" },
   "pancake": { gi: 67, confidence: 0.88, source: "Sydney GI DB", category: "sweet" },
   "muffin": { gi: 62, confidence: 0.88, source: "Sydney GI DB", category: "sweet" },
-  "bal kabağı": { gi: 58, confidence: 0.80, source: "TürKomp", category: "sweet" },
   "granola": { gi: 45, confidence: 0.88, source: "Sydney GI DB", carb_per_100g: 60, fiber_per_100g: 6.6, fat_per_100g: 20, cal_per_100g: 471, category: "snack" },
   "muesli": { gi: 57, confidence: 0.88, source: "Sydney GI DB", category: "snack" },
   "cornflakes": { gi: 81, confidence: 0.95, source: "Sydney GI DB", carb_per_100g: 84, fiber_per_100g: 3.0, cal_per_100g: 357, category: "snack" },
@@ -646,15 +587,14 @@ export const GI_DATABASE: Record<string, GIEntry> = {
   "akçaağaç şurubu": { gi: 54, confidence: 0.88, source: "Sydney GI DB", category: "sweetener" },
   "stevia": { gi: 0, confidence: 0.99, source: "General", category: "sweetener" },
 
-  // ════════════════════════════════════════════════
-  // AKDENIZ & DÜNYA MUTFAKLARI — World Cuisines
-  // ════════════════════════════════════════════════
-
+  // ── DÜNYA MUTFAKLARI / WORLD CUISINES ──────────
   "falafel": { gi: 42, confidence: 0.82, source: "Sydney GI DB", category: "mediterranean" },
   "fattoush": { gi: 38, confidence: 0.78, source: "Sydney GI DB", category: "mediterranean" },
   "shakshuka": { gi: 20, confidence: 0.80, source: "Sydney GI DB", category: "mediterranean" },
   "tzatziki": { gi: 15, confidence: 0.88, source: "Sydney GI DB", category: "mediterranean" },
   "baba ganoush": { gi: 15, confidence: 0.82, source: "Sydney GI DB", category: "mediterranean" },
+  "tabbouleh": { gi: 42, confidence: 0.80, source: "Sydney GI DB", category: "mediterranean" },
+  "taboule": { gi: 42, confidence: 0.80, source: "Sydney GI DB", category: "mediterranean" },
   "shawarma": { gi: 30, confidence: 0.80, source: "Sydney GI DB", category: "middle_eastern" },
   "dal": { gi: 32, confidence: 0.90, source: "Sydney GI DB", category: "indian" },
   "biryani": { gi: 58, confidence: 0.82, source: "Sydney GI DB", category: "indian" },
@@ -679,9 +619,7 @@ export const GI_DATABASE: Record<string, GIEntry> = {
   "guacamole": { gi: 10, confidence: 0.90, source: "Sydney GI DB", category: "mexican" },
 };
 
-// ─────────────────────────────────────────────────────
-// Lookup Function — multi-strategy matching
-// ─────────────────────────────────────────────────────
+// ── Lookup Functions ───────────────────────────────
 export function lookupGI(name: string): GIEntry | null {
   const lower = name.toLowerCase().trim();
   if (GI_DATABASE[lower]) return GI_DATABASE[lower];
@@ -700,7 +638,6 @@ export function lookupGI(name: string): GIEntry | null {
   return null;
 }
 
-// Single ingredient lookup — returns full nutrition data
 export function lookupIngredient(name: string): (GIEntry & { name: string }) | null {
   const lower = name.toLowerCase().trim();
   const entry = lookupGI(lower);
@@ -708,13 +645,11 @@ export function lookupIngredient(name: string): (GIEntry & { name: string }) | n
   return { ...entry, name };
 }
 
-// Get all entries by category
 export function getByCategory(category: string): Record<string, GIEntry> {
   return Object.fromEntries(
     Object.entries(GI_DATABASE).filter(([, v]) => v.category === category)
   );
 }
 
-// Legacy export
 export const TURKISH_GI_DATA: Record<string, { gi: number; confidence: number; source: string }> =
   Object.fromEntries(Object.entries(GI_DATABASE).map(([k, v]) => [k, { gi: v.gi, confidence: v.confidence, source: v.source }]));
