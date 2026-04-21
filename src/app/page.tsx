@@ -7,10 +7,11 @@ import { LangSwitcher } from "@/components/lang-switcher";
 import { SingleIngredientAnalyzer } from "@/components/single-ingredient";
 import { QRMenuAnalyzer } from "@/components/qr-menu-analyzer";
 import { DrinkAnalyzer } from "@/components/drink-analyzer";
+import { MealPlanGenerator } from "@/components/meal-plan";
 import { getProfile, type UserProfile } from "@/lib/storage";
 import { detectBrowserLang, type Lang } from "@/lib/i18n";
 
-type View = "setup" | "analyze" | "history" | "ingredient" | "menu" | "drink";
+type View = "setup" | "analyze" | "history" | "ingredient" | "menu" | "drink" | "plan";
 
 export default function Home() {
   const [lang, setLang] = useState<Lang>("en");
@@ -53,6 +54,7 @@ export default function Home() {
     { key: "drink",      icon: "🥤", label: "Drink" },
     { key: "ingredient", icon: "🔬", label: "Search" },
     { key: "menu",       icon: "🍽️", label: "Menu" },
+    { key: "plan",       icon: "🗓️", label: "Plan" },
     { key: "history",    icon: "📊", label: "History" },
   ] as { key: View; icon: string; label: string }[];
 
@@ -72,8 +74,8 @@ export default function Home() {
           <LangSwitcher current={lang} onChange={setLang} />
         </div>
 
-        {/* Nav tabs — 5 tabs */}
-        <div className="max-w-2xl mx-auto px-4 pb-2 grid grid-cols-5 gap-1">
+        {/* Nav tabs — 6 tabs */}
+        <div className="max-w-2xl mx-auto px-4 pb-2 grid grid-cols-6 gap-1">
           {TABS.map(tab => (
             <button key={tab.key} onClick={() => setView(tab.key)}
               className={`py-1.5 rounded-lg text-xs font-medium transition-all ${
@@ -82,7 +84,7 @@ export default function Home() {
                   : "bg-gray-800/50 text-gray-500 hover:text-gray-300"
               }`}>
               <div className="text-sm">{tab.icon}</div>
-              <div className="text-xs">{tab.label}</div>
+              <div className="text-[10px]">{tab.label}</div>
             </button>
           ))}
         </div>
@@ -105,6 +107,9 @@ export default function Home() {
         )}
         {view === "menu" && (
           <QRMenuAnalyzer lang={lang} userType={profile?.userType || "healthy"} />
+        )}
+        {view === "plan" && (
+          <MealPlanGenerator lang={lang} userType={profile?.userType || "healthy"} />
         )}
         {view === "history" && profile && (
           <HistoryDashboard
