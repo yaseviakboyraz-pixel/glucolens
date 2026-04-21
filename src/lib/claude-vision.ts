@@ -17,6 +17,17 @@ Rules:
 - For pure proteins/fats (meat, fish, eggs, cheese, oil), set glycemic_index to 0
 - gi_confidence: 0.9+ for well-known items, 0.7-0.9 for estimated
 
+For timing_actions, provide SPECIFIC and ACTIONABLE nudges:
+- pre_meal: 2-3 actions user can do RIGHT NOW before eating (e.g. "Walk briskly for 10 minutes — reduces glucose peak by ~20%")
+- post_meal: 2-3 actions for AFTER eating (e.g. "Take a 15-minute walk within 30 minutes of finishing")
+- meal_mods: 2-3 meal modifications (e.g. "Squeeze lemon on rice — lowers GI by 10-15%")
+- swap_suggestion: ONE specific lower-GL alternative dish
+
+For glucose_curve, provide realistic peak timing based on total GL:
+- low GL (<10): gentle_rise, peak ~45min, baseline ~90min
+- medium GL (10-20): moderate_rise, peak ~60-75min, baseline ~2h
+- high GL (>20): sharp_rise, peak ~30-45min, baseline ~2.5-3h
+
 Return exactly this JSON structure:
 {
   "food_items": [{
@@ -42,11 +53,61 @@ Return exactly this JSON structure:
   "glucose_risk": "medium",
   "glucose_peak_estimate": "Blood sugar may peak at ~140-160 mg/dL within 1-1.5 hours",
   "glucose_curve_description": "Moderate rise, returning to baseline within 2 hours",
+  "glucose_curve": {
+    "shape": "moderate_rise",
+    "peak_minutes": 70,
+    "baseline_minutes": 120,
+    "peak_level": "moderate",
+    "points": [
+      {"minutes": 0, "level": 0},
+      {"minutes": 20, "level": 25},
+      {"minutes": 45, "level": 65},
+      {"minutes": 70, "level": 100},
+      {"minutes": 100, "level": 60},
+      {"minutes": 120, "level": 20},
+      {"minutes": 150, "level": 0}
+    ]
+  },
+  "timing_actions": {
+    "pre_meal": [
+      "Walk briskly for 10 minutes — reduces glucose peak by ~20%",
+      "Eat a small salad or vegetables first — slows carb absorption by ~30%"
+    ],
+    "post_meal": [
+      "Take a 15-minute walk within 30 minutes of finishing — lowers peak by ~25-30%",
+      "Avoid sitting for at least 20 minutes after eating"
+    ],
+    "meal_mods": [
+      "Squeeze lemon juice on the rice — lowers GI by 10-15%",
+      "Add a side of yogurt — protein slows glucose absorption"
+    ],
+    "swap_suggestion": "Replace white rice with bulgur — reduces GL by ~35%"
+  },
   "recommendations": ["Adding lemon juice or vinegar can lower GI by 10-15%"],
   "warnings": [],
   "confidence_score": 0.82,
   "hidden_ingredients_note": null
 }`;
+
+export interface GlucoseCurvePoint {
+  minutes: number;
+  level: number;
+}
+
+export interface GlucoseCurve {
+  shape: "gentle_rise" | "moderate_rise" | "sharp_rise";
+  peak_minutes: number;
+  baseline_minutes: number;
+  peak_level: "low" | "moderate" | "high";
+  points: GlucoseCurvePoint[];
+}
+
+export interface TimingActions {
+  pre_meal: string[];
+  post_meal: string[];
+  meal_mods: string[];
+  swap_suggestion: string;
+}
 
 export interface FoodItem {
   name: string;
@@ -74,19 +135,52 @@ export interface MealAnalysis {
   glucose_risk: "low" | "medium" | "high";
   glucose_peak_estimate: string;
   glucose_curve_description: string;
+  glucose_curve?: GlucoseCurve;
+  timing_actions?: TimingActions;
   recommendations: string[];
   warnings: string[];
   confidence_score: number;
   hidden_ingredients_note?: string;
 }
 
-// Detect image type from base64 header
 function detectMediaType(base64: string): "image/jpeg" | "image/png" | "image/webp" | "image/gif" {
   if (base64.startsWith("/9j/")) return "image/jpeg";
   if (base64.startsWith("iVBOR")) return "image/png";
   if (base64.startsWith("UklGR")) return "image/webp";
   if (base64.startsWith("R0lGO")) return "image/gif";
-  return "image/jpeg"; // fallback
+  return "image/jpeg";
+}
+
+// Generate fallback curve if Claude doesn't return one
+function generateFallbackCurve(gl: number): GlucoseCurve {
+  if (gl < 10) {
+    return {
+      shape: "gentle_rise", peak_minutes: 45, baseline_minutes: 90, peak_level: "low",
+      points: [
+        { minutes: 0, level: 0 }, { minutes: 15, level: 20 }, { minutes: 30, level: 55 },
+        { minutes: 45, level: 100 }, { minutes: 60, level: 75 }, { minutes: 75, level: 45 },
+        { minutes: 90, level: 10 }, { minutes: 105, level: 0 },
+      ],
+    };
+  } else if (gl <= 20) {
+    return {
+      shape: "moderate_rise", peak_minutes: 70, baseline_minutes: 130, peak_level: "moderate",
+      points: [
+        { minutes: 0, level: 0 }, { minutes: 15, level: 20 }, { minutes: 35, level: 60 },
+        { minutes: 70, level: 100 }, { minutes: 90, level: 70 }, { minutes: 110, level: 35 },
+        { minutes: 130, level: 10 }, { minutes: 150, level: 0 },
+      ],
+    };
+  } else {
+    return {
+      shape: "sharp_rise", peak_minutes: 40, baseline_minutes: 170, peak_level: "high",
+      points: [
+        { minutes: 0, level: 0 }, { minutes: 15, level: 45 }, { minutes: 30, level: 85 },
+        { minutes: 40, level: 100 }, { minutes: 60, level: 80 }, { minutes: 90, level: 50 },
+        { minutes: 130, level: 25 }, { minutes: 170, level: 0 },
+      ],
+    };
+  }
 }
 
 export async function analyzeMealImage(
@@ -96,16 +190,16 @@ export async function analyzeMealImage(
 ): Promise<MealAnalysis> {
   const profileNote =
     userType === "diabetic"
-      ? "\n\nUSER PROFILE: Diabetic patient. Warn clearly for GL > 15. Emphasize high-risk items."
+      ? "\n\nUSER PROFILE: Diabetic patient. Warn clearly for GL > 15. Emphasize high-risk items. Make timing_actions more urgent."
       : userType === "pre_diabetic"
-      ? "\n\nUSER PROFILE: Pre-diabetic. Warn for GL > 18. Suggest lower-GI alternatives."
-      : "\n\nUSER PROFILE: Healthy individual. Provide general wellness guidance.";
+      ? "\n\nUSER PROFILE: Pre-diabetic. Warn for GL > 18. Suggest lower-GI alternatives in timing_actions."
+      : "\n\nUSER PROFILE: Healthy individual. Provide general wellness guidance in timing_actions.";
 
   const mediaType = detectMediaType(imageBase64);
 
   const response = await client.messages.create({
     model: "claude-sonnet-4-6",
-    max_tokens: 2000,
+    max_tokens: 2500,
     system: SYSTEM_PROMPT + profileNote,
     messages: [{
       role: "user",
@@ -124,7 +218,6 @@ export async function analyzeMealImage(
 
   let raw = (response.content[0] as { type: string; text: string }).text.trim();
 
-  // Strip markdown code fences
   if (raw.startsWith("```")) {
     const parts = raw.split("```");
     raw = parts[1] || parts[0];
@@ -138,7 +231,6 @@ export async function analyzeMealImage(
     throw new Error("AI returned invalid JSON. Please try again.");
   }
 
-  // Validate required fields
   if (!data.food_items || !Array.isArray(data.food_items)) {
     throw new Error("AI response missing food items. Please try again.");
   }
@@ -173,6 +265,11 @@ export async function analyzeMealImage(
   data.glucose_risk =
     data.total_glycemic_load < 10 ? "low" :
     data.total_glycemic_load <= 20 ? "medium" : "high";
+
+  // Ensure curve exists
+  if (!data.glucose_curve) {
+    data.glucose_curve = generateFallbackCurve(data.total_glycemic_load);
+  }
 
   return data;
 }

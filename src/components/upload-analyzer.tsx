@@ -2,6 +2,7 @@
 import { useState, useRef, useCallback } from "react";
 import { GlucoseMeter } from "./glucose-meter";
 import { BarcodeScanner } from "./barcode-scanner";
+import { TimingNudges } from "./timing-nudges";
 import { t, type Lang } from "@/lib/i18n";
 import { saveMeal } from "@/lib/storage";
 import type { MealAnalysis } from "@/lib/claude-vision";
@@ -503,6 +504,9 @@ export function UploadAnalyzer({ userType = "healthy", lang, onAnalysisComplete 
               🔍 {result.hidden_ingredients_note}
             </div>
           )}
+
+          {/* Timing Nudges + Glucose Curve */}
+          <TimingNudges analysis={result} />
 
           {result.recommendations.length > 0 && (
             <div className="bg-teal-950 border border-teal-500/30 rounded-xl p-4">
