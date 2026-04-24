@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import { saveProfile, getDefaultProfile, getGLTargets, type UserType } from "@/lib/storage";
+import { saveProfile, getGLTargets, type UserProfile, type UserType } from "@/lib/storage";
 import type { Lang } from "@/lib/i18n";
 
 interface Props {
@@ -22,9 +22,9 @@ export function UserProfileSetup({ lang, onComplete }: Props) {
   const targets = getGLTargets(userType);
 
   function handleComplete() {
-    const profile = {
-      ...getDefaultProfile(),
-      name: name.trim() || undefined,
+    const targets = getGLTargets(userType);
+    const profile: UserProfile = {
+      name: name.trim() || "User",
       userType,
       dailyGLTarget: targets.daily,
       setupComplete: true,
@@ -107,7 +107,7 @@ export function UserProfileSetup({ lang, onComplete }: Props) {
             <div className="bg-gray-900 rounded-xl p-4 border border-gray-800">
               <div className="text-sm text-gray-400">
                 Your daily GL target: <span className="text-teal-400 font-bold">{targets.daily}</span>
-                <span className="text-gray-600 ml-1">· Max per meal: GL {targets.mealMax}</span>
+                <span className="text-gray-600 ml-1">· Max per meal: GL {targets.meal}</span>
               </div>
             </div>
 

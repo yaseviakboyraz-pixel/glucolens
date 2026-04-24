@@ -36,11 +36,11 @@ export function HistoryDashboard({ profile, lang, onNewMeal, onEditProfile }: Pr
     setMeals(m);
     setTodayStats(getTodayStats());
     setWeeklyAvg(getWeeklyAvgGL());
-    setStreak(getStreak(profile.dailyGLTarget));
+    setStreak(getStreak());
     setActivityGLReduction(getTodayActivityGL());
   }
 
-  const insights = generateInsights(todayStats, profile);
+  const insights = generateInsights(meals, profile.userType);
 
   const riskColor = (risk: string) =>
     risk === "low" ? "text-green-400" : risk === "medium" ? "text-amber-400" : "text-red-400";
@@ -53,7 +53,7 @@ export function HistoryDashboard({ profile, lang, onNewMeal, onEditProfile }: Pr
   }
 
   const today = new Date().toISOString().slice(0, 10);
-  const todayMeals = meals.filter((m) => m.timestamp.slice(0, 10) === today);
+  const todayMeals = meals.filter((m) => new Date(m.timestamp).toISOString().slice(0, 10) === today);
   const displayMeals = activeTab === "today" ? todayMeals : meals;
 
   // Net GL after activity
@@ -91,13 +91,8 @@ export function HistoryDashboard({ profile, lang, onNewMeal, onEditProfile }: Pr
 
       {/* Insights */}
       {insights.map((insight, i) => (
-        <div key={i} className={`rounded-xl p-3 text-sm border ${
-          insight.type === "success" ? "bg-green-950 border-green-500/30 text-green-300"
-          : insight.type === "warning" ? "bg-amber-950 border-amber-500/30 text-amber-300"
-          : "bg-blue-950 border-blue-500/30 text-blue-300"
-        }`}>
-          {insight.type === "success" ? "✅ " : insight.type === "warning" ? "⚠️ " : "ℹ️ "}
-          {insight.message}
+        <div key={i} className="rounded-xl p-3 text-sm border bg-blue-950 border-blue-500/30 text-blue-300">
+          {insight}
         </div>
       ))}
 
@@ -133,7 +128,7 @@ export function HistoryDashboard({ profile, lang, onNewMeal, onEditProfile }: Pr
       {/* Wellness Tab */}
       {activeTab === "wellness" && (
         <div className="space-y-4">
-          <WaterTracker dailyTarget={profile.dailyWaterTarget || 2000} />
+          <WaterTracker dailyTarget={2000} />
           <ActivityTracker />
           <WeeklyReportCard />
         </div>

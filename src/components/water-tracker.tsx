@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
-import { getTodayWater, addWater, removeWater, type WaterRecord } from "@/lib/storage";
+import { getTodayWater, addWater, getWaterLogs, removeWater } from "@/lib/storage";
 
 interface Props {
   dailyTarget: number; // ml
@@ -9,22 +9,29 @@ interface Props {
 const QUICK_AMOUNTS = [150, 200, 250, 500];
 
 export function WaterTracker({ dailyTarget }: Props) {
-  const [water, setWater] = useState<WaterRecord>({ date: "", totalMl: 0, entries: [] });
+  const [totalMl, setTotalMl] = useState(0);
 
   useEffect(() => {
-    setWater(getTodayWater());
+    setTotalMl(getTodayWater());
   }, []);
 
-  const pct = Math.min(100, Math.round((water.totalMl / dailyTarget) * 100));
-  const glasses = Math.floor(water.totalMl / 250);
+  const pct = Math.min(100, Math.round((totalMl / dailyTarget) * 100));
+  const glasses = Math.floor(totalMl / 250);
 
   function handleAdd(ml: number) {
-    setWater(addWater(ml));
+    addWater(ml);
+    setTotalMl(getTodayWater());
   }
 
   function handleRemove() {
-    if (water.totalMl === 0) return;
-    setWater(removeWater(250));
+    if (totalMl === 0) return;
+    const logs = getWaterLogs();
+    const todayStr = new Date().toDateString();
+    const todayLogs = logs.filter(l => new Date(l.timestamp).toDateString() === todayStr);
+    if (todayLogs.length > 0) {
+      removeWater(todayLogs[0].id);
+      setTotalMl(getTodayWater());
+    }
   }
 
   const barColor = pct >= 100 ? "bg-teal-500" : pct >= 60 ? "bg-blue-500" : "bg-blue-700";
@@ -36,7 +43,7 @@ export function WaterTracker({ dailyTarget }: Props) {
           💧 Water Today
         </h3>
         <span className={`text-sm font-bold ${pct >= 100 ? "text-teal-400" : "text-blue-400"}`}>
-          {water.totalMl} / {dailyTarget} ml
+          {totalMl} / {dailyTarget} ml
         </span>
       </div>
 
@@ -70,7 +77,7 @@ export function WaterTracker({ dailyTarget }: Props) {
         ))}
         <button
           onClick={handleRemove}
-          disabled={water.totalMl === 0}
+          disabled={totalMl === 0}
           className="px-3 py-2 rounded-lg bg-gray-800 hover:bg-red-900/50 text-gray-500 hover:text-red-400 text-xs transition-all border border-gray-700 disabled:opacity-30"
         >
           undo

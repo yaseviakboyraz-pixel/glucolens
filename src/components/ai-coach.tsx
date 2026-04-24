@@ -26,7 +26,7 @@ export function AICoach() {
     const contextPrompt = `You are GlucoLens AI Coach — a friendly, knowledgeable nutrition coach specializing in blood sugar management. Be concise, warm, and actionable.
 
 User profile: ${profile?.userType || "healthy"}, daily GL target: ${profile?.dailyGLTarget || 100}
-Weekly stats: avg daily GL ${report.avgDailyGL}, ${report.totalMeals} meals logged, ${report.highRiskMeals} high-risk meals, ${report.streak} day streak
+Weekly stats: avg daily GL ${report?.avgDailyGL ?? 0}, ${report?.totalMeals ?? 0} meals logged, ${report?.highRiskMeals ?? 0} high-risk meals, ${report?.streak ?? 0} day streak
 Recent meals: ${meals.slice(0, 3).map(m => m.analysis.food_items.map(f => f.name_tr || f.name).join("+")).join(" | ")}
 
 Generate a brief, personalized greeting (2-3 sentences max). Mention one specific insight from their data. End with an offer to help.`;
@@ -56,7 +56,7 @@ Generate a brief, personalized greeting (2-3 sentences max). Mention one specifi
   }
 
   function getDefaultGreeting(report: ReturnType<typeof getWeeklyReport>) {
-    if (report.totalMeals === 0) {
+    if (!report || report.totalMeals === 0) {
       return "Hi! I'm your GlucoLens AI Coach 👋 Start by analyzing your first meal and I'll give you personalized insights!";
     }
     if (report.avgDailyGL > 80) {
@@ -81,8 +81,8 @@ Generate a brief, personalized greeting (2-3 sentences max). Mention one specifi
 
 User context:
 - Profile: ${profile?.userType || "healthy"}, daily GL target: ${profile?.dailyGLTarget || 100}
-- This week: avg GL ${report.avgDailyGL}, ${report.totalMeals} meals, ${report.highRiskMeals} high-risk, streak: ${report.streak} days
-- Top foods: ${report.topFoods.join(", ")}
+- This week: avg GL ${report?.avgDailyGL ?? 0}, ${report?.totalMeals ?? 0} meals, ${report?.highRiskMeals ?? 0} high-risk, streak: ${report?.streak ?? 0} days
+- Top foods: ${report?.topFoods?.join(", ") ?? "none yet"}
 - Recent meals GL: ${meals.slice(0, 5).map(m => m.analysis.total_glycemic_load).join(", ")}
 
 Previous conversation: ${messages.slice(-4).map(m => `${m.role}: ${m.content}`).join("\n")}
