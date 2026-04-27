@@ -6,18 +6,18 @@
 - Environments: .env.local
 
   Creating an optimized production build ...
-Ô£ô Compiled successfully in 10.2s
+Ô£ô Compiled successfully in 14.9s
   Running TypeScript ...
 Failed to type check.
 
-./src/components/history-dashboard.tsx:95:19
-Type error: Property 'type' does not exist on type 'string'.
+./src/components/single-ingredient.tsx:64:20
+Type error: Type '{ name: string; name_tr: string; portion_g: number; total_sugar_g: number; added_sugar_g: number; carbohydrate_g: number; fiber_g: number; net_carb_g: number; glycemic_index: number; glycemic_load: number; gi_confidence: number; cooking_method: string; }' is missing the following properties from type 'FoodItem': protein_g, fat_g, calories
 
-  93 |       {insights.map((insight, i) => (
-  94 |         <div key={i} className={`rounded-xl p-3 text-sm border ${
-> 95 |           insight.type === "success" ? "bg-green-950 border-green-500/30 text-green-300"
-     |                   ^
-  96 |           : insight.type === "warning" ? "bg-amber-950 border-amber-500/30 text-amber-300"
-  97 |           : "bg-blue-950 border-blue-500/30 text-blue-300"
-  98 |         }`}>
+  62 |     const risk: "low" | "medium" | "high" = p.gl < 10 ? "low" : p.gl <= 20 ? "medium" : "h...
+  63 |     const analysis: MealAnalysis = {
+> 64 |       food_items: [{
+     |                    ^
+  65 |         name: query, name_tr: query, portion_g: portionG,
+  66 |         total_sugar_g: 0, added_sugar_g: 0,
+  67 |         carbohydrate_g: p.carbs, fiber_g: p.fiber, net_carb_g: p.netCarb,
 Next.js build worker exited with code: 1 and signal: null

@@ -141,11 +141,17 @@ export function UploadAnalyzer({ userType = "healthy", lang, onAnalysisComplete 
         glycemic_load: gl,
         gi_confidence: 0.75,
         cooking_method: "packaged",
+        protein_g: 0,
+        fat_g: parseFloat(((p as {fat_100g?: number}).fat_100g || 0) * ratio + ""),
+        calories: parseFloat(((p.calories_100g || 0) * ratio).toFixed(0)),
       }],
       total_sugar_g: sugars,
       total_added_sugar_g: 0,
       total_net_carb_g: netCarb,
       total_fiber_g: fiber,
+      total_protein_g: 0,
+      total_fat_g: 0,
+      total_calories: parseFloat(((p.calories_100g || 0) * ratio).toFixed(0)),
       avg_glycemic_index: gi,
       total_glycemic_load: gl,
       glucose_risk: risk,
@@ -460,6 +466,9 @@ export function UploadAnalyzer({ userType = "healthy", lang, onAnalysisComplete 
               { label: tx.total_sugar, value: `${result.total_sugar_g}g`, color: "text-amber-400" },
               { label: tx.net_carbs, value: `${result.total_net_carb_g}g`, color: "text-blue-400" },
               { label: tx.fiber, value: `${result.total_fiber_g}g`, color: "text-green-400" },
+              { label: "Protein", value: `${result.total_protein_g ?? 0}g`, color: "text-purple-400" },
+              { label: "Fat", value: `${result.total_fat_g ?? 0}g`, color: "text-orange-400" },
+              { label: "Calories", value: `${result.total_calories ?? 0}`, color: "text-rose-400" },
             ].map((s) => (
               <div key={s.label} className="bg-gray-900 rounded-xl p-3 text-center border border-gray-800">
                 <div className={`text-xl font-bold ${s.color}`}>{s.value}</div>

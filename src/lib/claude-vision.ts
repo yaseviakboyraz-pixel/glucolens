@@ -39,6 +39,9 @@ Return exactly this JSON structure:
     "carbohydrate_g": 28.0,
     "fiber_g": 3.0,
     "net_carb_g": 25.0,
+    "protein_g": 12.0,
+    "fat_g": 8.0,
+    "calories": 235,
     "glycemic_index": 52,
     "glycemic_load": 13.0,
     "gi_confidence": 0.85,
@@ -48,6 +51,9 @@ Return exactly this JSON structure:
   "total_added_sugar_g": 1.5,
   "total_net_carb_g": 45.0,
   "total_fiber_g": 6.0,
+  "total_protein_g": 28.0,
+  "total_fat_g": 14.0,
+  "total_calories": 420,
   "avg_glycemic_index": 55,
   "total_glycemic_load": 24.8,
   "glucose_risk": "medium",
@@ -118,6 +124,9 @@ export interface FoodItem {
   carbohydrate_g: number;
   fiber_g: number;
   net_carb_g: number;
+  protein_g: number;
+  fat_g: number;
+  calories: number;
   glycemic_index: number;
   glycemic_load: number;
   gi_confidence: number;
@@ -130,6 +139,9 @@ export interface MealAnalysis {
   total_added_sugar_g: number;
   total_net_carb_g: number;
   total_fiber_g: number;
+  total_protein_g: number;
+  total_fat_g: number;
+  total_calories: number;
   avg_glycemic_index: number;
   total_glycemic_load: number;
   glucose_risk: "low" | "medium" | "high";
@@ -261,6 +273,15 @@ export async function analyzeMealImage(
   );
   data.total_net_carb_g = parseFloat(
     data.food_items.reduce((s, i) => s + (i.net_carb_g || 0), 0).toFixed(1)
+  );
+  data.total_protein_g = parseFloat(
+    data.food_items.reduce((s, i) => s + (i.protein_g || 0), 0).toFixed(1)
+  );
+  data.total_fat_g = parseFloat(
+    data.food_items.reduce((s, i) => s + (i.fat_g || 0), 0).toFixed(1)
+  );
+  data.total_calories = parseFloat(
+    data.food_items.reduce((s, i) => s + (i.calories || 0), 0).toFixed(0)
   );
   data.glucose_risk =
     data.total_glycemic_load < 10 ? "low" :
