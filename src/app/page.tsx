@@ -8,8 +8,10 @@ import { SingleIngredientAnalyzer } from "@/components/single-ingredient";
 import { QRMenuAnalyzer } from "@/components/qr-menu-analyzer";
 import { DrinkAnalyzer } from "@/components/drink-analyzer";
 import { MealPlanGenerator } from "@/components/meal-plan";
-import { getProfile, type UserProfile } from "@/lib/storage";
+import { AuthScreen } from "@/components/auth-screen";
+import { getProfile, saveProfile, type UserProfile } from "@/lib/storage";
 import { detectBrowserLang, type Lang } from "@/lib/i18n";
+import { onAuthStateChange, signOut, type User } from "@/lib/auth";
 
 type View = "setup" | "analyze" | "history" | "ingredient" | "menu" | "drink" | "plan";
 
@@ -18,6 +20,8 @@ export default function Home() {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [view, setView] = useState<View>("analyze");
   const [loaded, setLoaded] = useState(false);
+  const [user, setUser] = useState<User | null>(null);
+  const [showAuth, setShowAuth] = useState(false);
 
   useEffect(() => {
     setLang(detectBrowserLang());
@@ -25,6 +29,22 @@ export default function Home() {
     setProfile(p);
     if (!p || !p.setupComplete) setView("setup");
     setLoaded(true);
+
+    // Auth state listener
+    const subscription = onAuthStateChange((u) => {
+      setUser(u);
+      if (u) {
+        // Sync user name to profile if available
+        const currentProfile = getProfile();
+        if (currentProfile && u.user_metadata?.name && !currentProfile.name) {
+          const updated = { ...currentProfile, name: u.user_metadata.name };
+          saveProfile(updated);
+          setProfile(updated);
+        }
+      }
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
 
   function refreshProfile() {
@@ -37,6 +57,16 @@ export default function Home() {
       <div className="min-h-screen bg-gray-950 flex items-center justify-center">
         <div className="text-teal-500 text-2xl animate-pulse">●</div>
       </div>
+    );
+  }
+
+  // Auth screen
+  if (showAuth) {
+    return (
+      <AuthScreen onSuccess={() => {
+        setShowAuth(false);
+        refreshProfile();
+      }} />
     );
   }
 
@@ -71,10 +101,31 @@ export default function Home() {
               <span className="text-xs text-gray-600 hidden sm:block">· {profile.name}</span>
             )}
           </div>
-          <LangSwitcher current={lang} onChange={setLang} />
+          <div className="flex items-center gap-2">
+            {/* Auth button */}
+            {user ? (
+              <button onClick={() => signOut().catch(console.error)}
+                className="text-xs text-gray-500 hover:text-gray-300 transition-colors px-2 py-1 rounded-lg border border-gray-800">
+                Sign out
+              </button>
+            ) : (
+              <button onClick={() => setShowAuth(true)}
+                className="text-xs text-teal-400 hover:text-teal-300 transition-colors px-2 py-1 rounded-lg border border-teal-800 bg-teal-950/30">
+                Sign in
+              </button>
+            )}
+            <LangSwitcher current={lang} onChange={setLang} />
+          </div>
         </div>
 
-        {/* Nav tabs — 6 tabs */}
+        {/* Cloud sync indicator */}
+        {user && (
+          <div className="max-w-2xl mx-auto px-4 pb-1">
+            <p className="text-xs text-green-500">☁️ Synced · {user.email}</p>
+          </div>
+        )}
+
+        {/* Nav tabs */}
         <div className="max-w-2xl mx-auto px-4 pb-2 grid grid-cols-6 gap-1">
           {TABS.map(tab => (
             <button key={tab.key} onClick={() => setView(tab.key)}
