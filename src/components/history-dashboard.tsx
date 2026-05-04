@@ -47,8 +47,16 @@ export function HistoryDashboard({ profile, lang, onNewMeal, onEditProfile }: Pr
   const riskBg = (risk: string) =>
     risk === "low" ? "bg-green-500" : risk === "medium" ? "bg-amber-500" : "bg-red-500";
 
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+
   function handleDelete(id: string) {
-    deleteMeal(id);
+    setConfirmDeleteId(id);
+  }
+
+  function confirmDelete() {
+    if (!confirmDeleteId) return;
+    deleteMeal(confirmDeleteId);
+    setConfirmDeleteId(null);
     refresh();
   }
 
@@ -61,6 +69,32 @@ export function HistoryDashboard({ profile, lang, onNewMeal, onEditProfile }: Pr
 
   return (
     <div className="max-w-xl mx-auto space-y-4">
+      {/* Delete confirmation dialog */}
+      {confirmDeleteId && (
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center px-6">
+          <div className="bg-gray-900 border border-gray-700 rounded-2xl p-6 w-full max-w-sm space-y-4">
+            <div className="text-center">
+              <div className="text-3xl mb-2">🗑️</div>
+              <h3 className="text-white font-semibold text-lg">Delete this meal?</h3>
+              <p className="text-gray-500 text-sm mt-1">
+                This will permanently remove the meal from your history.
+              </p>
+            </div>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setConfirmDeleteId(null)}
+                className="flex-1 py-3 rounded-xl text-gray-300 bg-gray-800 hover:bg-gray-700 font-medium text-sm transition-all">
+                Cancel
+              </button>
+              <button
+                onClick={confirmDelete}
+                className="flex-1 py-3 rounded-xl text-white bg-red-600 hover:bg-red-500 font-semibold text-sm transition-all">
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       {/* Header stats */}
       <div className="grid grid-cols-3 gap-3">
         <div className="bg-gray-900 rounded-xl p-3 text-center border border-gray-800">
