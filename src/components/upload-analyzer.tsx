@@ -2,6 +2,8 @@
 import { useState, useRef, useCallback } from "react";
 import { GlucoseMeter } from "./glucose-meter";
 import { BarcodeScanner } from "./barcode-scanner";
+import { canAnalyze, recordAnalysis } from "@/lib/subscriptions";
+import { Paywall } from "./paywall";
 import { TimingNudges } from "./timing-nudges";
 import { t, type Lang } from "@/lib/i18n";
 import { saveMeal } from "@/lib/storage";
@@ -34,6 +36,9 @@ export function UploadAnalyzer({ userType = "healthy", lang, onAnalysisComplete 
     calories_100g?: number; serving_size?: number; image_url?: string; barcode: string;
   } | null>(null);
   const [portionG, setPortionG] = useState(100);
+
+  const [showPaywall, setShowPaywall] = useState(false);
+  const [currentPlan, setCurrentPlan] = useState<"free" | "pro" | "premium">("free");
 
   const cameraRef = useRef<HTMLInputElement>(null);
   const galleryRef = useRef<HTMLInputElement>(null);
@@ -69,6 +74,13 @@ export function UploadAnalyzer({ userType = "healthy", lang, onAnalysisComplete 
   }, [tx, mode]); // eslint-disable-line
 
   const runAnalysis = async (b64: string, b64_2: string | null = null, currentMode: Mode = "normal") => {
+    // Check subscription limit
+    const { allowed, plan } = await canAnalyze();
+    setCurrentPlan(plan);
+    if (!allowed) {
+      setShowPaywall(true);
+      return;
+    }
     setLoading(true); setError(null); setResult(null); setResult2(null); setSaved(false);
     try {
       const contextNote = currentMode === "pre_meal"
@@ -83,6 +95,7 @@ export function UploadAnalyzer({ userType = "healthy", lang, onAnalysisComplete 
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || tx.error_failed);
       setResult(data.analysis);
+      recordAnalysis();
 
       if (currentMode === "compare" && b64_2) {
         const res2 = await fetch("/api/analyze", {
@@ -183,7 +196,24 @@ export function UploadAnalyzer({ userType = "healthy", lang, onAnalysisComplete 
 
   return (
     <div className="max-w-xl mx-auto space-y-4">
-      {/* Mode selector */}
+      {/* Paywall */}
+      {showPaywall && (
+        <Paywall
+          onClose={() => setShowPaywall(false)}
+          onUpgrade={(plan) => { setCurrentPlan(plan); setShowPaywall(false); }}
+        />
+      )}
+
+      {/* Free plan indicator */}
+      {currentPlan === "free" && (
+        <div className="flex items-center justify-between bg-gray-900 border border-gray-800 rounded-xl px-4 py-2">
+          <span className="text-xs text-gray-500">Free plan · 5 analyses/day</span>
+          <button onClick={() => setShowPaywall(true)}
+            className="text-xs text-teal-400 font-medium hover:text-teal-300">
+            Upgrade ↗
+          </button>
+        </div>
+      )}
       <div className="grid grid-cols-4 gap-1.5">
         {([
           { key: "normal",   label: "📷", sub: "Analyze" },

@@ -24,7 +24,8 @@ export default function Home() {
   const [showAuth, setShowAuth] = useState(false);
 
   useEffect(() => {
-    setLang(detectBrowserLang());
+    const saved = localStorage.getItem("glucolens_lang") as Lang | null;
+    setLang(saved || detectBrowserLang());
     const p = getProfile();
     setProfile(p);
     if (!p || !p.setupComplete) setView("setup");
@@ -46,6 +47,13 @@ export default function Home() {
 
     return () => subscription.unsubscribe();
   }, []);
+
+  function handleLangChange(l: Lang) {
+    setLang(l);
+    localStorage.setItem("glucolens_lang", l);
+    document.documentElement.lang = l;
+    document.documentElement.dir = l === "ar" ? "rtl" : "ltr";
+  }
 
   function refreshProfile() {
     const p = getProfile();
@@ -114,7 +122,7 @@ export default function Home() {
                 Sign in
               </button>
             )}
-            <LangSwitcher current={lang} onChange={setLang} />
+            <LangSwitcher current={lang} onChange={handleLangChange} />
           </div>
         </div>
 
