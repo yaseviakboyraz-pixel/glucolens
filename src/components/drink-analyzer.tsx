@@ -5,6 +5,7 @@ import {
   DRINK_DATABASE, SAFE_DRINKS, HIGH_RISK_DRINKS,
   type DrinkEntry,
 } from "@/lib/drink-data";
+import { claudeGIEstimate } from "@/lib/claude-fallback";
 import type { Lang } from "@/lib/i18n";
 
 interface AnalyzedDrink {
@@ -45,6 +46,7 @@ export function DrinkAnalyzer({ lang, userType = "healthy" }: Props) {
   const [error, setError] = useState<string | null>(null);
   const [servingMl, setServingMl] = useState(0);
   const [activeCategory, setActiveCategory] = useState("all");
+  const [aiLoading, setAiLoading] = useState(false);
   const photoRef = useRef<HTMLInputElement>(null);
 
   const riskColor = (risk: string) => {
@@ -73,14 +75,52 @@ export function DrinkAnalyzer({ lang, userType = "healthy" }: Props) {
     setSuggestions(matches);
   }
 
+  async function runDrinkSearch(name: string) {
+    const key = name.toLowerCase();
+    const dbMatch = DRINK_DATABASE[key] || lookupDrink(name);
+    if (dbMatch) {
+      setQuery(dbMatch.name_tr || dbMatch.name);
+      setSuggestions([]);
+      setServingMl(dbMatch.serving_ml);
+      buildResult(dbMatch, dbMatch.serving_ml);
+    } else {
+      // Claude fallback
+      setSuggestions([]);
+      setAiLoading(true);
+      setResult(null);
+      const estimate = await claudeGIEstimate(name, 250, "drink/beverage");
+      setAiLoading(false);
+      if (estimate) {
+        const synth: DrinkEntry = {
+          name: estimate.name,
+          name_tr: estimate.name,
+          category: "soda",
+          alcohol_pct: 0,
+          carb_per_100ml: (estimate.carb_g / 250) * 100,
+          sugar_per_100ml: (estimate.sugar_g / 250) * 100,
+          cal_per_100ml: (estimate.calories / 250) * 100,
+          gi: estimate.gi,
+          serving_ml: 250,
+          diabetes_risk: estimate.glucose_risk,
+          hypo_risk: false,
+          source: "Claude AI",
+          notes: estimate.notes,
+        };
+        setServingMl(250);
+        buildResult(synth, 250);
+      } else {
+        setError("Could not find this drink. Try the photo mode.");
+      }
+    }
+  }
+
   function selectDrink(key: string) {
     const entry = DRINK_DATABASE[key];
     if (!entry) return;
     setQuery(entry.name_tr || entry.name);
     setSuggestions([]);
-    const ml = entry.serving_ml;
-    setServingMl(ml);
-    buildResult(entry, ml);
+    setServingMl(entry.serving_ml);
+    buildResult(entry, entry.serving_ml);
   }
 
   function buildResult(entry: DrinkEntry, ml: number) {
@@ -195,10 +235,15 @@ export function DrinkAnalyzer({ lang, userType = "healthy" }: Props) {
       {/* Search Mode */}
       {mode === "search" && (
         <div className="space-y-4">
-          <div className="relative">
+          <div className="relative flex gap-2">
             <input type="text" value={query} onChange={(e) => handleSearch(e.target.value)}
-              placeholder="e.g. mojito, bira, beyaz şarap, cola..."
-              className="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-gray-200 placeholder-gray-600 focus:outline-none focus:border-teal-500" />
+              onKeyDown={(e) => e.key === "Enter" && runDrinkSearch(query)}
+              placeholder="e.g. mojito, bira, bubble tea, taro latte..."
+              className="flex-1 bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-gray-200 placeholder-gray-600 focus:outline-none focus:border-teal-500" />
+            <button onClick={() => runDrinkSearch(query)} disabled={aiLoading || query.length < 2}
+              className="px-4 py-3 bg-teal-600 hover:bg-teal-500 disabled:opacity-40 text-white rounded-xl font-medium text-sm transition-all">
+              {aiLoading ? "..." : "Go"}
+            </button>
             {suggestions.length > 0 && (
               <div className="absolute top-full left-0 right-0 bg-gray-900 border border-gray-700 rounded-xl mt-1 z-10 shadow-xl overflow-hidden">
                 {suggestions.map(s => (
@@ -258,6 +303,13 @@ export function DrinkAnalyzer({ lang, userType = "healthy" }: Props) {
           <p className="text-center text-gray-600 text-xs">
             Claude reads labels, colors, and glass type to identify the drink
           </p>
+        </div>
+      )}
+
+      {aiLoading && (
+        <div className="bg-purple-950/30 border border-purple-500/30 rounded-xl p-4 text-center">
+          <div className="text-purple-400 text-sm animate-pulse">🤖 AI analyzing "{query}" as a drink...</div>
+          <div className="text-gray-600 text-xs mt-1">Not in database — asking Claude</div>
         </div>
       )}
 
@@ -323,6 +375,11 @@ export function DrinkAnalyzer({ lang, userType = "healthy" }: Props) {
               <div>
                 <h3 className="text-white font-bold text-lg">{result.entry.name_tr || result.entry.name}</h3>
                 <p className="text-gray-400 text-sm capitalize">{result.entry.subcategory || result.entry.category}</p>
+                {result.entry.source === "Claude AI" && (
+                  <span className="text-xs bg-purple-950/50 border border-purple-500/30 text-purple-400 px-2 py-0.5 rounded-full">
+                    🤖 AI Estimate
+                  </span>
+                )}
               </div>
               <div className={`text-right ${riskColor(result.entry.diabetes_risk)}`}>
                 <div className="text-2xl font-bold">{getDiabetesRiskLabel(result.entry.diabetes_risk)}</div>
