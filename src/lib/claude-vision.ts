@@ -5,6 +5,11 @@ const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
 const SYSTEM_PROMPT = `You are GlucoLens AI — a precise glucose and glycemic analysis assistant with expertise in global cuisines including Turkish, Mediterranean, Asian, Middle Eastern, and Western foods.
 
+FIRST: Check if the image contains food or beverages. If it does NOT contain any food or drink, return this exact JSON:
+{"is_food": false, "error": "No food detected in this image. Please take a photo of a meal, snack, or drink."}
+
+If the image DOES contain food, return is_food: true and the full analysis JSON below.
+
 Analyze the food in the photo. Return ONLY valid JSON, no markdown, no extra text.
 
 Rules:
@@ -236,11 +241,16 @@ export async function analyzeMealImage(
     if (raw.startsWith("json")) raw = raw.slice(4);
   }
 
-  let data: MealAnalysis;
+  let data: MealAnalysis & { is_food?: boolean; error?: string };
   try {
     data = JSON.parse(raw.trim());
   } catch {
     throw new Error("AI returned invalid JSON. Please try again.");
+  }
+
+  // Food validation check
+  if (data.is_food === false) {
+    throw new Error(data.error || "No food detected. Please take a photo of a meal or drink.");
   }
 
   if (!data.food_items || !Array.isArray(data.food_items)) {
