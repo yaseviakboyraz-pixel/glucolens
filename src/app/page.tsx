@@ -13,6 +13,7 @@ import { getProfile, saveProfile, type UserProfile } from "@/lib/storage";
 import { detectBrowserLang, type Lang } from "@/lib/i18n";
 import { onAuthStateChange, signOut, type User } from "@/lib/auth";
 import { initPushNotifications } from "@/lib/push-notifications";
+import { initNetworkMonitor, onNetworkChange, isOnline, type NetworkStatus } from "@/lib/network";
 
 type View = "setup" | "analyze" | "history" | "ingredient" | "menu" | "drink" | "plan";
 
@@ -23,6 +24,7 @@ export default function Home() {
   const [loaded, setLoaded] = useState(false);
   const [user, setUser] = useState<User | null>(null);
   const [showAuth, setShowAuth] = useState(false);
+  const [networkStatus, setNetworkStatus] = useState<NetworkStatus>("unknown");
 
   useEffect(() => {
     const saved = localStorage.getItem("glucolens_lang") as Lang | null;
@@ -35,7 +37,11 @@ export default function Home() {
     // Push notifications
     initPushNotifications().catch(console.error);
 
-    // Auth state listener
+    // Network monitor
+    initNetworkMonitor().then(() => {
+      setNetworkStatus(isOnline() ? "online" : "offline");
+    });
+    const unsubNetwork = onNetworkChange(status => setNetworkStatus(status));
     const subscription = onAuthStateChange((u) => {
       setUser(u);
       if (u) {
@@ -49,7 +55,10 @@ export default function Home() {
       }
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      subscription.unsubscribe();
+      unsubNetwork();
+    };
   }, []);
 
   function handleLangChange(l: Lang) {
@@ -134,6 +143,15 @@ export default function Home() {
         {user && (
           <div className="max-w-2xl mx-auto px-4 pb-1">
             <p className="text-xs text-green-500">☁️ Synced · {user.email}</p>
+          </div>
+        )}
+
+        {/* Offline banner */}
+        {networkStatus === "offline" && (
+          <div className="bg-amber-950 border-b border-amber-500/30 px-4 py-1.5">
+            <p className="text-xs text-amber-400 text-center max-w-2xl mx-auto">
+              📵 Offline — Analysis requires internet. Your history is still available.
+            </p>
           </div>
         )}
 
