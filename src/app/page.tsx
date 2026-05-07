@@ -25,6 +25,7 @@ export default function Home() {
   const [user, setUser] = useState<User | null>(null);
   const [showAuth, setShowAuth] = useState(false);
   const [networkStatus, setNetworkStatus] = useState<NetworkStatus>("unknown");
+  const [theme, setTheme] = useState<"dark" | "light">("dark");
 
   useEffect(() => {
     const saved = localStorage.getItem("glucolens_lang") as Lang | null;
@@ -33,6 +34,12 @@ export default function Home() {
     setProfile(p);
     if (!p || !p.setupComplete) setView("setup");
     setLoaded(true);
+
+    // Theme
+    const savedTheme = localStorage.getItem("glucolens_theme") as "dark" | "light" | null;
+    const t = savedTheme || "dark";
+    setTheme(t);
+    document.documentElement.classList.toggle("light", t === "light");
 
     // Push notifications
     initPushNotifications().catch(console.error);
@@ -66,6 +73,13 @@ export default function Home() {
     localStorage.setItem("glucolens_lang", l);
     document.documentElement.lang = l;
     document.documentElement.dir = l === "ar" ? "rtl" : "ltr";
+  }
+
+  function toggleTheme() {
+    const next = theme === "dark" ? "light" : "dark";
+    setTheme(next);
+    localStorage.setItem("glucolens_theme", next);
+    document.documentElement.classList.toggle("light", next === "light");
   }
 
   function refreshProfile() {
@@ -135,6 +149,10 @@ export default function Home() {
                 Sign in
               </button>
             )}
+            <button onClick={toggleTheme}
+              className="text-xs text-gray-500 hover:text-gray-300 transition-colors px-2 py-1 rounded-lg border border-gray-800">
+              {theme === "dark" ? "☀️" : "🌙"}
+            </button>
             <LangSwitcher current={lang} onChange={handleLangChange} />
           </div>
         </div>
