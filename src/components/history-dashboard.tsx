@@ -183,7 +183,15 @@ export function HistoryDashboard({ profile, lang, onNewMeal, onEditProfile }: Pr
           ) : (
             displayMeals.map((meal) => (
               <div key={meal.id} className="bg-gray-900 rounded-xl p-4 border border-gray-800">
-                <div className="flex justify-between items-start">
+                <div className="flex justify-between items-start gap-3">
+                  {/* Thumbnail */}
+                  {meal.photo_base64 && (
+                    <img
+                      src={`data:image/jpeg;base64,${meal.photo_base64}`}
+                      alt="meal"
+                      className="w-14 h-14 rounded-xl object-cover shrink-0"
+                    />
+                  )}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
                       <div className={`w-2 h-2 rounded-full shrink-0 ${riskBg(meal.analysis.glucose_risk)}`} />

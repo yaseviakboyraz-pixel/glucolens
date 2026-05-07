@@ -6,6 +6,8 @@ import {
   type DrinkEntry,
 } from "@/lib/drink-data";
 import { claudeGIEstimate } from "@/lib/claude-fallback";
+import { saveMeal } from "@/lib/storage";
+import type { MealAnalysis } from "@/lib/claude-vision";
 import type { Lang } from "@/lib/i18n";
 
 interface AnalyzedDrink {

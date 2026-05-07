@@ -108,11 +108,11 @@ export function UploadAnalyzer({ userType = "healthy", lang, onAnalysisComplete 
       }
 
       if (currentMode === "normal") {
-        saveMeal(data.analysis);
+        saveMeal(data.analysis, "meal", b64);
         setSaved(true);
         onAnalysisComplete?.();
       } else if (currentMode === "pre_meal") {
-        saveMeal(data.analysis, "pre_meal");
+        saveMeal(data.analysis, "pre_meal", b64);
         setSaved(true);
       }
     } catch (e) {

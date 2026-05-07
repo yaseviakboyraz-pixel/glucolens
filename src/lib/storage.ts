@@ -22,6 +22,7 @@ export interface MealRecord {
   timestamp: number;
   mealType?: string;
   isPreMeal?: boolean;
+  photo_base64?: string;
 }
 
 export interface WaterRecord {
@@ -102,12 +103,13 @@ export function getMeals(): MealRecord[] {
   } catch { return []; }
 }
 
-export function saveMeal(analysis: MealAnalysis, mealType = "other"): MealRecord {
+export function saveMeal(analysis: MealAnalysis, mealType = "other", photo_base64?: string): MealRecord {
   const record: MealRecord = {
     id: Math.random().toString(36).slice(2) + Date.now().toString(36),
     analysis,
     timestamp: Date.now(),
     mealType,
+    photo_base64,
   };
   const meals = getMeals();
   meals.unshift(record);
