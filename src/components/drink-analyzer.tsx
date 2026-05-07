@@ -469,10 +469,35 @@ export function DrinkAnalyzer({ lang, userType = "healthy" }: Props) {
             </div>
           )}
 
-          <button onClick={() => { setResult(null); setQuery(""); setSuggestions([]); }}
-            className="w-full py-3 rounded-xl text-gray-400 bg-gray-900 border border-gray-800 text-sm">
-            Search another drink
-          </button>
+          <div className="flex gap-2">
+            <button onClick={() => { setResult(null); setQuery(""); setSuggestions([]); }}
+              className="flex-1 py-3 rounded-xl text-gray-400 bg-gray-900 border border-gray-800 text-sm">
+              Search another
+            </button>
+            <button onClick={() => {
+              if (!result) return;
+              const risk = result.gl < 10 ? "low" : result.gl <= 20 ? "medium" : "high" as "low" | "medium" | "high";
+              const analysis: MealAnalysis = {
+                food_items: [{
+                  name: result.entry.name, name_tr: result.entry.name_tr || result.entry.name,
+                  portion_g: result.serving_ml, total_sugar_g: result.sugar_g, added_sugar_g: 0,
+                  carbohydrate_g: result.carb_g, fiber_g: 0, net_carb_g: result.carb_g,
+                  protein_g: 0, fat_g: 0, calories: result.cal,
+                  glycemic_index: result.entry.gi, glycemic_load: result.gl, gi_confidence: 0.8,
+                }],
+                total_sugar_g: result.sugar_g, total_added_sugar_g: 0,
+                total_net_carb_g: result.carb_g, total_fiber_g: 0,
+                total_protein_g: 0, total_fat_g: 0, total_calories: result.cal,
+                avg_glycemic_index: result.entry.gi, total_glycemic_load: result.gl,
+                glucose_risk: risk, glucose_peak_estimate: "", glucose_curve_description: "",
+                recommendations: [], warnings: [], confidence_score: 0.8,
+              };
+              saveMeal(analysis, "drink");
+            }}
+              className="flex-1 py-3 rounded-xl text-white bg-teal-600 hover:bg-teal-500 font-semibold text-sm">
+              Log to history
+            </button>
+          </div>
         </div>
       )}
     </div>
