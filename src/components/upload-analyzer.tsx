@@ -34,6 +34,7 @@ export function UploadAnalyzer({ userType = "healthy", lang, onAnalysisComplete 
   const [barcodeProduct, setBarcodeProduct] = useState<{
     name: string; brand?: string; gi_estimate?: number; gl_estimate?: number;
     carbs_100g?: number; sugars_100g?: number; fiber_100g?: number;
+    protein_100g?: number; fat_100g?: number;
     calories_100g?: number; serving_size?: number; image_url?: string; barcode: string;
   } | null>(null);
   const [portionG, setPortionG] = useState(100);
@@ -136,6 +137,8 @@ export function UploadAnalyzer({ userType = "healthy", lang, onAnalysisComplete 
     const carbs = parseFloat(((p.carbs_100g || 0) * ratio).toFixed(1));
     const sugars = parseFloat(((p.sugars_100g || 0) * ratio).toFixed(1));
     const fiber = parseFloat(((p.fiber_100g || 0) * ratio).toFixed(1));
+    const protein = parseFloat(((p.protein_100g || 0) * ratio).toFixed(1));
+    const fat = parseFloat(((p.fat_100g || 0) * ratio).toFixed(1));
     const netCarb = Math.max(0, parseFloat((carbs - fiber).toFixed(1)));
     const gi = p.gi_estimate || 55;
     const gl = parseFloat(((gi * netCarb) / 100).toFixed(1));
@@ -155,16 +158,16 @@ export function UploadAnalyzer({ userType = "healthy", lang, onAnalysisComplete 
         glycemic_load: gl,
         gi_confidence: 0.75,
         cooking_method: "packaged",
-        protein_g: 0,
-        fat_g: parseFloat(((p as {fat_100g?: number}).fat_100g || 0) * ratio + ""),
+        protein_g: protein,
+        fat_g: fat,
         calories: parseFloat(((p.calories_100g || 0) * ratio).toFixed(0)),
       }],
       total_sugar_g: sugars,
       total_added_sugar_g: 0,
       total_net_carb_g: netCarb,
       total_fiber_g: fiber,
-      total_protein_g: 0,
-      total_fat_g: 0,
+      total_protein_g: protein,
+      total_fat_g: fat,
       total_calories: parseFloat(((p.calories_100g || 0) * ratio).toFixed(0)),
       avg_glycemic_index: gi,
       total_glycemic_load: gl,
