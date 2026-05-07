@@ -5,6 +5,7 @@ import { BarcodeScanner } from "./barcode-scanner";
 import { canAnalyze, recordAnalysis } from "@/lib/subscriptions";
 import { Paywall } from "./paywall";
 import { TimingNudges } from "./timing-nudges";
+import { ShareCard } from "./share-card";
 import { t, type Lang } from "@/lib/i18n";
 import { saveMeal } from "@/lib/storage";
 import type { MealAnalysis } from "@/lib/claude-vision";
@@ -546,6 +547,9 @@ export function UploadAnalyzer({ userType = "healthy", lang, onAnalysisComplete 
 
           {/* Timing Nudges + Glucose Curve */}
           <TimingNudges analysis={result} />
+
+          {/* Share */}
+          <ShareCard analysis={result} photoBase64={image || undefined} />
 
           {result.recommendations.length > 0 && (
             <div className="bg-teal-950 border border-teal-500/30 rounded-xl p-4">

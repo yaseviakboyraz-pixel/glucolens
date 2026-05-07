@@ -11,6 +11,7 @@ import { ActivityTracker } from "./activity-tracker";
 import { WeeklyReportCard } from "./weekly-report";
 import { AICoach } from "./ai-coach";
 import { GoalTracker } from "./goal-tracker";
+import { WeeklyChallenge } from "./weekly-challenge";
 import type { Lang } from "@/lib/i18n";
 
 interface Props {
@@ -164,6 +165,7 @@ export function HistoryDashboard({ profile, lang, onNewMeal, onEditProfile }: Pr
       {activeTab === "wellness" && (
         <div className="space-y-4">
           <GoalTracker />
+          <WeeklyChallenge />
           <WaterTracker dailyTarget={2000} />
           <ActivityTracker />
           <WeeklyReportCard />
