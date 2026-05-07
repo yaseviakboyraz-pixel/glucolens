@@ -1,5 +1,6 @@
 "use client";
 import { useState, useRef, useEffect, useCallback } from "react";
+import { scanBarcode, isNativePlatform } from "@/lib/barcode-scanner";
 import type { Lang } from "@/lib/i18n";
 
 interface BarcodeResult {
@@ -52,6 +53,19 @@ export function BarcodeScanner({ lang, onResult, onClose }: Props) {
 
   async function startCamera() {
     setError(null);
+    // Native platform (iOS/Android) — use MLKit
+    if (isNativePlatform()) {
+      setLoading(true);
+      const result = await scanBarcode();
+      setLoading(false);
+      if (result) {
+        await fetchProduct(result.barcode);
+      } else {
+        setError("Scan cancelled or no barcode found.");
+      }
+      return;
+    }
+    // Web fallback
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
         video: { facingMode: "environment", width: { ideal: 1280 }, height: { ideal: 720 } }
