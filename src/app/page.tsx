@@ -12,6 +12,7 @@ import { AuthScreen } from "@/components/auth-screen";
 import { getProfile, saveProfile, type UserProfile } from "@/lib/storage";
 import { detectBrowserLang, type Lang } from "@/lib/i18n";
 import { onAuthStateChange, signOut, type User } from "@/lib/auth";
+import { initPushNotifications } from "@/lib/push-notifications";
 
 type View = "setup" | "analyze" | "history" | "ingredient" | "menu" | "drink" | "plan";
 
@@ -30,6 +31,9 @@ export default function Home() {
     setProfile(p);
     if (!p || !p.setupComplete) setView("setup");
     setLoaded(true);
+
+    // Push notifications
+    initPushNotifications().catch(console.error);
 
     // Auth state listener
     const subscription = onAuthStateChange((u) => {
