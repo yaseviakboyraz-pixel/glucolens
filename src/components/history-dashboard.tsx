@@ -10,6 +10,7 @@ import { WaterTracker } from "./water-tracker";
 import { ActivityTracker } from "./activity-tracker";
 import { WeeklyReportCard } from "./weekly-report";
 import { AICoach } from "./ai-coach";
+import { GoalTracker } from "./goal-tracker";
 import type { Lang } from "@/lib/i18n";
 
 interface Props {
@@ -162,6 +163,7 @@ export function HistoryDashboard({ profile, lang, onNewMeal, onEditProfile }: Pr
       {/* Wellness Tab */}
       {activeTab === "wellness" && (
         <div className="space-y-4">
+          <GoalTracker />
           <WaterTracker dailyTarget={2000} />
           <ActivityTracker />
           <WeeklyReportCard />
