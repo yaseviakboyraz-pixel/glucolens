@@ -7,3 +7,6 @@ project(':capacitor-mlkit-barcode-scanning').projectDir = new File('../node_modu
 
 include ':revenuecat-purchases-capacitor'
 project(':revenuecat-purchases-capacitor').projectDir = new File('../node_modules/@revenuecat/purchases-capacitor/android')
+
+include ':capacitor-health'
+project(':capacitor-health').projectDir = new File('../node_modules/capacitor-health/android')

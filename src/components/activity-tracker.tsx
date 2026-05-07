@@ -5,6 +5,7 @@ import {
   ACTIVITY_GL_REDUCTION, getTodayActivityGL,
   type ActivityRecord,
 } from "@/lib/storage";
+import { getTodayHealthData, estimateGLReduction, isHealthAvailable, type HealthData } from "@/lib/healthkit";
 
 const ACTIVITY_ICONS: Record<ActivityRecord["type"], string> = {
   walking: "🚶", running: "🏃", cycling: "🚴",
@@ -19,9 +20,18 @@ export function ActivityTracker() {
   const [selectedDuration, setSelectedDuration] = useState(30);
   const [adding, setAdding] = useState(false);
   const [todayGLReduction, setTodayGLReduction] = useState(0);
+  const [healthData, setHealthData] = useState<HealthData | null>(null);
+  const [healthLoading, setHealthLoading] = useState(false);
 
   useEffect(() => {
     refresh();
+    if (isHealthAvailable()) {
+      setHealthLoading(true);
+      getTodayHealthData().then(data => {
+        setHealthData(data);
+        setHealthLoading(false);
+      });
+    }
   }, []);
 
   function refresh() {
@@ -43,6 +53,8 @@ export function ActivityTracker() {
   }
 
   const todayMin = activities.reduce((s, a) => s + a.durationMin, 0);
+  const healthGLReduction = healthData ? estimateGLReduction(healthData) : 0;
+  const totalGLReduction = parseFloat((todayGLReduction + healthGLReduction).toFixed(1));
 
   return (
     <div className="bg-gray-900 rounded-xl p-4 border border-gray-800">
@@ -51,12 +63,44 @@ export function ActivityTracker() {
           🏃 Activity Today
         </h3>
         <div className="flex items-center gap-2">
-          {todayGLReduction > 0 && (
-            <span className="text-xs text-green-400">-{todayGLReduction} GL</span>
+          {totalGLReduction > 0 && (
+            <span className="text-xs text-green-400">-{totalGLReduction} GL</span>
           )}
           <span className="text-xs text-gray-500">{todayMin} min</span>
         </div>
       </div>
+
+      {/* HealthKit data */}
+      {isHealthAvailable() && (
+        <div className="bg-gray-800 rounded-xl p-3 mb-3 border border-gray-700">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-xs text-gray-400 flex items-center gap-1">
+              ❤️ Apple Health
+            </span>
+            {healthLoading && <span className="text-xs text-gray-600 animate-pulse">Loading...</span>}
+          </div>
+          {healthData ? (
+            <div className="grid grid-cols-3 gap-2">
+              <div className="text-center">
+                <div className="text-white font-bold">{healthData.steps.toLocaleString()}</div>
+                <div className="text-xs text-gray-600">Steps</div>
+              </div>
+              <div className="text-center">
+                <div className="text-white font-bold">{healthData.calories}</div>
+                <div className="text-xs text-gray-600">Calories</div>
+              </div>
+              <div className="text-center">
+                <div className="text-green-400 font-bold">-{healthGLReduction}</div>
+                <div className="text-xs text-gray-600">GL saved</div>
+              </div>
+            </div>
+          ) : (
+            !healthLoading && (
+              <p className="text-xs text-gray-600">No health data available today</p>
+            )
+          )}
+        </div>
+      )}
 
       {/* Today's activities */}
       {activities.length > 0 && (
