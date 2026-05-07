@@ -297,9 +297,37 @@ export async function analyzeMealImage(
     data.total_glycemic_load < 10 ? "low" :
     data.total_glycemic_load <= 20 ? "medium" : "high";
 
-  // Ensure curve exists
+  // Ensure curve exists — calibrate for user type
   if (!data.glucose_curve) {
     data.glucose_curve = generateFallbackCurve(data.total_glycemic_load);
+  }
+
+  // Calibrate curve based on user type
+  const curve = data.glucose_curve;
+  if (userType === "type1" || userType === "type2" || userType === "diabetic") {
+    // Diabetic: higher peak, longer duration
+    curve.peak_minutes = Math.round(curve.peak_minutes * 0.85); // faster spike
+    curve.baseline_minutes = Math.round(curve.baseline_minutes * 1.5); // slower return
+    curve.peak_level = "high";
+    curve.points = curve.points.map(p => ({
+      ...p,
+      level: Math.min(100, Math.round(p.level * 1.35)), // 35% higher
+    }));
+    // Extend baseline
+    curve.points.push({ minutes: curve.baseline_minutes, level: 0 });
+    curve.points = curve.points.filter(p => p.minutes <= curve.baseline_minutes);
+  } else if (userType === "pre_diabetic") {
+    curve.baseline_minutes = Math.round(curve.baseline_minutes * 1.25);
+    curve.points = curve.points.map(p => ({
+      ...p,
+      level: Math.min(100, Math.round(p.level * 1.15)),
+    }));
+  } else if (userType === "athlete") {
+    curve.baseline_minutes = Math.round(curve.baseline_minutes * 0.7); // faster clearance
+    curve.points = curve.points.map(p => ({
+      ...p,
+      level: Math.max(0, Math.round(p.level * 0.85)),
+    }));
   }
 
   return data;
