@@ -40,7 +40,7 @@ export function UploadAnalyzer({ userType = "healthy", lang, onAnalysisComplete 
   const [portionG, setPortionG] = useState(100);
 
   const [showPaywall, setShowPaywall] = useState(false);
-  const [currentPlan, setCurrentPlan] = useState<"free" | "pro" | "premium">("free");
+  const [currentPlan, setCurrentPlan] = useState<"free" | "pro">("free");
 
   const cameraRef = useRef<HTMLInputElement>(null);
   const galleryRef = useRef<HTMLInputElement>(null);

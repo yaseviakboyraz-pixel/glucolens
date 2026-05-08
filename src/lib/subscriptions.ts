@@ -4,7 +4,7 @@
 
 import { Capacitor } from "@capacitor/core";
 
-export type PlanId = "free" | "pro" | "premium";
+export type PlanId = "free" | "pro";
 
 export interface Plan {
   id: PlanId;
@@ -12,7 +12,7 @@ export interface Plan {
   monthlyPrice: string;
   yearlyPrice: string;
   features: string[];
-  glLimit: number; // analyses per day, -1 = unlimited
+  glLimit: number;
   color: string;
 }
 
@@ -47,20 +47,7 @@ export const PLANS: Record<PlanId, Plan> = {
       "Meal plan generator",
       "Glucose curve predictions",
       "Timing nudges",
-      "Cloud sync",
-    ],
-  },
-  premium: {
-    id: "premium",
-    name: "Premium",
-    monthlyPrice: "$9.99/mo",
-    yearlyPrice: "$79.99/yr",
-    glLimit: -1,
-    color: "purple",
-    features: [
-      "Everything in Pro",
-      "Priority support",
-      "Early access to new features",
+      "Cloud sync & backup",
       "HealthKit integration",
       "Advanced analytics",
       "Export data (CSV/PDF)",
@@ -72,8 +59,6 @@ export const PLANS: Record<PlanId, Plan> = {
 export const RC_PRODUCT_IDS = {
   pro_monthly: "glucolens_pro_monthly",
   pro_yearly: "glucolens_pro_yearly",
-  premium_monthly: "glucolens_premium_monthly",
-  premium_yearly: "glucolens_premium_yearly",
 };
 
 // ── Web Mock (for development/web use) ───────────
@@ -108,9 +93,6 @@ async function getNativePlan(): Promise<PlanId> {
     const { Purchases } = await import("@revenuecat/purchases-capacitor");
     const { customerInfo } = await Purchases.getCustomerInfo();
     const active = customerInfo.activeSubscriptions;
-    if (active.includes(RC_PRODUCT_IDS.premium_monthly) || active.includes(RC_PRODUCT_IDS.premium_yearly)) {
-      return "premium";
-    }
     if (active.includes(RC_PRODUCT_IDS.pro_monthly) || active.includes(RC_PRODUCT_IDS.pro_yearly)) {
       return "pro";
     }
@@ -138,8 +120,8 @@ export async function getCurrentPlan(): Promise<PlanId> {
 export async function purchasePlan(productId: string): Promise<boolean> {
   if (!Capacitor.isNativePlatform()) {
     // Web mock — simulate purchase
-    if (productId.includes("premium")) setMockPlan("premium");
-    else if (productId.includes("pro")) setMockPlan("pro");
+    if (productId.includes("pro")) setMockPlan("pro");
+    else setMockPlan("free");
     return true;
   }
   try {
@@ -162,7 +144,6 @@ export async function restorePurchases(): Promise<PlanId> {
     const { Purchases } = await import("@revenuecat/purchases-capacitor");
     const { customerInfo } = await Purchases.restorePurchases();
     const active = customerInfo.activeSubscriptions;
-    if (active.some(id => id.includes("premium"))) return "premium";
     if (active.some(id => id.includes("pro"))) return "pro";
     return "free";
   } catch {

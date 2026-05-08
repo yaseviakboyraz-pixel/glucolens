@@ -22,10 +22,9 @@ export function Paywall({ onClose, onUpgrade }: Props) {
     setLoading(planId);
     setError(null);
     try {
-      const productId = planId === "premium"
-        ? (billing === "yearly" ? RC_PRODUCT_IDS.premium_yearly : RC_PRODUCT_IDS.premium_monthly)
-        : (billing === "yearly" ? RC_PRODUCT_IDS.pro_yearly : RC_PRODUCT_IDS.pro_monthly);
-
+      const productId = billing === "yearly"
+        ? RC_PRODUCT_IDS.pro_yearly
+        : RC_PRODUCT_IDS.pro_monthly;
       const success = await purchasePlan(productId);
       if (success) {
         setCurrentPlan(planId);
@@ -47,9 +46,7 @@ export function Paywall({ onClose, onUpgrade }: Props) {
   }
 
   const proPrice = billing === "yearly" ? "$39.99/yr" : "$4.99/mo";
-  const premiumPrice = billing === "yearly" ? "$79.99/yr" : "$9.99/mo";
   const proPriceNote = billing === "yearly" ? "~$3.33/mo — save 33%" : "";
-  const premiumPriceNote = billing === "yearly" ? "~$6.67/mo — save 33%" : "";
 
   return (
     <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-4">
@@ -79,11 +76,33 @@ export function Paywall({ onClose, onUpgrade }: Props) {
         </div>
 
         {/* Plans */}
-        <div className="px-6 pb-6 space-y-3">
+        <div className="px-6 pb-6 space-y-4">
+
+          {/* Free Plan */}
+          <div className={`rounded-2xl border p-4 ${currentPlan === "free" ? "border-gray-600 bg-gray-900" : "border-gray-800 bg-gray-900/50"}`}>
+            <div className="flex justify-between items-center">
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="text-white font-bold">Free</span>
+                  {currentPlan === "free" && (
+                    <span className="text-xs bg-gray-700 text-gray-300 px-2 py-0.5 rounded-full">Current</span>
+                  )}
+                </div>
+                <div className="text-gray-400 font-medium mt-0.5">$0</div>
+              </div>
+            </div>
+            <div className="mt-3 space-y-1">
+              {PLANS.free.features.map((f, i) => (
+                <div key={i} className="flex gap-2 text-sm text-gray-400">
+                  <span className="text-gray-600 shrink-0">✓</span>{f}
+                </div>
+              ))}
+            </div>
+          </div>
 
           {/* Pro Plan */}
           <div className={`rounded-2xl border-2 p-5 transition-all ${
-            currentPlan === "pro" ? "border-teal-500 bg-teal-950/30" : "border-gray-800 bg-gray-900"
+            currentPlan === "pro" ? "border-teal-500 bg-teal-950/30" : "border-teal-700/50 bg-gray-900"
           }`}>
             <div className="flex justify-between items-start mb-3">
               <div>
@@ -118,54 +137,12 @@ export function Paywall({ onClose, onUpgrade }: Props) {
             </button>
           </div>
 
-          {/* Premium Plan */}
-          <div className={`rounded-2xl border-2 p-5 transition-all ${
-            currentPlan === "premium" ? "border-purple-500 bg-purple-950/30" : "border-gray-800 bg-gray-900"
-          }`}>
-            <div className="flex justify-between items-start mb-3">
-              <div>
-                <div className="flex items-center gap-2">
-                  <span className="text-white font-bold text-lg">Premium</span>
-                  {currentPlan === "premium" && (
-                    <span className="text-xs bg-purple-600 text-white px-2 py-0.5 rounded-full">Current</span>
-                  )}
-                </div>
-                <div className="text-purple-400 font-bold text-xl mt-1">{premiumPrice}</div>
-                {premiumPriceNote && <p className="text-gray-500 text-xs">{premiumPriceNote}</p>}
-              </div>
-            </div>
-
-            <div className="space-y-1.5 mb-4">
-              {PLANS.premium.features.map((f, i) => (
-                <div key={i} className="flex gap-2 text-sm text-gray-300">
-                  <span className="text-purple-400 shrink-0">✓</span>{f}
-                </div>
-              ))}
-            </div>
-
-            <button onClick={() => handlePurchase("premium")}
-              disabled={currentPlan === "premium" || loading !== null}
-              className={`w-full py-3 rounded-xl font-semibold text-sm transition-all ${
-                currentPlan === "premium"
-                  ? "bg-gray-800 text-gray-500 cursor-default"
-                  : "bg-purple-600 hover:bg-purple-500 text-white"
-              } disabled:opacity-50`}>
-              {loading === "premium" ? "Processing..." : currentPlan === "premium" ? "Current Plan" : "Get Premium"}
-            </button>
-          </div>
-
-          {/* Free plan note */}
-          <div className="text-center text-gray-600 text-xs py-1">
-            Free plan: 5 analyses/day · Basic features
-          </div>
-
           {error && (
             <div className="bg-red-950 border border-red-500/30 rounded-xl p-3 text-red-300 text-sm text-center">
               {error}
             </div>
           )}
 
-          {/* Restore */}
           <button onClick={handleRestore} disabled={loading !== null}
             className="w-full text-gray-500 hover:text-gray-300 text-sm py-2 transition-colors">
             {loading === "restore" ? "Restoring..." : "Restore purchases"}

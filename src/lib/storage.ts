@@ -1,7 +1,7 @@
 // GlucoLens Storage v2.0
 // Hybrid: localStorage (instant) + Supabase (cloud sync)
 
-import { supabase, getDeviceId } from "./supabase";
+import { supabase, getDeviceId, getOwnerId, uploadMealPhoto } from "./supabase";
 import type { MealAnalysis } from "./claude-vision";
 
 // ── INTERFACES ────────────────────────────────────
@@ -79,9 +79,9 @@ export function saveProfile(profile: UserProfile): void {
 }
 
 async function syncProfileToCloud(profile: UserProfile) {
-  const deviceId = getDeviceId();
+  const { userId, deviceId } = await getOwnerId();
   await supabase.from("profiles").upsert({
-    device_id: deviceId,
+    ...(userId ? { user_id: userId } : { device_id: deviceId }),
     name: profile.name,
     user_type: profile.userType,
     age: profile.age,
@@ -90,7 +90,7 @@ async function syncProfileToCloud(profile: UserProfile) {
     daily_gl_target: profile.dailyGLTarget,
     setup_complete: profile.setupComplete,
     updated_at: new Date().toISOString(),
-  }, { onConflict: "device_id" });
+  }, { onConflict: userId ? "user_id" : "device_id" });
 }
 
 // ── MEALS ─────────────────────────────────────────
@@ -114,27 +114,41 @@ export function saveMeal(analysis: MealAnalysis, mealType = "other", photo_base6
   const meals = getMeals();
   meals.unshift(record);
   if (meals.length > 100) meals.splice(100);
-  localStorage.setItem("glucolens_meals", JSON.stringify(meals));
-  syncMealToCloud(record).catch(console.error);
+  // Store without photo in localStorage to save space
+  localStorage.setItem("glucolens_meals", JSON.stringify(meals.map(m => ({ ...m, photo_base64: undefined }))));
+  syncMealToCloud(record, photo_base64).catch(console.error);
   return record;
 }
 
-async function syncMealToCloud(record: MealRecord) {
-  const deviceId = getDeviceId();
+async function syncMealToCloud(record: MealRecord, photo_base64?: string) {
+  const { userId, deviceId } = await getOwnerId();
+  const ownerId = userId || deviceId;
+  const isUser = !!userId;
+
+  // Ensure profile exists
   await supabase.from("profiles").upsert({
-    device_id: deviceId,
+    ...(isUser ? { user_id: userId } : { device_id: deviceId }),
     setup_complete: false,
     daily_gl_target: 60,
     user_type: "healthy",
-  }, { onConflict: "device_id", ignoreDuplicates: true });
+  }, { onConflict: isUser ? "user_id" : "device_id", ignoreDuplicates: true });
+
+  // Upload photo to Storage if authenticated
+  let photo_url: string | null = null;
+  if (photo_base64 && isUser) {
+    photo_url = await uploadMealPhoto(photo_base64, record.id);
+  }
 
   await supabase.from("meals").insert({
-    device_id: deviceId,
+    ...(isUser ? { user_id: userId } : { device_id: deviceId }),
     food_items: record.analysis.food_items,
     total_sugar_g: record.analysis.total_sugar_g,
     total_added_sugar_g: record.analysis.total_added_sugar_g,
     total_net_carb_g: record.analysis.total_net_carb_g,
     total_fiber_g: record.analysis.total_fiber_g,
+    total_protein_g: record.analysis.total_protein_g,
+    total_fat_g: record.analysis.total_fat_g,
+    total_calories: record.analysis.total_calories,
     avg_glycemic_index: record.analysis.avg_glycemic_index,
     total_glycemic_load: record.analysis.total_glycemic_load,
     glucose_risk: record.analysis.glucose_risk,
@@ -144,6 +158,7 @@ async function syncMealToCloud(record: MealRecord) {
     warnings: record.analysis.warnings,
     confidence_score: record.analysis.confidence_score,
     meal_type: record.mealType,
+    photo_url,
     logged_at: new Date(record.timestamp).toISOString(),
   });
 }
@@ -163,12 +178,17 @@ export async function syncFromCloud(): Promise<{
   meals: MealRecord[];
   profile: UserProfile | null;
 }> {
-  const deviceId = getDeviceId();
+  const { userId, deviceId, isAuthenticated } = await getOwnerId();
   try {
+    // Query by user_id if authenticated, else device_id
+    const filter = isAuthenticated
+      ? { column: "user_id", value: userId! }
+      : { column: "device_id", value: deviceId };
+
     const [profileRes, mealsRes] = await Promise.all([
-      supabase.from("profiles").select("*").eq("device_id", deviceId).single(),
-      supabase.from("meals").select("*").eq("device_id", deviceId)
-        .order("logged_at", { ascending: false }).limit(100),
+      supabase.from("profiles").select("*").eq(filter.column, filter.value).single(),
+      supabase.from("meals").select("*").eq(filter.column, filter.value)
+        .order("logged_at", { ascending: false }).limit(200),
     ]);
 
     let profile: UserProfile | null = null;
@@ -240,12 +260,13 @@ export function logWater(amount_ml: number): void {
   const logs = getWaterLogs();
   logs.unshift(log);
   localStorage.setItem("glucolens_water", JSON.stringify(logs));
-  const deviceId = getDeviceId();
-  supabase.from("water_logs").insert({
-    device_id: deviceId,
-    amount_ml,
-    logged_at: new Date().toISOString(),
-  }).then(null, console.error);
+  getOwnerId().then(({ userId, deviceId }) => {
+    supabase.from("water_logs").insert({
+      ...(userId ? { user_id: userId } : { device_id: deviceId }),
+      amount_ml,
+      logged_at: new Date().toISOString(),
+    }).then(null, console.error);
+  });
 }
 
 // Aliases for water-tracker.tsx compatibility
@@ -302,14 +323,15 @@ export function logActivity(
   const logs = getActivities();
   logs.unshift(record);
   localStorage.setItem("glucolens_activity", JSON.stringify(logs));
-  const deviceId = getDeviceId();
-  supabase.from("activity_logs").insert({
-    device_id: deviceId,
-    activity_type: type,
-    duration_minutes: durationMin,
-    gl_reduction: glReduction,
-    logged_at: new Date().toISOString(),
-  }).then(null, console.error);
+  getOwnerId().then(({ userId, deviceId }) => {
+    supabase.from("activity_logs").insert({
+      ...(userId ? { user_id: userId } : { device_id: deviceId }),
+      activity_type: type,
+      duration_minutes: durationMin,
+      gl_reduction: glReduction,
+      logged_at: new Date().toISOString(),
+    }).then(null, console.error);
+  });
 }
 
 export function deleteActivity(id: string): void {
