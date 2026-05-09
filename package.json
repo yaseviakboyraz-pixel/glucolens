@@ -9,7 +9,7 @@
     "lint": "eslint"
   },
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.90.0",
+    "@anthropic-ai/sdk": "^0.95.1",
     "@capacitor-mlkit/barcode-scanning": "^8.0.1",
     "@capacitor/android": "^8.3.1",
     "@capacitor/cli": "^8.3.1",
