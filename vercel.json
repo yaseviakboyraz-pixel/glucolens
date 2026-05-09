@@ -6,6 +6,21 @@
   "functions": {
     "src/app/api/analyze/route.ts": {
       "maxDuration": 60
+    },
+    "src/app/api/menu-analyze/route.ts": {
+      "maxDuration": 60
+    },
+    "src/app/api/meal-plan/route.ts": {
+      "maxDuration": 60
+    },
+    "src/app/api/coach/route.ts": {
+      "maxDuration": 30
+    },
+    "src/app/api/menu-fetch/route.ts": {
+      "maxDuration": 30
+    },
+    "src/app/api/gi-estimate/route.ts": {
+      "maxDuration": 30
     }
   }
 }
