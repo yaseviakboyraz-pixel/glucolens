@@ -23,6 +23,7 @@ export interface MealRecord {
   mealType?: string;
   isPreMeal?: boolean;
   photo_base64?: string;
+  photo_url?: string;
 }
 
 export interface WaterRecord {
@@ -122,7 +123,6 @@ export function saveMeal(analysis: MealAnalysis, mealType = "other", photo_base6
 
 async function syncMealToCloud(record: MealRecord, photo_base64?: string) {
   const { userId, deviceId } = await getOwnerId();
-  const ownerId = userId || deviceId;
   const isUser = !!userId;
 
   // Ensure profile exists
@@ -211,15 +211,16 @@ export async function syncFromCloud(): Promise<{
         id: m.id,
         timestamp: new Date(m.logged_at).getTime(),
         mealType: m.meal_type,
+        photo_url: m.photo_url || undefined,
         analysis: {
           food_items: m.food_items || [],
           total_sugar_g: m.total_sugar_g || 0,
           total_added_sugar_g: m.total_added_sugar_g || 0,
           total_net_carb_g: m.total_net_carb_g || 0,
           total_fiber_g: m.total_fiber_g || 0,
-          total_protein_g: 0,
-          total_fat_g: 0,
-          total_calories: 0,
+          total_protein_g: m.total_protein_g || 0,
+          total_fat_g: m.total_fat_g || 0,
+          total_calories: m.total_calories || 0,
           avg_glycemic_index: m.avg_glycemic_index || 0,
           total_glycemic_load: m.total_glycemic_load || 0,
           glucose_risk: m.glucose_risk || "low",

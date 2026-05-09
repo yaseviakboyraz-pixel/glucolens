@@ -188,10 +188,10 @@ export function HistoryDashboard({ profile, lang, onNewMeal, onEditProfile }: Pr
             displayMeals.map((meal) => (
               <div key={meal.id} className="bg-gray-900 rounded-xl p-4 border border-gray-800">
                 <div className="flex justify-between items-start gap-3">
-                  {/* Thumbnail */}
-                  {meal.photo_base64 && (
+                  {/* Thumbnail: photo_url (cloud) veya photo_base64 (eski) */}
+                  {(meal.photo_url || meal.photo_base64) && (
                     <img
-                      src={`data:image/jpeg;base64,${meal.photo_base64}`}
+                      src={meal.photo_url || `data:image/jpeg;base64,${meal.photo_base64}`}
                       alt="meal"
                       className="w-14 h-14 rounded-xl object-cover shrink-0"
                     />
