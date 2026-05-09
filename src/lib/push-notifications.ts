@@ -14,16 +14,15 @@ export async function initPushNotifications(): Promise<void> {
     await PushNotifications.register();
 
     PushNotifications.addListener('registration', token => {
-      console.log('Push token:', token.value);
       localStorage.setItem('push_token', token.value);
     });
 
-    PushNotifications.addListener('pushNotificationReceived', notification => {
-      console.log('Push received:', notification);
+    PushNotifications.addListener('pushNotificationReceived', _notification => {
+      // Handle foreground notification
     });
 
-    PushNotifications.addListener('pushNotificationActionPerformed', action => {
-      console.log('Push action:', action);
+    PushNotifications.addListener('pushNotificationActionPerformed', _action => {
+      // Handle notification tap
     });
   } catch (err) {
     console.error('Push init error:', err);

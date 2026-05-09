@@ -26,17 +26,14 @@ export interface MealRecord {
   photo_url?: string;
 }
 
-export interface WaterRecord {
-  id: string;
-  amount_ml: number;
-  timestamp: number;
-}
-
 export interface WaterLog {
   id: string;
   amount_ml: number;
   timestamp: number;
 }
+
+// Alias for backwards compatibility
+export type WaterRecord = WaterLog;
 
 export interface ActivityLog {
   id: string;

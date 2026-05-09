@@ -9,7 +9,7 @@ import { QRMenuAnalyzer } from "@/components/qr-menu-analyzer";
 import { DrinkAnalyzer } from "@/components/drink-analyzer";
 import { MealPlanGenerator } from "@/components/meal-plan";
 import { AuthScreen } from "@/components/auth-screen";
-import { getProfile, saveProfile, type UserProfile } from "@/lib/storage";
+import { getProfile, saveProfile, syncFromCloud, type UserProfile } from "@/lib/storage";
 import { detectBrowserLang, type Lang } from "@/lib/i18n";
 import { onAuthStateChange, signOut, type User } from "@/lib/auth";
 import { initPushNotifications } from "@/lib/push-notifications";
@@ -52,7 +52,14 @@ export default function Home() {
     const subscription = onAuthStateChange((u) => {
       setUser(u);
       if (u) {
-        // Sync user name to profile if available
+        // Sync cloud data when user logs in
+        syncFromCloud().then(({ profile: cloudProfile }) => {
+          if (cloudProfile) {
+            setProfile(cloudProfile);
+            if (cloudProfile.setupComplete) setView("analyze");
+          }
+        }).catch(console.error);
+        // Sync name to profile if available
         const currentProfile = getProfile();
         if (currentProfile && u.user_metadata?.name && !currentProfile.name) {
           const updated = { ...currentProfile, name: u.user_metadata.name };

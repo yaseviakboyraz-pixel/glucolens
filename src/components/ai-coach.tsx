@@ -23,30 +23,24 @@ export function AICoach() {
     const report = getWeeklyReport();
     const meals = getMeals().slice(0, 5);
 
-    const contextPrompt = `You are GlucoLens AI Coach — a friendly, knowledgeable nutrition coach specializing in blood sugar management. Be concise, warm, and actionable.
+    const prompt = `You are GlucoLens AI Coach. Generate a brief, personalized greeting (2-3 sentences max).
 
-User profile: ${profile?.userType || "healthy"}, daily GL target: ${profile?.dailyGLTarget || 100}
+User profile: ${profile?.userType || "healthy"}, daily GL target: ${profile?.dailyGLTarget || 60}
 Weekly stats: avg daily GL ${report?.avgDailyGL ?? 0}, ${report?.totalMeals ?? 0} meals logged, ${report?.highRiskMeals ?? 0} high-risk meals, ${report?.streak ?? 0} day streak
-Recent meals: ${meals.slice(0, 3).map(m => m.analysis.food_items.map(f => f.name_tr || f.name).join("+")).join(" | ")}
+Recent meals: ${meals.slice(0, 3).map(m => m.analysis.food_items.map(f => f.name_tr || f.name).join("+")).join(" | ") || "none yet"}
 
-Generate a brief, personalized greeting (2-3 sentences max). Mention one specific insight from their data. End with an offer to help.`;
+Mention one specific insight from their data if available. End with an offer to help. Be warm and concise.`;
 
     try {
-      const res = await fetch("/api/analyze", {
+      const res = await fetch("/api/coach", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          imageBase64: null,
-          userType: profile?.userType || "healthy",
-          mealContext: "__COACH_GREETING__",
-          coachPrompt: contextPrompt,
-        }),
+        body: JSON.stringify({ prompt }),
       });
 
       if (res.ok) {
         const data = await res.json();
-        const greeting = data.coachMessage || getDefaultGreeting(report);
-        setMessages([{ role: "coach", content: greeting }]);
+        setMessages([{ role: "coach", content: data.message || getDefaultGreeting(report) }]);
       } else {
         setMessages([{ role: "coach", content: getDefaultGreeting(report) }]);
       }
