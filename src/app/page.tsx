@@ -9,11 +9,13 @@ import { QRMenuAnalyzer } from "@/components/qr-menu-analyzer";
 import { DrinkAnalyzer } from "@/components/drink-analyzer";
 import { MealPlanGenerator } from "@/components/meal-plan";
 import { AuthScreen } from "@/components/auth-screen";
+import { Paywall } from "@/components/paywall";
 import { getProfile, saveProfile, syncFromCloud, type UserProfile } from "@/lib/storage";
 import { detectBrowserLang, type Lang } from "@/lib/i18n";
 import { onAuthStateChange, signOut, type User } from "@/lib/auth";
 import { initPushNotifications } from "@/lib/push-notifications";
 import { initNetworkMonitor, onNetworkChange, isOnline, type NetworkStatus } from "@/lib/network";
+import { getCurrentPlan, type PlanId } from "@/lib/subscriptions";
 
 type View = "setup" | "analyze" | "history" | "ingredient" | "menu" | "drink" | "plan";
 
@@ -24,6 +26,8 @@ export default function Home() {
   const [loaded, setLoaded] = useState(false);
   const [user, setUser] = useState<User | null>(null);
   const [showAuth, setShowAuth] = useState(false);
+  const [showPaywall, setShowPaywall] = useState(false);
+  const [currentPlan, setCurrentPlan] = useState<PlanId>("free");
   const [networkStatus, setNetworkStatus] = useState<NetworkStatus>("unknown");
   const [theme, setTheme] = useState<"dark" | "light">("dark");
 
@@ -35,31 +39,25 @@ export default function Home() {
     if (!p || !p.setupComplete) setView("setup");
     setLoaded(true);
 
-    // Theme
     const savedTheme = localStorage.getItem("glucolens_theme") as "dark" | "light" | null;
     const t = savedTheme || "dark";
     setTheme(t);
     document.documentElement.classList.toggle("light", t === "light");
 
-    // Push notifications
     initPushNotifications().catch(console.error);
-
-    // Network monitor
-    initNetworkMonitor().then(() => {
-      setNetworkStatus(isOnline() ? "online" : "offline");
-    });
+    initNetworkMonitor().then(() => setNetworkStatus(isOnline() ? "online" : "offline"));
     const unsubNetwork = onNetworkChange(status => setNetworkStatus(status));
+    getCurrentPlan().then(setCurrentPlan);
+
     const subscription = onAuthStateChange((u) => {
       setUser(u);
       if (u) {
-        // Sync cloud data when user logs in
         syncFromCloud().then(({ profile: cloudProfile }) => {
           if (cloudProfile) {
             setProfile(cloudProfile);
             if (cloudProfile.setupComplete) setView("analyze");
           }
         }).catch(console.error);
-        // Sync name to profile if available
         const currentProfile = getProfile();
         if (currentProfile && u.user_metadata?.name && !currentProfile.name) {
           const updated = { ...currentProfile, name: u.user_metadata.name };
@@ -69,10 +67,7 @@ export default function Home() {
       }
     });
 
-    return () => {
-      subscription.unsubscribe();
-      unsubNetwork();
-    };
+    return () => { subscription.unsubscribe(); unsubNetwork(); };
   }, []);
 
   function handleLangChange(l: Lang) {
@@ -90,114 +85,84 @@ export default function Home() {
   }
 
   function refreshProfile() {
-    const p = getProfile();
-    setProfile(p);
+    setProfile(getProfile());
   }
 
+  // Loading
   if (!loaded) {
     return (
-      <div className="min-h-screen bg-gray-950 flex items-center justify-center">
-        <div className="text-teal-500 text-2xl animate-pulse">●</div>
+      <div style={{ minHeight: "100dvh", display: "flex", alignItems: "center", justifyContent: "center", background: "var(--nova-bg)" }}>
+        <div style={{ width: 8, height: 8, borderRadius: "50%", background: "rgba(139,92,246,0.8)", animation: "nova-pulse 1.2s infinite" }} />
       </div>
     );
   }
 
-  // Auth screen
   if (showAuth) {
-    return (
-      <AuthScreen onSuccess={() => {
-        setShowAuth(false);
-        refreshProfile();
-      }} />
-    );
+    return <AuthScreen onSuccess={() => { setShowAuth(false); refreshProfile(); }} />;
   }
 
   if (view === "setup") {
     return (
-      <UserProfileSetup
-        lang={lang}
-        onComplete={() => { refreshProfile(); setView("analyze"); }}
-      />
+      <UserProfileSetup lang={lang} onComplete={() => { refreshProfile(); setView("analyze"); }} />
     );
   }
 
-  const TABS = [
-    { key: "analyze",    icon: "📷", label: "Meal" },
-    { key: "drink",      icon: "🥤", label: "Drink" },
-    { key: "ingredient", icon: "🔬", label: "Search" },
-    { key: "menu",       icon: "🍽️", label: "Menu" },
-    { key: "plan",       icon: "🗓️", label: "Plan" },
-    { key: "history",    icon: "📊", label: "History" },
-  ] as { key: View; icon: string; label: string }[];
-
   return (
-    <main className="min-h-screen bg-gray-950 text-white">
-      {/* Sticky Header */}
-      <div className="bg-gray-900/90 backdrop-blur border-b border-gray-800 sticky top-0 z-10">
-        <div className="max-w-2xl mx-auto px-4 py-3 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <span className="text-xl font-bold bg-gradient-to-r from-teal-400 to-emerald-400 bg-clip-text text-transparent">
-              GlucoLens
+    <div className="nova-page">
+
+      {/* ── HEADER ── */}
+      <header className="nova-header">
+        <div>
+          <div className="nova-logo-word">GlucoLens</div>
+          <div className="nova-logo-sub">Glucose Intelligence</div>
+        </div>
+        <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+
+          {/* Network offline badge */}
+          {networkStatus === "offline" && (
+            <span style={{ fontSize: 9, color: "rgba(245,158,11,0.8)", letterSpacing: 1, background: "rgba(245,158,11,0.08)", border: "0.5px solid rgba(245,158,11,0.2)", borderRadius: 20, padding: "2px 8px" }}>
+              OFFLINE
             </span>
-            {profile?.name && (
-              <span className="text-xs text-gray-600 hidden sm:block">· {profile.name}</span>
-            )}
-          </div>
-          <div className="flex items-center gap-2">
-            {/* Auth button */}
-            {user ? (
-              <button onClick={() => signOut().catch(console.error)}
-                className="text-xs text-gray-500 hover:text-gray-300 transition-colors px-2 py-1 rounded-lg border border-gray-800">
-                Sign out
-              </button>
-            ) : (
-              <button onClick={() => setShowAuth(true)}
-                className="text-xs text-teal-400 hover:text-teal-300 transition-colors px-2 py-1 rounded-lg border border-teal-800 bg-teal-950/30">
-                Sign in
-              </button>
-            )}
-            <button onClick={toggleTheme}
-              className="text-xs text-gray-500 hover:text-gray-300 transition-colors px-2 py-1 rounded-lg border border-gray-800">
-              {theme === "dark" ? "☀️" : "🌙"}
+          )}
+
+          {/* Plan badge */}
+          {currentPlan === "pro" && (
+            <span style={{ fontSize: 9, color: "rgba(139,92,246,0.9)", letterSpacing: 1, background: "rgba(139,92,246,0.1)", border: "0.5px solid rgba(139,92,246,0.25)", borderRadius: 20, padding: "2px 10px", fontWeight: 600 }}>
+              PRO
+            </span>
+          )}
+
+          {/* Auth */}
+          {user ? (
+            <button onClick={() => signOut().catch(console.error)} className="nova-hbtn" title="Sign out">
+              <i className="ti ti-logout" />
             </button>
-            <LangSwitcher current={lang} onChange={handleLangChange} />
-          </div>
-        </div>
-
-        {/* Cloud sync indicator */}
-        {user && (
-          <div className="max-w-2xl mx-auto px-4 pb-1">
-            <p className="text-xs text-green-500">☁️ Synced · {user.email}</p>
-          </div>
-        )}
-
-        {/* Offline banner */}
-        {networkStatus === "offline" && (
-          <div className="bg-amber-950 border-b border-amber-500/30 px-4 py-1.5">
-            <p className="text-xs text-amber-400 text-center max-w-2xl mx-auto">
-              📵 Offline — Analysis requires internet. Your history is still available.
-            </p>
-          </div>
-        )}
-
-        {/* Nav tabs */}
-        <div className="max-w-2xl mx-auto px-4 pb-2 grid grid-cols-6 gap-1">
-          {TABS.map(tab => (
-            <button key={tab.key} onClick={() => setView(tab.key)}
-              className={`py-1.5 rounded-lg text-xs font-medium transition-all ${
-                view === tab.key
-                  ? "bg-teal-600 text-white"
-                  : "bg-gray-800/50 text-gray-500 hover:text-gray-300"
-              }`}>
-              <div className="text-sm">{tab.icon}</div>
-              <div className="text-[10px]">{tab.label}</div>
+          ) : (
+            <button onClick={() => setShowAuth(true)} className="nova-hbtn" title="Sign in">
+              <i className="ti ti-user" />
             </button>
-          ))}
-        </div>
-      </div>
+          )}
 
-      {/* Content */}
-      <div className="max-w-2xl mx-auto px-4 py-6">
+          {/* Theme toggle */}
+          <button onClick={toggleTheme} className="nova-hbtn" title="Toggle theme">
+            <i className={`ti ti-${theme === "dark" ? "sun" : "moon"}`} />
+          </button>
+
+          {/* Language */}
+          <LangSwitcher current={lang} onChange={handleLangChange} />
+        </div>
+      </header>
+
+      {/* ── CLOUD SYNC INDICATOR ── */}
+      {user && (
+        <div style={{ padding: "4px 18px", display: "flex", alignItems: "center", gap: 6, borderBottom: "0.5px solid var(--nova-border)" }}>
+          <i className="ti ti-cloud-check" style={{ fontSize: 12, color: "rgba(16,185,129,0.6)" }} />
+          <span style={{ fontSize: 9, color: "var(--nova-text-4)", letterSpacing: 1 }}>{user.email}</span>
+        </div>
+      )}
+
+      {/* ── CONTENT ── */}
+      <div style={{ flex: 1, padding: "0 0 8px" }}>
         {view === "analyze" && (
           <UploadAnalyzer
             userType={profile?.userType || "healthy"}
@@ -227,11 +192,49 @@ export default function Home() {
         )}
       </div>
 
-      <div className="border-t border-gray-800 py-4 text-center mt-8">
-        <p className="text-gray-700 text-xs">
-          GlucoLens © 2026 · Powered by Claude AI · Not medical advice
-        </p>
-      </div>
-    </main>
+      {/* ── BOTTOM NAV ── */}
+      <nav className="nova-bnav" aria-label="Main navigation">
+        <button className={`nova-nav-item ${view === "history" ? "active" : ""}`}
+          onClick={() => setView("history")}>
+          <i className="ti ti-chart-bar" />
+          <span>Log</span>
+          {view === "history" && <div className="nova-nav-dot" />}
+        </button>
+
+        <button className={`nova-nav-item ${view === "drink" ? "active" : ""}`}
+          onClick={() => setView("drink")}>
+          <i className="ti ti-bottle" />
+          <span>Drink</span>
+          {view === "drink" && <div className="nova-nav-dot" />}
+        </button>
+
+        {/* FAB — Camera */}
+        <button className="nova-fab" onClick={() => setView("analyze")} aria-label="Analyze meal">
+          <i className="ti ti-camera" />
+        </button>
+
+        <button className={`nova-nav-item ${view === "ingredient" ? "active" : ""}`}
+          onClick={() => setView("ingredient")}>
+          <i className="ti ti-search" />
+          <span>Search</span>
+          {view === "ingredient" && <div className="nova-nav-dot" />}
+        </button>
+
+        <button className={`nova-nav-item ${view === "plan" ? "active" : ""}`}
+          onClick={() => setView("plan")}>
+          <i className="ti ti-heart-rate-monitor" />
+          <span>Plan</span>
+          {view === "plan" && <div className="nova-nav-dot" />}
+        </button>
+      </nav>
+
+      {/* Paywall */}
+      {showPaywall && (
+        <Paywall
+          onClose={() => setShowPaywall(false)}
+          onUpgrade={(plan) => { setCurrentPlan(plan); setShowPaywall(false); }}
+        />
+      )}
+    </div>
   );
 }

@@ -5,11 +5,12 @@ import { NextRequest, NextResponse } from "next/server";
 const rateMap = new Map<string, { count: number; reset: number }>();
 
 const LIMITS: Record<string, { max: number; windowMs: number }> = {
-  "/api/analyze":     { max: 10, windowMs: 60_000 },   // 10 per minute
-  "/api/coach":       { max: 20, windowMs: 60_000 },   // 20 per minute
-  "/api/gi-estimate": { max: 30, windowMs: 60_000 },   // 30 per minute
-  "/api/meal-plan":   { max: 5,  windowMs: 60_000 },   // 5 per minute
-  "/api/menu-analyze":{ max: 5,  windowMs: 60_000 },   // 5 per minute
+  "/api/analyze":          { max: 10, windowMs: 60_000 },
+  "/api/delivery-analyze": { max: 10, windowMs: 60_000 },
+  "/api/coach":            { max: 20, windowMs: 60_000 },
+  "/api/gi-estimate":      { max: 30, windowMs: 60_000 },
+  "/api/meal-plan":        { max: 5,  windowMs: 60_000 },
+  "/api/menu-analyze":     { max: 5,  windowMs: 60_000 },
 };
 
 function getIP(req: NextRequest): string {
@@ -55,5 +56,5 @@ export function middleware(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/api/analyze", "/api/coach", "/api/gi-estimate", "/api/meal-plan", "/api/menu-analyze"],
+  matcher: ["/api/analyze", "/api/delivery-analyze", "/api/coach", "/api/gi-estimate", "/api/meal-plan", "/api/menu-analyze"],
 };

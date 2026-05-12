@@ -41,7 +41,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
       </head>
-      <body className="min-h-screen bg-gray-950 antialiased">
+      <body className="min-h-screen antialiased" style={{background:'var(--nova-bg)',color:'var(--nova-text-1)'}}>
+        <div className="nova-aurora" aria-hidden="true" />
         <ErrorBoundary>{children}</ErrorBoundary>
       </body>
     </html>

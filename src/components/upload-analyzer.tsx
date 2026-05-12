@@ -10,7 +10,7 @@ import { t, type Lang } from "@/lib/i18n";
 import { saveMeal } from "@/lib/storage";
 import type { MealAnalysis } from "@/lib/claude-vision";
 
-type Mode = "normal" | "pre_meal" | "compare";
+type Mode = "normal" | "pre_meal" | "compare" | "delivery";
 
 interface Props {
   userType?: string;
@@ -87,9 +87,13 @@ export function UploadAnalyzer({ userType = "healthy", lang, onAnalysisComplete 
     try {
       const contextNote = currentMode === "pre_meal"
         ? "[PRE-MEAL ANALYSIS] User is asking about this food BEFORE eating. Emphasize glucose spike prediction and suggest optimal timing/pairing. " + mealContext
+        : currentMode === "delivery"
+        ? "[DELIVERY ORDER] This is a food delivery order screenshot or packaged food photo. Extract all items from the order. " + mealContext
         : mealContext;
 
-      const res = await fetch("/api/analyze", {
+      const apiEndpoint = currentMode === "delivery" ? "/api/delivery-analyze" : "/api/analyze";
+
+      const res = await fetch(apiEndpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ imageBase64: b64, userType, mealContext: contextNote }),
@@ -219,8 +223,9 @@ export function UploadAnalyzer({ userType = "healthy", lang, onAnalysisComplete 
         </div>
       )}
       <div className="grid grid-cols-4 gap-1.5">
-        {([
+        {([  
           { key: "normal",   label: "📷", sub: "Analyze" },
+          { key: "delivery", label: "🛵", sub: "Sipariş" },
           { key: "pre_meal", label: "🤔", sub: "Before" },
           { key: "compare",  label: "⚖️", sub: "Compare" },
         ] as { key: Mode; label: string; sub: string }[]).map((m) => (
@@ -232,11 +237,6 @@ export function UploadAnalyzer({ userType = "healthy", lang, onAnalysisComplete 
             <div>{m.sub}</div>
           </button>
         ))}
-        <button onClick={() => setShowBarcode(true)}
-          className="py-2.5 rounded-xl text-xs font-medium bg-gray-900 text-gray-400 hover:bg-gray-800 border border-gray-800 transition-all">
-          <div className="text-base">🏷️</div>
-          <div>Barcode</div>
-        </button>
       </div>
 
       {/* Barcode Scanner Modal */}
@@ -325,9 +325,9 @@ export function UploadAnalyzer({ userType = "healthy", lang, onAnalysisComplete 
       )}
 
       {/* Mode descriptions */}
-      {mode === "pre_meal" && !barcodeProduct && (
-        <div className="bg-blue-950 border border-blue-500/30 rounded-xl p-3 text-xs text-blue-300">
-          🤔 <strong>Before Eating:</strong> Take a photo before eating to predict glucose impact.
+      {mode === "delivery" && !barcodeProduct && (
+        <div className="bg-orange-950 border border-orange-500/30 rounded-xl p-3 text-xs text-orange-300">
+          🛵 <strong>Sipariş Analizi:</strong> Yemeksepeti, Trendyol Yemek, Getir veya herhangi bir sipariş uygulamasından sipariş ekranının fotoğrafını çek. Tatlıcı, fırın, restoran siparişi de analiz edilir.
         </div>
       )}
       {mode === "compare" && !barcodeProduct && (

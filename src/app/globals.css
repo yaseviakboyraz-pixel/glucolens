@@ -1,37 +1,471 @@
 @import "tailwindcss";
 
+/* ══════════════════════════════════════════
+   GLUCOLENS — NOVA/AURORA DESIGN SYSTEM
+   Dark: deep black + aurora gradients
+   Light: pure white + same aurora gradients
+   Accent colors stay identical in both modes
+══════════════════════════════════════════ */
+
 :root {
-  --background: #030712;
-  --foreground: #f9fafb;
+  /* Background */
+  --nova-bg:            #030308;
+  --nova-surface:       rgba(255,255,255,0.025);
+  --nova-surface-hover: rgba(255,255,255,0.04);
+  --nova-border:        rgba(255,255,255,0.055);
+  --nova-border-med:    rgba(255,255,255,0.1);
+
+  /* Text */
+  --nova-text-1:        rgba(255,255,255,0.92);
+  --nova-text-2:        rgba(255,255,255,0.45);
+  --nova-text-3:        rgba(255,255,255,0.18);
+  --nova-text-4:        rgba(255,255,255,0.08);
+
+  /* Nav */
+  --nova-nav-bg:        rgba(3,3,8,0.97);
+  --nova-nav-border:    rgba(255,255,255,0.05);
+
+  /* Aurora accents — identical in both modes */
+  --nova-purple:        rgba(139,92,246,1);
+  --nova-purple-dim:    rgba(139,92,246,0.12);
+  --nova-purple-border: rgba(139,92,246,0.25);
+  --nova-pink:          rgba(236,72,153,0.08);
+  --nova-cyan:          rgba(6,182,212,0.06);
+
+  /* Semantic data colors — same both modes */
+  --c-sugar:    rgba(239,68,68,1);
+  --c-carb:     rgba(59,130,246,1);
+  --c-protein:  rgba(139,92,246,1);
+  --c-fat:      rgba(245,158,11,1);
+  --c-fiber:    rgba(16,185,129,1);
+  --c-kcal:     rgba(255,255,255,0.3);
+  --c-risk-hi:  rgba(239,68,68,0.85);
+  --c-risk-med: rgba(245,158,11,0.85);
+  --c-risk-lo:  rgba(16,185,129,0.85);
+
+  --background: var(--nova-bg);
+  --foreground: var(--nova-text-1);
 }
 
+/* ── LIGHT MODE ───────────────────────── */
 .light {
-  --background: #f9fafb;
-  --foreground: #030712;
+  --nova-bg:            #ffffff;
+  --nova-surface:       rgba(0,0,0,0.03);
+  --nova-surface-hover: rgba(0,0,0,0.055);
+  --nova-border:        rgba(0,0,0,0.07);
+  --nova-border-med:    rgba(0,0,0,0.14);
+
+  --nova-text-1:        #0a0a14;
+  --nova-text-2:        rgba(10,10,20,0.55);
+  --nova-text-3:        rgba(10,10,20,0.3);
+  --nova-text-4:        rgba(10,10,20,0.12);
+
+  --nova-nav-bg:        rgba(255,255,255,0.97);
+  --nova-nav-border:    rgba(0,0,0,0.07);
+
+  --background: var(--nova-bg);
+  --foreground: var(--nova-text-1);
 }
 
-.light body {
-  background: #f9fafb;
-  color: #030712;
-}
+/* ── BASE ─────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; }
 
-.light .bg-gray-950 { background-color: #f9fafb !important; }
-.light .bg-gray-900 { background-color: #f3f4f6 !important; }
-.light .bg-gray-800 { background-color: #e5e7eb !important; }
-.light .border-gray-800 { border-color: #d1d5db !important; }
-.light .text-gray-200 { color: #1f2937 !important; }
-.light .text-gray-300 { color: #374151 !important; }
-.light .text-gray-400 { color: #4b5563 !important; }
-.light .text-gray-500 { color: #6b7280 !important; }
-.light .text-gray-600 { color: #9ca3af !important; }
-.light .text-white { color: #111827 !important; }
+html { scroll-behavior: smooth; }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+  background: var(--nova-bg);
+  color: var(--nova-text-1);
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  min-height: 100dvh;
 }
 
-* {
-  box-sizing: border-box;
+/* ── AURORA BACKGROUND ────────────────── */
+.nova-aurora {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background:
+    radial-gradient(ellipse 200% 60% at 30% -10%, rgba(139,92,246,0.1) 0%, transparent 60%),
+    radial-gradient(ellipse 150% 40% at 80% 20%,  rgba(236,72,153,0.07) 0%, transparent 50%),
+    radial-gradient(ellipse 200% 80% at 10% 80%,  rgba(6,182,212,0.05)  0%, transparent 60%);
 }
+.light .nova-aurora {
+  background:
+    radial-gradient(ellipse 200% 60% at 30% -10%, rgba(139,92,246,0.06) 0%, transparent 60%),
+    radial-gradient(ellipse 150% 40% at 80% 20%,  rgba(236,72,153,0.04) 0%, transparent 50%),
+    radial-gradient(ellipse 200% 80% at 10% 80%,  rgba(6,182,212,0.03)  0%, transparent 60%);
+}
+
+/* ── LAYOUT ───────────────────────────── */
+.nova-page {
+  position: relative;
+  z-index: 1;
+  max-width: 672px;
+  margin: 0 auto;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  padding-bottom: 80px; /* bottom nav height */
+}
+
+/* ── HEADER ───────────────────────────── */
+.nova-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 18px 10px;
+  border-bottom: 0.5px solid var(--nova-border);
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  background: var(--nova-bg);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+.nova-logo-word {
+  font-size: 17px;
+  font-weight: 200;
+  color: var(--nova-text-1);
+  letter-spacing: 8px;
+  text-transform: uppercase;
+}
+.nova-logo-sub {
+  font-size: 7px;
+  color: var(--nova-text-4);
+  letter-spacing: 4px;
+  text-transform: uppercase;
+  margin-top: 1px;
+}
+.nova-hbtn {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: var(--nova-surface);
+  border: 0.5px solid var(--nova-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--nova-text-3);
+  font-size: 14px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.nova-hbtn:hover { background: var(--nova-surface-hover); }
+
+/* ── CARDS ────────────────────────────── */
+.nova-card {
+  background: var(--nova-surface);
+  border: 0.5px solid var(--nova-border);
+  border-radius: 20px;
+  position: relative;
+  overflow: hidden;
+}
+.nova-card-glow {
+  background: rgba(139,92,246,0.04);
+  border: 0.5px solid var(--nova-purple-border);
+  border-radius: 20px;
+  position: relative;
+  overflow: hidden;
+}
+.nova-card-glow::before {
+  content: '';
+  position: absolute;
+  width: 180px; height: 180px;
+  border-radius: 50%;
+  border: 1px solid rgba(139,92,246,0.08);
+  top: -80px; right: -50px;
+  pointer-events: none;
+}
+
+/* ── GL HERO ──────────────────────────── */
+.nova-gl-score {
+  font-size: clamp(56px, 14vw, 72px);
+  font-weight: 100;
+  line-height: 1;
+  letter-spacing: -4px;
+  background: linear-gradient(135deg, var(--nova-text-1) 40%, rgba(139,92,246,0.7));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.light .nova-gl-score {
+  background: linear-gradient(135deg, #0a0a14 40%, rgba(139,92,246,0.8));
+  -webkit-background-clip: text;
+  background-clip: text;
+}
+
+/* ── STAT CARDS ───────────────────────── */
+.nova-stat {
+  background: var(--nova-surface);
+  border: 0.5px solid var(--nova-border);
+  border-radius: 14px;
+  padding: 10px 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border-left-width: 2px;
+  border-left-style: solid;
+}
+.nova-stat-icon {
+  width: 28px; height: 28px;
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.nova-stat-val {
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1;
+}
+.nova-stat-lbl {
+  font-size: 8px;
+  color: var(--nova-text-3);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  margin-top: 2px;
+}
+
+/* ── FOOD ROWS ────────────────────────── */
+.nova-food-card {
+  background: var(--nova-surface);
+  border: 0.5px solid var(--nova-border);
+  border-radius: 14px;
+  padding: 10px 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.nova-food-accent {
+  width: 3px;
+  border-radius: 2px;
+  align-self: stretch;
+  flex-shrink: 0;
+}
+.nova-food-name {
+  font-size: 12px;
+  color: var(--nova-text-2);
+  font-weight: 400;
+}
+.nova-food-sub {
+  font-size: 9px;
+  color: var(--nova-text-4);
+  margin-top: 2px;
+}
+
+/* ── MODE PILLS ───────────────────────── */
+.nova-pill {
+  flex: 1;
+  padding: 8px 4px;
+  border-radius: 12px;
+  background: var(--nova-surface);
+  border: 0.5px solid var(--nova-border);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 9px;
+  color: var(--nova-text-3);
+  letter-spacing: 0.5px;
+}
+.nova-pill.active {
+  background: rgba(139,92,246,0.1);
+  border-color: var(--nova-purple-border);
+  color: rgba(139,92,246,0.9);
+}
+.nova-pill i { font-size: 15px; }
+
+/* ── UPLOAD ZONE ──────────────────────── */
+.nova-upload {
+  flex: 1;
+  background: rgba(139,92,246,0.03);
+  border: 1.5px dashed rgba(139,92,246,0.18);
+  border-radius: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  position: relative;
+  overflow: hidden;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.nova-upload:hover { background: rgba(139,92,246,0.06); }
+.nova-upload-corner {
+  position: absolute;
+  width: 14px; height: 14px;
+  border-color: rgba(139,92,246,0.4);
+  border-style: solid;
+}
+.nova-upload-corner.tl { top: 12px; left: 12px; border-width: 1px 0 0 1px; }
+.nova-upload-corner.tr { top: 12px; right: 12px; border-width: 1px 1px 0 0; }
+.nova-upload-corner.bl { bottom: 12px; left: 12px; border-width: 0 0 1px 1px; }
+.nova-upload-corner.br { bottom: 12px; right: 12px; border-width: 0 1px 1px 0; }
+
+/* ── PRIMARY BUTTON ───────────────────── */
+.nova-btn-primary {
+  width: 100%;
+  padding: 14px;
+  background: rgba(139,92,246,0.12);
+  border: 0.5px solid var(--nova-purple-border);
+  border-radius: 16px;
+  color: rgba(139,92,246,0.9);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.nova-btn-primary:hover { background: rgba(139,92,246,0.18); }
+.nova-btn-primary:active { transform: scale(0.98); }
+
+/* ── ACTION BUTTONS ───────────────────── */
+.nova-action-btn {
+  flex: 1;
+  padding: 10px 6px;
+  background: var(--nova-surface);
+  border: 0.5px solid var(--nova-border);
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  cursor: pointer;
+  transition: background 0.2s;
+  font-size: 9px;
+  color: var(--nova-text-3);
+  letter-spacing: 0.5px;
+}
+.nova-action-btn:hover { background: var(--nova-surface-hover); }
+.nova-action-btn i { font-size: 18px; color: var(--nova-text-3); }
+
+/* ── BOTTOM NAV ───────────────────────── */
+.nova-bnav {
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  max-width: 672px;
+  margin: 0 auto;
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  padding: 8px 6px max(env(safe-area-inset-bottom), 14px);
+  background: var(--nova-nav-bg);
+  border-top: 0.5px solid var(--nova-nav-border);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  z-index: 50;
+}
+.nova-bnav::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 25%; right: 25%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(139,92,246,0.4), transparent);
+  opacity: 0.6;
+}
+.nova-nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  font-size: 8px;
+  color: var(--nova-text-4);
+  letter-spacing: 0.5px;
+  min-width: 44px;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 10px;
+  transition: color 0.2s;
+  background: none;
+  border: none;
+}
+.nova-nav-item i { font-size: 21px; color: var(--nova-text-4); transition: color 0.2s; }
+.nova-nav-item.active { color: rgba(139,92,246,0.9); }
+.nova-nav-item.active i { color: rgba(139,92,246,0.9); }
+.nova-nav-dot { width: 3px; height: 3px; background: rgba(139,92,246,0.9); border-radius: 50%; }
+
+/* FAB */
+.nova-fab {
+  width: 50px; height: 50px;
+  border-radius: 50%;
+  background: rgba(139,92,246,0.12);
+  border: 1px solid var(--nova-purple-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: -20px;
+  cursor: pointer;
+  transition: all 0.2s;
+  position: relative;
+}
+.nova-fab::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(139,92,246,0.15), transparent);
+}
+.nova-fab i { font-size: 21px; color: rgba(139,92,246,0.8); position: relative; }
+.nova-fab:hover { background: rgba(139,92,246,0.2); transform: scale(1.05); }
+.nova-fab:active { transform: scale(0.97); }
+
+/* ── SECTION HEADER ───────────────────── */
+.nova-section-hdr {
+  font-size: 8px;
+  color: var(--nova-text-4);
+  letter-spacing: 4px;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+
+/* ── RISK BADGE ───────────────────────── */
+.nova-risk-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  border-radius: 20px;
+  padding: 4px 12px;
+  font-size: 9px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+}
+.nova-risk-badge.hi  { background: rgba(239,68,68,0.08); border: 0.5px solid rgba(239,68,68,0.2); color: rgba(239,68,68,0.8); }
+.nova-risk-badge.med { background: rgba(245,158,11,0.08); border: 0.5px solid rgba(245,158,11,0.2); color: rgba(245,158,11,0.8); }
+.nova-risk-badge.lo  { background: rgba(16,185,129,0.08); border: 0.5px solid rgba(16,185,129,0.2); color: rgba(16,185,129,0.8); }
+.nova-rdot { width: 4px; height: 4px; border-radius: 50%; background: currentColor; animation: nova-pulse 2s infinite; }
+
+/* ── ANIMATIONS ───────────────────────── */
+@keyframes nova-pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+@keyframes nova-slide-up { from{opacity:0;transform:translateY(14px)} to{opacity:1;transform:translateY(0)} }
+@keyframes nova-fade-in  { from{opacity:0} to{opacity:1} }
+@keyframes nova-scale-in { from{opacity:0;transform:scale(0.96)} to{opacity:1;transform:scale(1)} }
+
+.nova-slide-up  { animation: nova-slide-up  0.3s cubic-bezier(0.4,0,0.2,1) forwards; }
+.nova-fade-in   { animation: nova-fade-in   0.25s ease forwards; }
+.nova-scale-in  { animation: nova-scale-in  0.3s cubic-bezier(0.4,0,0.2,1) forwards; }
+
+/* ── SCROLLBAR ────────────────────────── */
+::-webkit-scrollbar { width: 3px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--nova-border); border-radius: 2px; }
+
+/* ── TAILWIND COMPAT OVERRIDES ─────────── */
+.light .bg-gray-950 { background: #ffffff !important; }
+.light .bg-gray-900 { background: rgba(0,0,0,0.03) !important; }
+.light .bg-gray-800 { background: rgba(0,0,0,0.06) !important; }
+.light .border-gray-800 { border-color: rgba(0,0,0,0.07) !important; }
+.light .text-white { color: #0a0a14 !important; }
+.light .text-gray-200 { color: rgba(10,10,20,0.85) !important; }
+.light .text-gray-300 { color: rgba(10,10,20,0.7) !important; }
+.light .text-gray-400 { color: rgba(10,10,20,0.55) !important; }
+.light .text-gray-500 { color: rgba(10,10,20,0.4) !important; }
+.light .text-gray-600 { color: rgba(10,10,20,0.3) !important; }
