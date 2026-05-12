@@ -10,7 +10,16 @@ import { t, type Lang } from "@/lib/i18n";
 import { saveMeal } from "@/lib/storage";
 import type { MealAnalysis } from "@/lib/claude-vision";
 
-type Mode = "normal" | "pre_meal" | "compare" | "delivery";
+type Mode = "normal" | "pre_meal" | "compare" | "url";
+
+const DELIVERY_PLATFORMS = ["yemeksepeti.com", "trendyol.com", "getir.com", "ubereats.com", "migros.com.tr", "grubhub.com", "deliveroo.com", "doordash.com"];
+const IMAGE_EXTS = /\.(jpg|jpeg|png|gif|webp|avif|bmp)(\?|$)/i;
+function detectUrlType(url: string): "delivery" | "image" | "menu" {
+  const lower = url.toLowerCase();
+  if (DELIVERY_PLATFORMS.some(p => lower.includes(p))) return "delivery";
+  if (IMAGE_EXTS.test(lower)) return "image";
+  return "menu";
+}
 
 interface Props {
   userType?: string;
@@ -41,6 +50,9 @@ export function UploadAnalyzer({ userType = "healthy", lang, onAnalysisComplete 
 
   const [showPaywall, setShowPaywall] = useState(false);
   const [currentPlan, setCurrentPlan] = useState<"free" | "pro">("free");
+  const [urlInput, setUrlInput] = useState("");
+  const [urlLoading, setUrlLoading] = useState(false);
+  const [menuResult, setMenuResult] = useState<null | { restaurant_name?: string; cuisine_type?: string; dishes: Array<{ name: string; name_tr?: string; estimated_gl: number; glucose_risk: string; notes: string; category: string; gi_estimate: number }>; top_safe: string[]; top_risky: string[]; meal_tips: string[] }>(null);
 
   const cameraRef = useRef<HTMLInputElement>(null);
   const galleryRef = useRef<HTMLInputElement>(null);
@@ -87,13 +99,9 @@ export function UploadAnalyzer({ userType = "healthy", lang, onAnalysisComplete 
     try {
       const contextNote = currentMode === "pre_meal"
         ? "[PRE-MEAL ANALYSIS] User is asking about this food BEFORE eating. Emphasize glucose spike prediction and suggest optimal timing/pairing. " + mealContext
-        : currentMode === "delivery"
-        ? "[DELIVERY ORDER] This is a food delivery order screenshot or packaged food photo. Extract all items from the order. " + mealContext
         : mealContext;
 
-      const apiEndpoint = currentMode === "delivery" ? "/api/delivery-analyze" : "/api/analyze";
-
-      const res = await fetch(apiEndpoint, {
+      const res = await fetch("/api/analyze", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ imageBase64: b64, userType, mealContext: contextNote }),
@@ -197,6 +205,59 @@ export function UploadAnalyzer({ userType = "healthy", lang, onAnalysisComplete 
     setImage(null); setPreview(null); setImage2(null); setPreview2(null);
     setResult(null); setResult2(null); setError(null); setSaved(false);
     setMealContext(""); setBarcodeProduct(null); setPortionG(100);
+    setUrlInput(""); setMenuResult(null);
+  };
+
+  const runUrlAnalysis = async (url: string) => {
+    if (!url.trim()) return;
+    const urlType = detectUrlType(url);
+    setUrlLoading(true); setError(null); setMenuResult(null); setResult(null); setSaved(false);
+    try {
+      if (urlType === "image") {
+        const fetchRes = await fetch("/api/menu-fetch", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ url }),
+        });
+        const fetchData = await fetchRes.json();
+        if (!fetchRes.ok || fetchData.type !== "image") throw new Error("Could not load image from URL");
+        setUrlLoading(false);
+        await runAnalysis(fetchData.base64, null, "normal");
+        return;
+      }
+      const fetchRes = await fetch("/api/menu-fetch", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url }),
+      });
+      const fetchData = await fetchRes.json();
+      if (!fetchRes.ok) throw new Error(fetchData.error || "Could not load page");
+
+      if (urlType === "delivery") {
+        const analyzeRes = await fetch("/api/delivery-analyze", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ text: fetchData.text, url, userType }),
+        });
+        const analyzeData = await analyzeRes.json();
+        if (!analyzeRes.ok) throw new Error(analyzeData.error || "Delivery analysis failed");
+        setResult(analyzeData.analysis);
+        setSaved(true);
+      } else {
+        const analyzeRes = await fetch("/api/menu-analyze", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ ...fetchData, userType }),
+        });
+        const analyzeData = await analyzeRes.json();
+        if (!analyzeRes.ok) throw new Error(analyzeData.error || "Menu analysis failed");
+        setMenuResult(analyzeData.menu);
+      }
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "URL analysis failed");
+    } finally {
+      setUrlLoading(false);
+    }
   };
 
   const foodName = (item: MealAnalysis["food_items"][number]) =>
@@ -225,7 +286,7 @@ export function UploadAnalyzer({ userType = "healthy", lang, onAnalysisComplete 
       <div className="grid grid-cols-4 gap-1.5">
         {([  
           { key: "normal",   label: "📷", sub: "Analyze" },
-          { key: "delivery", label: "🛵", sub: "Sipariş" },
+          { key: "url",      label: "🔗", sub: "URL / QR" },
           { key: "pre_meal", label: "🤔", sub: "Before" },
           { key: "compare",  label: "⚖️", sub: "Compare" },
         ] as { key: Mode; label: string; sub: string }[]).map((m) => (
@@ -324,20 +385,163 @@ export function UploadAnalyzer({ userType = "healthy", lang, onAnalysisComplete 
         </div>
       )}
 
-      {/* Mode descriptions */}
-      {mode === "delivery" && !barcodeProduct && (
-        <div className="bg-orange-950 border border-orange-500/30 rounded-xl p-3 text-xs text-orange-300">
-          🛵 <strong>Sipariş Analizi:</strong> Yemeksepeti, Trendyol Yemek, Getir veya herhangi bir sipariş uygulamasından sipariş ekranının fotoğrafını çek. Tatlıcı, fırın, restoran siparişi de analiz edilir.
-        </div>
-      )}
       {mode === "compare" && !barcodeProduct && (
         <div className="bg-purple-950 border border-purple-500/30 rounded-xl p-3 text-xs text-purple-300">
           ⚖️ <strong>Compare:</strong> Upload two meals to compare GL side by side.
         </div>
       )}
 
+      {/* URL mode */}
+      {mode === "url" && !menuResult && !result && (
+        <div className="space-y-3">
+          <div className="bg-blue-950 border border-blue-500/30 rounded-xl p-3 text-xs text-blue-300">
+            🔗 <strong>URL / QR Analiz:</strong> Restoran menü URL’si yapıştır veya QR kodu tara.
+          </div>
+
+          {/* QR scan button */}
+          <button
+            onClick={() => {
+              // trigger hidden QR input
+              const el = document.getElementById("qr-scan-input") as HTMLInputElement | null;
+              el?.click();
+            }}
+            className="w-full py-3 rounded-xl font-semibold text-white bg-gray-800 hover:bg-gray-700 border border-gray-700 transition-all flex items-center justify-center gap-2 text-sm">
+            📷 QR Kod Tara
+          </button>
+          <input
+            id="qr-scan-input"
+            type="file"
+            accept="image/*"
+            capture="environment"
+            className="hidden"
+            onChange={async (e) => {
+              const file = e.target.files?.[0];
+              if (!file) return;
+              e.target.value = "";
+              if ("BarcodeDetector" in window) {
+                const img = new Image();
+                const objectUrl = URL.createObjectURL(file);
+                img.onload = async () => {
+                  try {
+                    // @ts-expect-error BarcodeDetector not in TS types
+                    const detector = new BarcodeDetector({ formats: ["qr_code"] });
+                    const codes = await detector.detect(img);
+                    URL.revokeObjectURL(objectUrl);
+                    if (codes.length > 0 && codes[0].rawValue.startsWith("http")) {
+                      setUrlInput(codes[0].rawValue);
+                      await runUrlAnalysis(codes[0].rawValue);
+                    } else {
+                      setError("QR kodundan URL okunamadı. URL’yi manuel girin.");
+                    }
+                  } catch {
+                    URL.revokeObjectURL(objectUrl);
+                    setError("QR tarama başarısız. URL’yi manuel girin.");
+                  }
+                };
+                img.src = objectUrl;
+              } else {
+                setError("Bu tarayıcı QR okumayı desteklemiyor. URL’yi manuel girin.");
+              }
+            }}
+          />
+
+          <div className="flex items-center gap-2 text-xs text-gray-600">
+            <div className="flex-1 h-px bg-gray-800" />
+            ya da
+            <div className="flex-1 h-px bg-gray-800" />
+          </div>
+
+          <input
+            type="url"
+            value={urlInput}
+            onChange={(e) => setUrlInput(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && runUrlAnalysis(urlInput)}
+            placeholder="https://yemeksepeti.com/... veya https://restaurant.com/menu"
+            className="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-gray-200 placeholder-gray-600 text-sm focus:outline-none focus:border-teal-500"
+          />
+          {urlInput && (
+            <div className="text-xs text-gray-500 text-center">
+              Tespit: <span className="text-teal-400 font-medium">
+                {detectUrlType(urlInput) === "delivery" ? "🛵 Delivery siparişi" :
+                 detectUrlType(urlInput) === "image" ? "🖼️ Görsel" : "🍽️ Restoran menüsü"}
+              </span>
+            </div>
+          )}
+          <button
+            onClick={() => runUrlAnalysis(urlInput)}
+            disabled={!urlInput.trim() || urlLoading}
+            className="w-full py-4 rounded-xl font-semibold text-white bg-teal-600 hover:bg-teal-500 disabled:opacity-40 transition-all flex items-center justify-center gap-2">
+            {urlLoading ? "Analiz ediliyor..." : "🔗 Analiz Et"}
+          </button>
+        </div>
+      )}
+
+      {/* Menu result from URL */}
+      {menuResult && mode === "url" && (
+        <div className="space-y-4">
+          <div className="bg-gray-900 rounded-2xl p-4 border border-gray-800">
+            <div className="flex justify-between items-start">
+              <div>
+                <h2 className="text-white font-bold">{menuResult.restaurant_name || "Menü Analizi"}</h2>
+                {menuResult.cuisine_type && <p className="text-gray-500 text-xs mt-0.5">{menuResult.cuisine_type}</p>}
+              </div>
+              <button onClick={reset} className="text-gray-600 text-sm">✕</button>
+            </div>
+            <div className="grid grid-cols-3 gap-2 mt-3">
+              <div className="bg-gray-800 rounded-xl p-2 text-center">
+                <div className="text-white font-bold">{menuResult.dishes.length}</div>
+                <div className="text-xs text-gray-500">Toplam</div>
+              </div>
+              <div className="bg-green-950/60 rounded-xl p-2 text-center border border-green-500/20">
+                <div className="text-green-400 font-bold">{menuResult.dishes.filter(d => d.glucose_risk === "low").length}</div>
+                <div className="text-xs text-gray-500">Güvenli</div>
+              </div>
+              <div className="bg-red-950/60 rounded-xl p-2 text-center border border-red-500/20">
+                <div className="text-red-400 font-bold">{menuResult.dishes.filter(d => d.glucose_risk === "high").length}</div>
+                <div className="text-xs text-gray-500">Yüksek risk</div>
+              </div>
+            </div>
+          </div>
+          {menuResult.top_safe.length > 0 && (
+            <div className="bg-green-950/40 border border-green-500/30 rounded-xl p-3">
+              <p className="text-green-400 text-xs font-semibold mb-2">✅ En iyi seçenekler</p>
+              <div className="flex flex-wrap gap-1.5">
+                {menuResult.top_safe.map(d => <span key={d} className="text-xs bg-green-900/50 text-green-300 px-2 py-1 rounded-full">{d}</span>)}
+              </div>
+            </div>
+          )}
+          {menuResult.top_risky.length > 0 && (
+            <div className="bg-red-950/40 border border-red-500/30 rounded-xl p-3">
+              <p className="text-red-400 text-xs font-semibold mb-2">🔴 Kaçın</p>
+              <div className="flex flex-wrap gap-1.5">
+                {menuResult.top_risky.map(d => <span key={d} className="text-xs bg-red-900/50 text-red-300 px-2 py-1 rounded-full">{d}</span>)}
+              </div>
+            </div>
+          )}
+          <div className="space-y-2">
+            {menuResult.dishes.map((dish, i) => {
+              const rc = dish.glucose_risk === "low" ? "text-green-400" : dish.glucose_risk === "medium" ? "text-amber-400" : "text-red-400";
+              const rb = dish.glucose_risk === "low" ? "border-green-500/20 bg-green-950/20" : dish.glucose_risk === "medium" ? "border-amber-500/20 bg-amber-950/20" : "border-red-500/20 bg-red-950/20";
+              return (
+                <div key={i} className={`rounded-xl p-3 border ${rb} flex justify-between items-start`}>
+                  <div className="flex-1 min-w-0">
+                    <div className="text-white text-sm font-medium">{lang === "tr" ? (dish.name_tr || dish.name) : dish.name}</div>
+                    <div className="text-gray-500 text-xs mt-0.5">GI ~{dish.gi_estimate} · {dish.category}</div>
+                    {dish.notes && <p className="text-gray-600 text-xs mt-1">{dish.notes}</p>}
+                  </div>
+                  <div className={`text-xl font-bold ml-3 shrink-0 ${rc}`}>{dish.estimated_gl}</div>
+                </div>
+              );
+            })}
+          </div>
+          <button onClick={reset} className="w-full py-3 rounded-xl text-white bg-teal-600 hover:bg-teal-500 font-semibold text-sm">
+            🔗 Yeni URL Analiz Et
+          </button>
+        </div>
+      )}
+
       {/* Upload area */}
-      {!preview && !loading && !barcodeProduct && (
+      {mode !== "url" && !preview && !loading && !barcodeProduct && (
         <div className={mode === "compare" ? "grid grid-cols-2 gap-3" : "space-y-3"}>
           <div className="space-y-3">
             <button onClick={() => cameraRef.current?.click()}
@@ -382,10 +586,10 @@ export function UploadAnalyzer({ userType = "healthy", lang, onAnalysisComplete 
         onChange={(e) => { const f = e.target.files?.[0]; if (f) handleFile(f, 2); e.target.value = ""; }} />
 
       {/* Loading */}
-      {loading && (
+      {(loading || urlLoading) && (
         <div className="text-center py-12 space-y-4">
-          <div className="text-5xl animate-bounce">🔬</div>
-          <p className="text-teal-400 font-medium text-lg">{tx.analyzing}</p>
+          <div className="text-5xl animate-bounce">{mode === "url" ? "🔗" : "🔬"}</div>
+          <p className="text-teal-400 font-medium text-lg">{mode === "url" ? "URL analiz ediliyor..." : tx.analyzing}</p>
           {preview && <img src={preview} alt="analyzing" className="max-h-40 mx-auto rounded-xl object-contain opacity-50" />}
         </div>
       )}
