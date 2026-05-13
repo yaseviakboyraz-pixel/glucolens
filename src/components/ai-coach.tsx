@@ -1,35 +1,89 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { getMeals, getWeeklyReport, getProfile } from "@/lib/storage";
 
 interface CoachMessage {
   role: "user" | "coach";
   content: string;
+  timestamp?: number;
 }
+
+const STORAGE_KEY = "glucolens_coach_messages";
+const MAX_STORED = 40;
+
+function loadMessages(): CoachMessage[] {
+  if (typeof window === "undefined") return [];
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch { return []; }
+}
+
+function saveMessages(msgs: CoachMessage[]) {
+  if (typeof window === "undefined") return;
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(msgs.slice(-MAX_STORED)));
+}
+
+const QUICK_QUESTIONS_BY_TYPE: Record<string, string[]> = {
+  diabetic: [
+    "Bugün için güvenli kahvaltı önerir misin?",
+    "GL'mi nasıl düşürebilirim?",
+    "İnsülin direncini ne etkiler?",
+    "Diyabetik için en iyi atıştırmalık?",
+  ],
+  pre_diabetic: [
+    "Pre-diyabet için ideal öğün planı?",
+    "Hangi karbonhidratlar daha güvenli?",
+    "GL hedefime ulaşmak için ipuçları?",
+    "Kan şekeri dengelemek için ne yemeliyim?",
+  ],
+  healthy: [
+    "Kahvaltı için ne önerirsin?",
+    "GL nedir, nasıl çalışır?",
+    "En iyi düşük GL atıştırmalıklar?",
+    "Spordan önce ne yemeliyim?",
+  ],
+};
 
 export function AICoach() {
   const [messages, setMessages] = useState<CoachMessage[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [expanded, setExpanded] = useState(false);
+  const [initialized, setInitialized] = useState(false);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const profile = typeof window !== "undefined" ? getProfile() : null;
+
+  const quickQuestions = QUICK_QUESTIONS_BY_TYPE[profile?.userType || "healthy"];
 
   useEffect(() => {
-    // Initial greeting based on data
-    generateGreeting();
+    const stored = loadMessages();
+    if (stored.length > 0) {
+      setMessages(stored);
+      setInitialized(true);
+    } else {
+      generateGreeting();
+    }
   }, []);
 
+  useEffect(() => {
+    if (expanded) {
+      setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: "smooth" }), 100);
+    }
+  }, [messages, expanded]);
+
   async function generateGreeting() {
-    const profile = getProfile();
     const report = getWeeklyReport();
     const meals = getMeals().slice(0, 5);
+    const lastMeal = meals[0];
 
-    const prompt = `You are GlucoLens AI Coach. Generate a brief, personalized greeting (2-3 sentences max).
+    const prompt = `You are GlucoLens AI Coach. Generate a brief, warm, personalized greeting in ${profile?.userType === "diabetic" || profile?.userType === "pre_diabetic" ? "Turkish" : "English"} (2-3 sentences max).
 
-User profile: ${profile?.userType || "healthy"}, daily GL target: ${profile?.dailyGLTarget || 60}
-Weekly stats: avg daily GL ${report?.avgDailyGL ?? 0}, ${report?.totalMeals ?? 0} meals logged, ${report?.highRiskMeals ?? 0} high-risk meals, ${report?.streak ?? 0} day streak
-Recent meals: ${meals.slice(0, 3).map(m => m.analysis.food_items.map(f => f.name_tr || f.name).join("+")).join(" | ") || "none yet"}
+User: ${profile?.name || "there"}, type: ${profile?.userType || "healthy"}, daily GL target: ${profile?.dailyGLTarget || 60}
+Weekly: avg GL ${report?.avgDailyGL ?? 0}, ${report?.totalMeals ?? 0} meals, streak: ${report?.streak ?? 0} days, ${report?.highRiskMeals ?? 0} high-risk meals
+${lastMeal ? `Last meal: ${lastMeal.analysis.food_items.map(f => f.name_tr || f.name).join(", ")} — GL ${lastMeal.analysis.total_glycemic_load}` : "No meals yet"}
 
-Mention one specific insight from their data if available. End with an offer to help. Be warm and concise.`;
+If they have data, comment on ONE specific insight. End with a concrete offer to help. Be personal, not generic.`;
 
     try {
       const res = await fetch("/api/coach", {
@@ -37,53 +91,65 @@ Mention one specific insight from their data if available. End with an offer to 
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ prompt }),
       });
-
-      if (res.ok) {
-        const data = await res.json();
-        setMessages([{ role: "coach", content: data.message || getDefaultGreeting(report) }]);
-      } else {
-        setMessages([{ role: "coach", content: getDefaultGreeting(report) }]);
-      }
+      const data = await res.json();
+      const greeting: CoachMessage = {
+        role: "coach",
+        content: data.message || getFallbackGreeting(report),
+        timestamp: Date.now(),
+      };
+      setMessages([greeting]);
+      saveMessages([greeting]);
     } catch {
-      setMessages([{ role: "coach", content: getDefaultGreeting(report) }]);
+      const greeting: CoachMessage = {
+        role: "coach",
+        content: getFallbackGreeting(getWeeklyReport()),
+        timestamp: Date.now(),
+      };
+      setMessages([greeting]);
+      saveMessages([greeting]);
     }
+    setInitialized(true);
   }
 
-  function getDefaultGreeting(report: ReturnType<typeof getWeeklyReport>) {
+  function getFallbackGreeting(report: ReturnType<typeof getWeeklyReport>) {
     if (!report || report.totalMeals === 0) {
-      return "Hi! I'm your GlucoLens AI Coach 👋 Start by analyzing your first meal and I'll give you personalized insights!";
+      return "Merhaba! Ben GlucoLens AI Coach 👋 İlk öğününü analiz ettiğinde sana kişisel öneriler vereceğim. Ne sormak istersin?";
     }
     if (report.avgDailyGL > 80) {
-      return `Hi! Your 7-day average GL is ${report.avgDailyGL} — slightly above the optimal range. I can help you identify which meals are causing the most impact. What would you like to know?`;
+      return `Merhaba! Bu hafta günlük GL ortalamanız ${report.avgDailyGL} — hedefin biraz üzerinde. Hangi öğünlerin en çok etkilediğini birlikte inceleyelim mi?`;
     }
-    return `Hi! You're doing great with a ${report.avgDailyGL} average daily GL this week! ${report.streak > 0 ? `${report.streak}-day streak too 🔥` : ""} What can I help you with today?`;
+    return `Merhaba! Bu hafta ortalama ${report.avgDailyGL} GL ile harika gidiyorsun! ${report.streak > 1 ? `${report.streak} günlük seri de devam ediyor 🔥` : ""} Bugün nasıl yardımcı olabilirim?`;
   }
 
-  async function sendMessage() {
-    if (!input.trim() || loading) return;
-    const userMsg = input.trim();
+  async function sendMessage(text?: string) {
+    const userText = (text || input).trim();
+    if (!userText || loading) return;
     setInput("");
-    setMessages(prev => [...prev, { role: "user", content: userMsg }]);
+
+    const userMsg: CoachMessage = { role: "user", content: userText, timestamp: Date.now() };
+    const newMessages = [...messages, userMsg];
+    setMessages(newMessages);
+    saveMessages(newMessages);
     setLoading(true);
 
     try {
-      const profile = getProfile();
       const report = getWeeklyReport();
       const meals = getMeals().slice(0, 10);
+      const lastMeal = meals[0];
 
-      const coachPrompt = `You are GlucoLens AI Coach. Be concise (max 3-4 sentences), warm, and actionable.
+      const coachPrompt = `You are GlucoLens AI Coach — a warm, knowledgeable nutrition coach specializing in glycemic management.
+Respond in the SAME language as the user's message. Be concise (3-5 sentences), specific, and actionable. No lists unless asked.
 
-User context:
-- Profile: ${profile?.userType || "healthy"}, daily GL target: ${profile?.dailyGLTarget || 100}
-- This week: avg GL ${report?.avgDailyGL ?? 0}, ${report?.totalMeals ?? 0} meals, ${report?.highRiskMeals ?? 0} high-risk, streak: ${report?.streak ?? 0} days
-- Top foods: ${report?.topFoods?.join(", ") ?? "none yet"}
-- Recent meals GL: ${meals.slice(0, 5).map(m => m.analysis.total_glycemic_load).join(", ")}
+User profile: ${profile?.name || "User"}, type: ${profile?.userType || "healthy"}, daily GL target: ${profile?.dailyGLTarget || 60}
+Weekly stats: avg GL ${report?.avgDailyGL ?? 0}, ${report?.totalMeals ?? 0} meals, ${report?.highRiskMeals ?? 0} high-risk meals, streak: ${report?.streak ?? 0} days
+Top foods: ${report?.topFoods?.join(", ") ?? "none yet"}
+Recent meal GLs: ${meals.slice(0, 5).map(m => m.analysis.total_glycemic_load).join(", ")}
+${lastMeal ? `Last meal: ${lastMeal.analysis.food_items.map(f => f.name_tr || f.name).join(", ")} — GL ${lastMeal.analysis.total_glycemic_load}, risk: ${lastMeal.analysis.glucose_risk}` : ""}
 
-Previous conversation: ${messages.slice(-4).map(m => `${m.role}: ${m.content}`).join("\n")}
+Conversation history:
+${newMessages.slice(-6).map(m => `${m.role === "user" ? "User" : "Coach"}: ${m.content}`).join("\n")}
 
-User asks: ${userMsg}
-
-Respond helpfully and specifically. If asked about a food, give GL estimate. If asked for advice, be specific and actionable.`;
+Respond helpfully. If asked about a food, give GL estimate. If asked for advice, be specific to their profile data.`;
 
       const res = await fetch("/api/coach", {
         method: "POST",
@@ -91,28 +157,35 @@ Respond helpfully and specifically. If asked about a food, give GL estimate. If 
         body: JSON.stringify({ prompt: coachPrompt }),
       });
 
-      if (res.ok) {
-        const data = await res.json();
-        setMessages(prev => [...prev, { role: "coach", content: data.message }]);
-      } else {
-        throw new Error("Coach unavailable");
-      }
-    } catch {
-      setMessages(prev => [...prev, {
+      const data = await res.json();
+      const coachMsg: CoachMessage = {
         role: "coach",
-        content: "Sorry, I'm having trouble connecting right now. Try again in a moment!"
-      }]);
+        content: data.message || "Şu an bağlanamıyorum, biraz sonra tekrar dene!",
+        timestamp: Date.now(),
+      };
+      const updatedMessages = [...newMessages, coachMsg];
+      setMessages(updatedMessages);
+      saveMessages(updatedMessages);
+    } catch {
+      const errMsg: CoachMessage = {
+        role: "coach",
+        content: "Bağlantı sorunu var, biraz sonra tekrar dene!",
+        timestamp: Date.now(),
+      };
+      const updatedMessages = [...newMessages, errMsg];
+      setMessages(updatedMessages);
+      saveMessages(updatedMessages);
     } finally {
       setLoading(false);
     }
   }
 
-  const quickQuestions = [
-    "What should I eat for breakfast?",
-    "How can I lower my GL?",
-    "Best snacks for my profile?",
-    "Explain glycemic load",
-  ];
+  function clearHistory() {
+    localStorage.removeItem(STORAGE_KEY);
+    setMessages([]);
+    setInitialized(false);
+    generateGreeting();
+  }
 
   return (
     <div className="bg-gray-900 rounded-xl border border-gray-800 overflow-hidden">
@@ -127,7 +200,9 @@ Respond helpfully and specifically. If asked about a food, give GL estimate. If 
           </div>
           <div className="text-left">
             <div className="text-sm font-medium text-white">GlucoLens Coach</div>
-            <div className="text-xs text-gray-500">AI nutrition assistant</div>
+            <div className="text-xs text-gray-500">
+              {messages.length > 1 ? `${messages.length} mesaj · geçmiş korundu` : "AI beslenme asistanı"}
+            </div>
           </div>
         </div>
         <span className="text-gray-500 text-sm">{expanded ? "▲" : "▼"}</span>
@@ -136,13 +211,25 @@ Respond helpfully and specifically. If asked about a food, give GL estimate. If 
       {expanded && (
         <div className="border-t border-gray-800">
           {/* Messages */}
-          <div className="max-h-64 overflow-y-auto p-4 space-y-3">
+          <div className="max-h-72 overflow-y-auto p-4 space-y-3">
+            {!initialized && (
+              <div className="flex justify-start">
+                <div className="bg-gray-800 rounded-xl px-3 py-2">
+                  <div className="flex gap-1">
+                    {[0, 150, 300].map(delay => (
+                      <div key={delay} className="w-2 h-2 bg-gray-500 rounded-full animate-bounce"
+                        style={{ animationDelay: `${delay}ms` }} />
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
             {messages.map((msg, i) => (
               <div key={i} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
-                <div className={`max-w-[85%] rounded-xl px-3 py-2 text-sm ${
+                <div className={`max-w-[88%] rounded-2xl px-3.5 py-2.5 text-sm leading-relaxed ${
                   msg.role === "user"
-                    ? "bg-teal-600 text-white"
-                    : "bg-gray-800 text-gray-200"
+                    ? "bg-teal-600 text-white rounded-br-sm"
+                    : "bg-gray-800 text-gray-200 rounded-bl-sm"
                 }`}>
                   {msg.content}
                 </div>
@@ -152,47 +239,47 @@ Respond helpfully and specifically. If asked about a food, give GL estimate. If 
               <div className="flex justify-start">
                 <div className="bg-gray-800 rounded-xl px-3 py-2">
                   <div className="flex gap-1">
-                    <div className="w-2 h-2 bg-gray-500 rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
-                    <div className="w-2 h-2 bg-gray-500 rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
-                    <div className="w-2 h-2 bg-gray-500 rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
+                    {[0, 150, 300].map(delay => (
+                      <div key={delay} className="w-2 h-2 bg-gray-500 rounded-full animate-bounce"
+                        style={{ animationDelay: `${delay}ms` }} />
+                    ))}
                   </div>
                 </div>
               </div>
             )}
+            <div ref={messagesEndRef} />
           </div>
 
-          {/* Quick questions */}
-          {messages.length <= 1 && (
-            <div className="px-4 pb-3 flex flex-wrap gap-2">
+          {/* Quick questions — show if ≤ 2 messages or explicitly */}
+          {messages.length <= 2 && (
+            <div className="px-4 pb-3 flex flex-wrap gap-1.5">
               {quickQuestions.map((q) => (
-                <button
-                  key={q}
-                  onClick={() => { setInput(q); }}
-                  className="text-xs px-3 py-1.5 bg-gray-800 hover:bg-gray-700 text-gray-400 hover:text-gray-200 rounded-full transition-all border border-gray-700"
-                >
+                <button key={q} onClick={() => sendMessage(q)}
+                  className="text-xs px-3 py-1.5 bg-gray-800 hover:bg-gray-700 text-gray-400 hover:text-gray-200 rounded-full transition-all border border-gray-700">
                   {q}
                 </button>
               ))}
             </div>
           )}
 
-          {/* Input */}
+          {/* Input row */}
           <div className="flex gap-2 px-4 pb-4">
-            <input
-              type="text"
-              value={input}
+            <input type="text" value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && sendMessage()}
-              placeholder="Ask your coach..."
+              placeholder="Sor..."
               className="flex-1 bg-gray-800 border border-gray-700 rounded-xl px-3 py-2 text-sm text-gray-200 placeholder-gray-600 focus:outline-none focus:border-teal-500"
             />
-            <button
-              onClick={sendMessage}
-              disabled={!input.trim() || loading}
-              className="px-3 py-2 bg-teal-600 hover:bg-teal-500 disabled:opacity-40 text-white rounded-xl text-sm transition-all"
-            >
+            <button onClick={() => sendMessage()} disabled={!input.trim() || loading}
+              className="px-3 py-2 bg-teal-600 hover:bg-teal-500 disabled:opacity-40 text-white rounded-xl text-sm transition-all">
               →
             </button>
+            {messages.length > 3 && (
+              <button onClick={clearHistory} title="Sohbeti sıfırla"
+                className="px-2 py-2 text-gray-600 hover:text-gray-400 transition-colors text-xs">
+                🔄
+              </button>
+            )}
           </div>
         </div>
       )}

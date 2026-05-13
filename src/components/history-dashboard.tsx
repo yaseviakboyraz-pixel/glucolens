@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import {
   getMeals, getTodayStats, getStreak, getWeeklyAvgGL,
   generateInsights, deleteMeal, getTodayActivityGL,
@@ -28,6 +28,9 @@ export function HistoryDashboard({ profile, lang, onNewMeal, onEditProfile }: Pr
   const [weeklyAvg, setWeeklyAvg] = useState(0);
   const [streak, setStreak] = useState(0);
   const [activityGLReduction, setActivityGLReduction] = useState(0);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [riskFilter, setRiskFilter] = useState<"all" | "low" | "medium" | "high">("all");
+  const [expandedMealId, setExpandedMealId] = useState<string | null>(null);
 
   useEffect(() => {
     refresh();
@@ -43,6 +46,50 @@ export function HistoryDashboard({ profile, lang, onNewMeal, onEditProfile }: Pr
   }
 
   const insights = generateInsights(meals, profile.userType);
+
+  // CSV Export
+  function exportCSV() {
+    const rows = [
+      ["Date", "Time", "Foods", "GL", "Risk", "Sugar(g)", "Calories", "Protein(g)", "Carbs(g)", "Fat(g)"],
+      ...meals.map(m => {
+        const d = new Date(m.timestamp);
+        return [
+          d.toLocaleDateString(),
+          d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+          m.analysis.food_items.map(f => f.name_tr || f.name).join(" + "),
+          m.analysis.total_glycemic_load,
+          m.analysis.glucose_risk,
+          m.analysis.total_sugar_g,
+          m.analysis.total_calories,
+          m.analysis.total_protein_g,
+          m.analysis.total_net_carb_g,
+          m.analysis.total_fat_g,
+        ];
+      }),
+    ];
+    const csv = rows.map(r => r.map(v => `"${v}"`).join(",")).join("\n");
+    const blob = new Blob([csv], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `glucolens-${new Date().toISOString().slice(0,10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  // Filtered meals
+  const filteredMeals = useMemo(() => {
+    const base = activeTab === "today"
+      ? meals.filter(m => new Date(m.timestamp).toISOString().slice(0,10) === new Date().toISOString().slice(0,10))
+      : meals;
+    return base.filter(m => {
+      const matchesSearch = !searchQuery || m.analysis.food_items.some(f =>
+        (f.name_tr || f.name).toLowerCase().includes(searchQuery.toLowerCase())
+      );
+      const matchesRisk = riskFilter === "all" || m.analysis.glucose_risk === riskFilter;
+      return matchesSearch && matchesRisk;
+    });
+  }, [meals, activeTab, searchQuery, riskFilter]);
 
   const riskColor = (risk: string) =>
     risk === "low" ? "text-green-400" : risk === "medium" ? "text-amber-400" : "text-red-400";
@@ -143,23 +190,52 @@ export function HistoryDashboard({ profile, lang, onNewMeal, onEditProfile }: Pr
         </button>
       </div>
 
-      {/* Tabs */}
-      <div className="flex gap-2">
-        {([
-          { key: "today", label: `Today (${todayMeals.length})` },
-          { key: "history", label: `All (${meals.length})` },
-          { key: "wellness", label: "💧🏃 Wellness" },
-        ] as { key: "today" | "history" | "wellness"; label: string }[]).map(tab => (
-          <button key={tab.key}
-            onClick={() => setActiveTab(tab.key)}
-            className={`flex-1 py-2 rounded-xl text-xs font-medium transition-all ${
-              activeTab === tab.key ? "bg-teal-600 text-white" : "bg-gray-900 text-gray-400 hover:bg-gray-800"
-            }`}
-          >
-            {tab.label}
+      {/* Tabs + Export */}
+      <div className="flex gap-2 items-center">
+        <div className="flex gap-1.5 flex-1">
+          {([
+            { key: "today", label: `Bugün (${meals.filter(m => new Date(m.timestamp).toISOString().slice(0,10) === new Date().toISOString().slice(0,10)).length})` },
+            { key: "history", label: `Tümü (${meals.length})` },
+            { key: "wellness", label: "💧🏃" },
+          ] as { key: "today" | "history" | "wellness"; label: string }[]).map(tab => (
+            <button key={tab.key} onClick={() => setActiveTab(tab.key)}
+              className={`flex-1 py-2 rounded-xl text-xs font-medium transition-all ${
+                activeTab === tab.key ? "bg-teal-600 text-white" : "bg-gray-900 text-gray-400 hover:bg-gray-800"
+              }`}>
+              {tab.label}
+            </button>
+          ))}
+        </div>
+        {meals.length > 0 && (
+          <button onClick={exportCSV} title="CSV olarak indir"
+            className="py-2 px-3 bg-gray-900 hover:bg-gray-800 border border-gray-800 rounded-xl text-xs text-gray-400 hover:text-gray-200 transition-all">
+            ⬇ CSV
           </button>
-        ))}
+        )}
       </div>
+
+      {/* Search & filter — only in history/today */}
+      {activeTab !== "wellness" && meals.length > 3 && (
+        <div className="flex gap-2">
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={e => setSearchQuery(e.target.value)}
+            placeholder="Yemek ara..."
+            className="flex-1 bg-gray-900 border border-gray-800 rounded-xl px-3 py-2 text-xs text-gray-300 placeholder-gray-600 focus:outline-none focus:border-teal-500"
+          />
+          {(["all", "low", "medium", "high"] as const).map(r => (
+            <button key={r} onClick={() => setRiskFilter(r)}
+              className={`px-2.5 py-2 rounded-xl text-xs transition-all ${
+                riskFilter === r
+                  ? r === "all" ? "bg-gray-700 text-white" : r === "low" ? "bg-green-700 text-white" : r === "medium" ? "bg-amber-700 text-white" : "bg-red-700 text-white"
+                  : "bg-gray-900 text-gray-600 hover:bg-gray-800"
+              }`}>
+              {r === "all" ? "Tümü" : r === "low" ? "✅" : r === "medium" ? "⚠️" : "🔴"}
+            </button>
+          ))}
+        </div>
+      )}
 
       {/* Wellness Tab */}
       {activeTab === "wellness" && (
@@ -175,53 +251,103 @@ export function HistoryDashboard({ profile, lang, onNewMeal, onEditProfile }: Pr
       {/* Meal list */}
       {activeTab !== "wellness" && (
         <div className="space-y-2">
-          {displayMeals.length === 0 ? (
+          {filteredMeals.length === 0 ? (
             <div className="text-center py-12 text-gray-600">
               <div className="text-4xl mb-3">🍽️</div>
-              <div>{activeTab === "today" ? "No meals logged today." : "No meals yet."}</div>
-              <button onClick={onNewMeal}
-                className="mt-4 px-6 py-2 bg-teal-600 hover:bg-teal-500 text-white rounded-xl text-sm transition-all">
-                Analyze a meal
-              </button>
+              <div>{searchQuery || riskFilter !== "all" ? "Filtrele eşleşen öğün yok." : activeTab === "today" ? "Bugün hiç öğün girilmedi." : "Henüz öğün yok."}</div>
+              {!searchQuery && riskFilter === "all" && (
+                <button onClick={onNewMeal}
+                  className="mt-4 px-6 py-2 bg-teal-600 hover:bg-teal-500 text-white rounded-xl text-sm transition-all">
+                  Analiz et
+                </button>
+              )}
             </div>
           ) : (
-            displayMeals.map((meal) => (
-              <div key={meal.id} className="bg-gray-900 rounded-xl p-4 border border-gray-800">
-                <div className="flex justify-between items-start gap-3">
-                  {/* Thumbnail: photo_url (cloud) veya photo_base64 (eski) */}
-                  {(meal.photo_url || meal.photo_base64) && (
-                    <img
-                      src={meal.photo_url || `data:image/jpeg;base64,${meal.photo_base64}`}
-                      alt="meal"
-                      className="w-14 h-14 rounded-xl object-cover shrink-0"
-                    />
+            filteredMeals.map((meal) => {
+              const isExpanded = expandedMealId === meal.id;
+              return (
+                <div key={meal.id} className="bg-gray-900 rounded-xl border border-gray-800 overflow-hidden">
+                  {/* Meal row */}
+                  <div
+                    className="p-4 flex items-start gap-3 cursor-pointer hover:bg-gray-800/40 transition-colors"
+                    onClick={() => setExpandedMealId(isExpanded ? null : meal.id)}
+                  >
+                    {(meal.photo_url || meal.photo_base64) && (
+                      <img
+                        src={meal.photo_url || `data:image/jpeg;base64,${meal.photo_base64}`}
+                        alt="meal"
+                        className="w-14 h-14 rounded-xl object-cover shrink-0"
+                      />
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1">
+                        <div className={`w-2 h-2 rounded-full shrink-0 ${riskBg(meal.analysis.glucose_risk)}`} />
+                        <span className={`text-sm font-medium ${riskColor(meal.analysis.glucose_risk)}`}>
+                          GL {meal.analysis.total_glycemic_load}
+                        </span>
+                        {meal.analysis.total_calories > 0 && (
+                          <span className="text-xs text-gray-600">· {meal.analysis.total_calories} kcal</span>
+                        )}
+                      </div>
+                      <div className="text-xs text-gray-600">
+                        {new Date(meal.timestamp).toLocaleString(lang === "tr" ? "tr-TR" : "en-US", {
+                          month: "short", day: "numeric", hour: "2-digit", minute: "2-digit",
+                        })}
+                        {meal.mealType && <span className="ml-2 capitalize">· {meal.mealType}</span>}
+                      </div>
+                      <div className="text-xs text-gray-500 mt-1.5 truncate">
+                        {meal.analysis.food_items.slice(0, 3).map(f => f.name_tr || f.name).join(", ")}
+                        {meal.analysis.food_items.length > 3 && ` +${meal.analysis.food_items.length - 3}`}
+                      </div>
+                    </div>
+                    <div className="flex flex-col items-end gap-2 shrink-0">
+                      <span className="text-gray-600 text-xs">{isExpanded ? "▲" : "▼"}</span>
+                      <button onClick={(e) => { e.stopPropagation(); handleDelete(meal.id); }}
+                        className="text-gray-700 hover:text-red-400 text-xs transition-colors" aria-label="Delete">✕
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Expanded detail */}
+                  {isExpanded && (
+                    <div className="border-t border-gray-800 px-4 pb-4 pt-3 space-y-3">
+                      {/* Macro grid */}
+                      <div className="grid grid-cols-4 gap-2">
+                        {[
+                          { label: "Protein", value: `${meal.analysis.total_protein_g}g`, color: "text-purple-400" },
+                          { label: "Yağ", value: `${meal.analysis.total_fat_g}g`, color: "text-amber-400" },
+                          { label: "Net Karb", value: `${meal.analysis.total_net_carb_g}g`, color: "text-blue-400" },
+                          { label: "Lif", value: `${meal.analysis.total_fiber_g}g`, color: "text-green-400" },
+                        ].map(s => (
+                          <div key={s.label} className="bg-gray-800 rounded-xl p-2 text-center">
+                            <div className={`text-sm font-bold ${s.color}`}>{s.value}</div>
+                            <div className="text-xs text-gray-600">{s.label}</div>
+                          </div>
+                        ))}
+                      </div>
+                      {/* Food items */}
+                      <div className="space-y-1.5">
+                        {meal.analysis.food_items.map((f, i) => (
+                          <div key={i} className="flex justify-between items-center text-xs">
+                            <span className="text-gray-400">{f.name_tr || f.name} ({f.portion_g}g)</span>
+                            <div className="flex gap-2 text-gray-600">
+                              <span>GI {f.glycemic_index}</span>
+                              <span className={riskColor(f.glycemic_load < 10 ? "low" : f.glycemic_load <= 20 ? "medium" : "high")}>
+                                GL {f.glycemic_load}
+                              </span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                      {/* Recommendations */}
+                      {meal.analysis.recommendations?.length > 0 && (
+                        <div className="text-xs text-gray-500 italic">{meal.analysis.recommendations[0]}</div>
+                      )}
+                    </div>
                   )}
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1">
-                      <div className={`w-2 h-2 rounded-full shrink-0 ${riskBg(meal.analysis.glucose_risk)}`} />
-                      <span className={`text-sm font-medium ${riskColor(meal.analysis.glucose_risk)}`}>
-                        GL {meal.analysis.total_glycemic_load} · {meal.analysis.glucose_risk} risk
-                      </span>
-                    </div>
-                    <div className="text-xs text-gray-600">
-                      {new Date(meal.timestamp).toLocaleString(lang === "tr" ? "tr-TR" : "en-US", {
-                        month: "short", day: "numeric", hour: "2-digit", minute: "2-digit",
-                      })}
-                      {meal.mealType && <span className="ml-2 capitalize">· {meal.mealType}</span>}
-                    </div>
-                    <div className="text-xs text-gray-500 mt-1.5 truncate">
-                      {meal.analysis.food_items.slice(0, 3).map((f) => f.name_tr || f.name).join(", ")}
-                      {meal.analysis.food_items.length > 3 && ` +${meal.analysis.food_items.length - 3}`}
-                    </div>
-                  </div>
-                  <div className="flex flex-col items-end gap-2 ml-3 shrink-0">
-                    <div className="text-xs text-gray-500">{meal.analysis.total_sugar_g}g sugar</div>
-                    <button onClick={() => handleDelete(meal.id)}
-                      className="text-gray-700 hover:text-red-400 text-xs transition-colors" aria-label="Delete">✕</button>
-                  </div>
                 </div>
-              </div>
-            ))
+              );
+            })
           )}
         </div>
       )}
