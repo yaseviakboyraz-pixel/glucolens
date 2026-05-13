@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import { lookupIngredient, GI_DATABASE } from "@/lib/turkish-gi-data";
+import { lookupIngredient, searchGI, GLOBAL_GI_DATABASE } from "@/lib/gi-index";
 import { claudeGIEstimate, type ClaudeFallbackResult } from "@/lib/claude-fallback";
 import type { Lang } from "@/lib/i18n";
 import { saveMeal } from "@/lib/storage";
@@ -31,11 +31,7 @@ export function SingleIngredientAnalyzer({ lang: _lang, onSaved }: Props) {
     setSaved(false);
     setAiResult(null);
     if (value.length < 2) { setSuggestions([]); setResult(null); return; }
-    const lower = value.toLowerCase();
-    const matches = Object.keys(GI_DATABASE)
-      .filter(k => k.includes(lower) || lower.includes(k))
-      .slice(0, 8);
-    setSuggestions(matches);
+    setSuggestions(searchGI(value, 8));
   }
 
   async function runSearch(name: string) {

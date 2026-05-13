@@ -1,5 +1,5 @@
 import Anthropic from "@anthropic-ai/sdk";
-import { lookupGI } from "./turkish-gi-data";
+import { lookupGI } from "./gi-index";
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 

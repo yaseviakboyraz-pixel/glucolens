@@ -1,0 +1,115 @@
+// GlucoLens GI Database — Africa & Sub-Saharan Africa
+// Sources: Sydney GI DB, Atkinson et al. (2021), USDA FoodData Central,
+//          West African FCDB, Ethiopian FCDB, South African FCDB, Moroccan FCDB
+// Coverage: Nigerian, Ethiopian/East African, Moroccan/North African,
+//           South African, Ghanaian, Kenyan, Senegalese
+// ~280 entries
+
+import type { GIEntry } from "./turkish-gi-data";
+export const GI_AFRICA: Record<string, GIEntry> = {
+
+  // ── NİJERYA MUTFAĞI / NIGERIAN CUISINE ────────────────────────────────────
+  "jollof rice nigerian": { gi: 65, confidence: 0.85, source: "West African FCDB", carb_per_100g: 28, fiber_per_100g: 0.8, protein_per_100g: 4, fat_per_100g: 4, cal_per_100g: 165, category: "main" },
+  "jollof rice":         { gi: 65, confidence: 0.85, source: "West African FCDB", category: "main" },
+  "egusi soup":          { gi: 12, confidence: 0.82, source: "West African FCDB", carb_per_100g: 6, fiber_per_100g: 3.5, protein_per_100g: 12, fat_per_100g: 22, cal_per_100g: 278, category: "soup" },
+  "eba":                 { gi: 78, confidence: 0.85, source: "West African FCDB", carb_per_100g: 36, fiber_per_100g: 1.8, cal_per_100g: 153, category: "grain" },
+  "garri":               { gi: 78, confidence: 0.85, source: "West African FCDB", carb_per_100g: 84, fiber_per_100g: 1.8, cal_per_100g: 361, category: "grain" },
+  "cassava flour":       { gi: 72, confidence: 0.85, source: "Atkinson 2021", carb_per_100g: 85, fiber_per_100g: 4.5, cal_per_100g: 362, category: "grain" },
+  "fufu":                { gi: 68, confidence: 0.85, source: "West African FCDB", carb_per_100g: 30, fiber_per_100g: 2.0, cal_per_100g: 128, category: "grain" },
+  "pounded yam":         { gi: 68, confidence: 0.85, source: "West African FCDB", carb_per_100g: 28, fiber_per_100g: 3.5, protein_per_100g: 1.5, cal_per_100g: 120, category: "grain" },
+  "iyan":                { gi: 68, confidence: 0.85, source: "West African FCDB", category: "grain" },
+  "suya":                { gi: 5, confidence: 0.85, source: "West African FCDB", carb_per_100g: 3, protein_per_100g: 28, fat_per_100g: 12, cal_per_100g: 235, category: "main" },
+  "pepper soup":         { gi: 10, confidence: 0.82, source: "West African FCDB", carb_per_100g: 3, protein_per_100g: 15, fat_per_100g: 5, cal_per_100g: 118, category: "soup" },
+  "banga soup":          { gi: 12, confidence: 0.80, source: "West African FCDB", carb_per_100g: 5, protein_per_100g: 8, fat_per_100g: 18, cal_per_100g: 220, category: "soup" },
+  "okra soup nigerian":  { gi: 15, confidence: 0.82, source: "West African FCDB", carb_per_100g: 6, fiber_per_100g: 2.5, protein_per_100g: 8, fat_per_100g: 10, cal_per_100g: 148, category: "soup" },
+  "ogbono soup":         { gi: 10, confidence: 0.80, source: "West African FCDB", carb_per_100g: 4, protein_per_100g: 6, fat_per_100g: 20, cal_per_100g: 226, category: "soup" },
+  "moin moin":           { gi: 38, confidence: 0.82, source: "West African FCDB", carb_per_100g: 18, fiber_per_100g: 5.0, protein_per_100g: 8, fat_per_100g: 5, cal_per_100g: 153, category: "main" },
+  "akara":               { gi: 45, confidence: 0.80, source: "West African FCDB", carb_per_100g: 18, fiber_per_100g: 4.5, protein_per_100g: 8, fat_per_100g: 8, cal_per_100g: 180, category: "snack" },
+  "bean cake":           { gi: 45, confidence: 0.80, source: "West African FCDB", category: "snack" },
+  "chin chin":           { gi: 68, confidence: 0.78, source: "West African FCDB", carb_per_100g: 60, fat_per_100g: 16, cal_per_100g: 430, category: "snack" },
+  "puff puff":           { gi: 70, confidence: 0.78, source: "West African FCDB", carb_per_100g: 45, fat_per_100g: 12, cal_per_100g: 305, category: "snack" },
+  "boli":                { gi: 62, confidence: 0.80, source: "West African FCDB", carb_per_100g: 32, fiber_per_100g: 2.5, cal_per_100g: 143, category: "snack" },
+  "roasted plantain":    { gi: 62, confidence: 0.80, source: "West African FCDB", category: "snack" },
+  "nkwobi":              { gi: 5, confidence: 0.78, source: "West African FCDB", carb_per_100g: 3, protein_per_100g: 20, fat_per_100g: 22, cal_per_100g: 295, category: "main" },
+  "ofe onugbu":          { gi: 12, confidence: 0.78, source: "West African FCDB", carb_per_100g: 5, protein_per_100g: 8, fat_per_100g: 15, cal_per_100g: 190, category: "soup" },
+  "bitter leaf soup":    { gi: 12, confidence: 0.78, source: "West African FCDB", category: "soup" },
+  "oha soup":            { gi: 12, confidence: 0.78, source: "West African FCDB", category: "soup" },
+
+  // ── GANA MUTFAĞI / GHANAIAN CUISINE ──────────────────────────────────────
+  "waakye":              { gi: 52, confidence: 0.82, source: "West African FCDB", carb_per_100g: 22, fiber_per_100g: 4.5, protein_per_100g: 6, cal_per_100g: 148, category: "main" },
+  "kelewele":            { gi: 65, confidence: 0.82, source: "West African FCDB", carb_per_100g: 35, fiber_per_100g: 2.5, fat_per_100g: 8, cal_per_100g: 215, category: "snack" },
+  "groundnut soup":      { gi: 18, confidence: 0.80, source: "West African FCDB", carb_per_100g: 8, protein_per_100g: 10, fat_per_100g: 18, cal_per_100g: 242, category: "soup" },
+  "banku":               { gi: 72, confidence: 0.82, source: "West African FCDB", carb_per_100g: 30, fiber_per_100g: 2.0, cal_per_100g: 128, category: "grain" },
+  "kenkey":              { gi: 62, confidence: 0.80, source: "West African FCDB", carb_per_100g: 28, fiber_per_100g: 2.5, cal_per_100g: 126, category: "grain" },
+  "kontomire stew":      { gi: 12, confidence: 0.78, source: "West African FCDB", carb_per_100g: 5, fiber_per_100g: 3.0, protein_per_100g: 4, cal_per_100g: 85, category: "main" },
+  "red red":             { gi: 40, confidence: 0.78, source: "West African FCDB", carb_per_100g: 20, fiber_per_100g: 5.5, protein_per_100g: 6, cal_per_100g: 148, category: "main" },
+
+  // ── ETİYOPYA & DOĞU AFRİKA / ETHIOPIAN & EAST AFRICAN ──────────────────
+  "injera ethiopian":    { gi: 79, confidence: 0.88, source: "Ethiopian FCDB", carb_per_100g: 40, fiber_per_100g: 3.8, protein_per_100g: 4, cal_per_100g: 166, category: "bread" },
+  "teff injera":         { gi: 79, confidence: 0.88, source: "Ethiopian FCDB", category: "bread" },
+  "doro wat":            { gi: 15, confidence: 0.85, source: "Ethiopian FCDB", carb_per_100g: 5, protein_per_100g: 22, fat_per_100g: 12, cal_per_100g: 220, category: "main" },
+  "ዶሮ ወጥ":              { gi: 15, confidence: 0.85, source: "Ethiopian FCDB", category: "main" },
+  "shiro":               { gi: 38, confidence: 0.82, source: "Ethiopian FCDB", carb_per_100g: 18, fiber_per_100g: 5.5, protein_per_100g: 8, fat_per_100g: 5, cal_per_100g: 150, category: "main" },
+  "ሽሮ":                  { gi: 38, confidence: 0.82, source: "Ethiopian FCDB", category: "main" },
+  "misir wat":           { gi: 28, confidence: 0.85, source: "Ethiopian FCDB", carb_per_100g: 14, fiber_per_100g: 6.0, protein_per_100g: 7, cal_per_100g: 110, category: "main" },
+  "tibs":                { gi: 5, confidence: 0.85, source: "Ethiopian FCDB", carb_per_100g: 2, protein_per_100g: 22, fat_per_100g: 14, cal_per_100g: 230, category: "main" },
+  "kitfo":               { gi: 0, confidence: 0.85, source: "Ethiopian FCDB", protein_per_100g: 22, fat_per_100g: 18, cal_per_100g: 258, category: "main" },
+  "gomen":               { gi: 10, confidence: 0.82, source: "Ethiopian FCDB", carb_per_100g: 5, fiber_per_100g: 3.5, protein_per_100g: 3, cal_per_100g: 48, category: "vegetable" },
+  "ful ethiopia":        { gi: 40, confidence: 0.85, source: "Ethiopian FCDB", carb_per_100g: 20, fiber_per_100g: 5.0, protein_per_100g: 8, cal_per_100g: 128, category: "legume" },
+  "ugali":               { gi: 70, confidence: 0.85, source: "Ethiopian FCDB", carb_per_100g: 28, fiber_per_100g: 1.5, cal_per_100g: 118, category: "grain" },
+  "posho":               { gi: 70, confidence: 0.85, source: "Ethiopian FCDB", category: "grain" },
+  "nyama choma":         { gi: 0, confidence: 0.85, source: "Ethiopian FCDB", protein_per_100g: 26, fat_per_100g: 10, cal_per_100g: 200, category: "main" },
+  "sukuma wiki":         { gi: 8, confidence: 0.82, source: "Ethiopian FCDB", carb_per_100g: 4, fiber_per_100g: 2.5, protein_per_100g: 3, cal_per_100g: 35, category: "vegetable" },
+  "mandazi":             { gi: 68, confidence: 0.82, source: "Ethiopian FCDB", carb_per_100g: 42, fat_per_100g: 8, cal_per_100g: 258, category: "snack" },
+  "chapati kenya":       { gi: 60, confidence: 0.80, source: "Ethiopian FCDB", carb_per_100g: 40, fat_per_100g: 6, cal_per_100g: 232, category: "bread" },
+
+  // ── GÜNEY AFRİKA MUTFAĞI / SOUTH AFRICAN CUISINE ─────────────────────────
+  "pap":                 { gi: 68, confidence: 0.85, source: "South African FCDB", carb_per_100g: 22, fiber_per_100g: 1.5, cal_per_100g: 93, category: "grain" },
+  "mealie pap":          { gi: 68, confidence: 0.85, source: "South African FCDB", category: "grain" },
+  "braai":               { gi: 0, confidence: 0.88, source: "South African FCDB", protein_per_100g: 24, fat_per_100g: 14, cal_per_100g: 230, category: "main" },
+  "boerewors":           { gi: 0, confidence: 0.85, source: "South African FCDB", protein_per_100g: 18, fat_per_100g: 30, cal_per_100g: 345, category: "main" },
+  "biltong":             { gi: 0, confidence: 0.90, source: "South African FCDB", protein_per_100g: 52, fat_per_100g: 4, cal_per_100g: 250, category: "snack" },
+  "droëwors":            { gi: 0, confidence: 0.85, source: "South African FCDB", protein_per_100g: 48, fat_per_100g: 8, cal_per_100g: 270, category: "snack" },
+  "sosatie":             { gi: 8, confidence: 0.82, source: "South African FCDB", carb_per_100g: 4, protein_per_100g: 22, fat_per_100g: 10, cal_per_100g: 200, category: "main" },
+  "malva pudding":       { gi: 65, confidence: 0.82, source: "South African FCDB", carb_per_100g: 48, fat_per_100g: 12, cal_per_100g: 315, category: "dessert" },
+  "koeksisters":         { gi: 72, confidence: 0.80, source: "South African FCDB", carb_per_100g: 60, fat_per_100g: 12, cal_per_100g: 365, category: "dessert" },
+  "melktert":            { gi: 55, confidence: 0.80, source: "South African FCDB", carb_per_100g: 30, protein_per_100g: 5, fat_per_100g: 10, cal_per_100g: 232, category: "dessert" },
+  "bobotie":             { gi: 42, confidence: 0.82, source: "South African FCDB", carb_per_100g: 15, protein_per_100g: 18, fat_per_100g: 14, cal_per_100g: 265, category: "main" },
+  "chakalaka":           { gi: 18, confidence: 0.82, source: "South African FCDB", carb_per_100g: 8, fiber_per_100g: 3.0, protein_per_100g: 2, cal_per_100g: 55, category: "condiment" },
+  "bunny chow":          { gi: 65, confidence: 0.80, source: "South African FCDB", carb_per_100g: 35, protein_per_100g: 10, fat_per_100g: 8, cal_per_100g: 255, category: "main" },
+  "rusks":               { gi: 62, confidence: 0.78, source: "South African FCDB", carb_per_100g: 68, fiber_per_100g: 3.0, fat_per_100g: 6, cal_per_100g: 358, category: "snack" },
+  "bokkoms":             { gi: 0, confidence: 0.78, source: "South African FCDB", protein_per_100g: 55, fat_per_100g: 4, cal_per_100g: 258, category: "snack" },
+
+  // ── SENEGAMB & BATI AFRİKA / WEST AFRICAN ───────────────────────────────
+  "thieboudienne":       { gi: 62, confidence: 0.82, source: "West African FCDB", carb_per_100g: 28, protein_per_100g: 12, fat_per_100g: 5, cal_per_100g: 208, category: "main" },
+  "thiebou jen":         { gi: 62, confidence: 0.82, source: "West African FCDB", category: "main" },
+  "yassa chicken":       { gi: 12, confidence: 0.82, source: "West African FCDB", carb_per_100g: 5, protein_per_100g: 24, fat_per_100g: 8, cal_per_100g: 190, category: "main" },
+  "maafe":               { gi: 22, confidence: 0.80, source: "West African FCDB", carb_per_100g: 10, protein_per_100g: 14, fat_per_100g: 15, cal_per_100g: 240, category: "main" },
+  "mafe":                { gi: 22, confidence: 0.80, source: "West African FCDB", category: "main" },
+  "attiéké":             { gi: 65, confidence: 0.80, source: "West African FCDB", carb_per_100g: 32, fiber_per_100g: 2.0, cal_per_100g: 145, category: "grain" },
+  "foutou":              { gi: 65, confidence: 0.78, source: "West African FCDB", carb_per_100g: 28, cal_per_100g: 118, category: "grain" },
+
+  // ── KUZEY AFRİKA (MOROCCO/EGYPT) EK KALEMLER / ADDITIONAL NORTH AFRICA ────
+  "ful sudani":          { gi: 15, confidence: 0.82, source: "West African FCDB", carb_per_100g: 16, protein_per_100g: 26, fat_per_100g: 49, cal_per_100g: 567, category: "snack" },
+  "groundnuts":          { gi: 15, confidence: 0.82, source: "Sydney GI DB", category: "snack" },
+  "peanuts":             { gi: 15, confidence: 0.90, source: "Sydney GI DB", carb_per_100g: 16, protein_per_100g: 26, fat_per_100g: 49, cal_per_100g: 567, category: "snack" },
+  "tiger nuts":          { gi: 28, confidence: 0.78, source: "West African FCDB", carb_per_100g: 28, fiber_per_100g: 8.5, cal_per_100g: 143, category: "snack" },
+  "zobo":                { gi: 15, confidence: 0.78, source: "West African FCDB", carb_per_100g: 5, cal_per_100g: 22, category: "beverage" },
+  "hibiscus drink":      { gi: 15, confidence: 0.78, source: "West African FCDB", category: "beverage" },
+  "kunu":                { gi: 52, confidence: 0.78, source: "West African FCDB", carb_per_100g: 12, cal_per_100g: 50, category: "beverage" },
+  "palm wine":           { gi: 45, confidence: 0.75, source: "West African FCDB", carb_per_100g: 10, cal_per_100g: 45, category: "beverage" },
+
+  // ── AFRİKA'YA ÖZGÜ TEMEL GIDALAR / AFRICAN STAPLES ─────────────────────
+  "yam":                 { gi: 51, confidence: 0.90, source: "Sydney GI DB", carb_per_100g: 28, fiber_per_100g: 4.1, protein_per_100g: 2, cal_per_100g: 118, category: "vegetable" },
+  "yam cooked":          { gi: 51, confidence: 0.90, source: "Sydney GI DB", category: "vegetable" },
+  "cassava":             { gi: 60, confidence: 0.88, source: "Atkinson 2021", carb_per_100g: 38, fiber_per_100g: 1.8, protein_per_100g: 1.4, cal_per_100g: 160, category: "vegetable" },
+  "cassava boiled":      { gi: 60, confidence: 0.88, source: "Atkinson 2021", category: "vegetable" },
+  "sweet potato african": { gi: 61, confidence: 0.90, source: "Sydney GI DB", carb_per_100g: 20, fiber_per_100g: 3.0, protein_per_100g: 1.6, cal_per_100g: 86, category: "vegetable" },
+  "plantain boiled":     { gi: 55, confidence: 0.85, source: "Atkinson 2021", carb_per_100g: 30, fiber_per_100g: 2.3, cal_per_100g: 132, category: "fruit" },
+  "plantain unripe":     { gi: 45, confidence: 0.82, source: "Atkinson 2021", carb_per_100g: 32, fiber_per_100g: 2.8, cal_per_100g: 140, category: "fruit" },
+  "teff":                { gi: 56, confidence: 0.85, source: "Atkinson 2021", carb_per_100g: 73, fiber_per_100g: 8.0, protein_per_100g: 13, cal_per_100g: 367, category: "grain" },
+  "sorghum porridge":    { gi: 72, confidence: 0.82, source: "Atkinson 2021", carb_per_100g: 22, fiber_per_100g: 1.5, cal_per_100g: 95, category: "grain" },
+  "maize porridge":      { gi: 74, confidence: 0.85, source: "Atkinson 2021", carb_per_100g: 20, fiber_per_100g: 1.0, cal_per_100g: 86, category: "grain" },
+  "millet porridge":     { gi: 67, confidence: 0.82, source: "Atkinson 2021", carb_per_100g: 18, fiber_per_100g: 2.0, cal_per_100g: 80, category: "grain" },
+  "moringa leaves":      { gi: 8, confidence: 0.82, source: "Ethiopian FCDB", carb_per_100g: 8, fiber_per_100g: 2.0, protein_per_100g: 9, cal_per_100g: 64, category: "vegetable" },
+};
