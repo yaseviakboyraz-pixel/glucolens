@@ -105,11 +105,17 @@ Return ONLY valid JSON, no markdown:
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { imageBase64, userType = "healthy", orderText } = body;
+    const { imageBase64, userType = "healthy", orderText, text, platform } = body;
 
-    if (!imageBase64 && !orderText) {
+    if (!imageBase64 && !orderText && !text) {
       return NextResponse.json({ error: "Image or order text required" }, { status: 400 });
     }
+
+    const platformHint = platform
+      ? `\n\nPLATFORM: ${platform.name} (${platform.region}) — use your knowledge of this platform's menu structure, typical dishes, and portion sizes.`
+      : "";
+
+    const orderContent = text || orderText;
 
     const profileNote = userType === "diabetic"
       ? "\n\nUSER: Diabetic. Emphasize high-risk items. Be very specific about glucose warnings."
@@ -126,27 +132,21 @@ export async function POST(req: NextRequest) {
       messages.push({
         role: "user",
         content: [
-          {
-            type: "image",
-            source: { type: "base64", media_type: mediaType, data: base64Data },
-          },
-          {
-            type: "text",
-            text: `Analyze this food delivery order. Extract all food items and provide complete glucose analysis.${orderText ? ` Additional context: ${orderText}` : ""} Return JSON only.`,
-          },
+          { type: "image", source: { type: "base64", media_type: mediaType, data: base64Data } },
+          { type: "text", text: `Analyze this food delivery order. Extract all food items and provide complete glucose analysis.${orderContent ? ` Additional context: ${orderContent}` : ""} Return JSON only.` },
         ],
       });
     } else {
       messages.push({
         role: "user",
-        content: `Analyze this food delivery order and provide complete glucose analysis.\n\nOrder:\n${orderText}\n\nReturn JSON only.`,
+        content: `Analyze this food delivery order and provide complete glucose analysis.\n\nOrder:\n${orderContent}\n\nReturn JSON only.`,
       });
     }
 
     const response = await client.messages.create({
-      model: "claude-sonnet-4-6",
+      model: "claude-sonnet-4-20250514",
       max_tokens: 4000,
-      system: DELIVERY_SYSTEM_PROMPT + profileNote,
+      system: DELIVERY_SYSTEM_PROMPT + profileNote + platformHint,
       messages,
     });
 

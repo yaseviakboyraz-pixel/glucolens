@@ -12,7 +12,18 @@ import type { MealAnalysis } from "@/lib/claude-vision";
 
 type Mode = "normal" | "pre_meal" | "compare" | "url";
 
-const DELIVERY_PLATFORMS = ["yemeksepeti.com", "trendyol.com", "getir.com", "ubereats.com", "migros.com.tr", "grubhub.com", "deliveroo.com", "doordash.com"];
+const DELIVERY_PLATFORMS = [
+  // Turkey
+  "yemeksepeti.com","trendyol.com","getir.com","migros.com.tr","banabi.com","gofody.com",
+  // Americas
+  "ubereats.com","doordash.com","grubhub.com","seamless.com","postmates.com","instacart.com","rappi.com","ifood.com.br","pedidosya.com","caviar.com",
+  // Europe
+  "deliveroo.com","justeat.com","just-eat.co.uk","just-eat.de","lieferando.de","takeaway.com","thuisbezorgd.nl","pyszne.pl","mjam.at","glovo.com","wolt.com","bolt.food",
+  // MENA / Africa
+  "talabat.com","careem.com","hungerstation.com","otlob.com","elmenus.com","jumia.com","noon.com",
+  // Asia-Pacific
+  "swiggy.com","zomato.com","grab.com","gojek.com","shopee.com","foodpanda.com","meituan.com","ele.me",
+];
 const IMAGE_EXTS = /\.(jpg|jpeg|png|gif|webp|avif|bmp)(\?|$)/i;
 function detectUrlType(url: string): "delivery" | "image" | "menu" {
   const lower = url.toLowerCase();
@@ -237,7 +248,7 @@ export function UploadAnalyzer({ userType = "healthy", lang, onAnalysisComplete 
         const analyzeRes = await fetch("/api/delivery-analyze", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ text: fetchData.text, url, userType }),
+          body: JSON.stringify({ text: fetchData.text, url, userType, platform: fetchData.platform }),
         });
         const analyzeData = await analyzeRes.json();
         if (!analyzeRes.ok) throw new Error(analyzeData.error || "Delivery analysis failed");
