@@ -77,7 +77,7 @@ export const GI_ASIA: Record<string, GIEntry> = {
   "yakitori":            { gi: 5, confidence: 0.85, source: "Japan MEXT", carb_per_100g: 3, protein_per_100g: 22, fat_per_100g: 6, cal_per_100g: 155, category: "main" },
   "miso soup":           { gi: 15, confidence: 0.88, source: "Japan MEXT", carb_per_100g: 4, protein_per_100g: 3, fat_per_100g: 1, cal_per_100g: 40, category: "soup" },
   "味噌汁":              { gi: 15, confidence: 0.88, source: "Japan MEXT", category: "soup" },
-  "edamame":             { gi: 18, confidence: 0.88, source: "Japan MEXT", category: "legume" },
+  "edamame jp":             { gi: 18, confidence: 0.88, source: "Japan MEXT", category: "legume" },
   "dorayaki":            { gi: 65, confidence: 0.82, source: "Japan MEXT", carb_per_100g: 55, fat_per_100g: 5, cal_per_100g: 275, category: "dessert" },
   "どら焼き":             { gi: 65, confidence: 0.82, source: "Japan MEXT", category: "dessert" },
   "daifuku":             { gi: 72, confidence: 0.80, source: "Japan MEXT", carb_per_100g: 50, fat_per_100g: 1, cal_per_100g: 215, category: "dessert" },

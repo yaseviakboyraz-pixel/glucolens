@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import { lookupIngredient, searchGI, GLOBAL_GI_DATABASE } from "@/lib/gi-index";
+import { lookupIngredient, searchGI } from "@/lib/gi-index";
 import { claudeGIEstimate, type ClaudeFallbackResult } from "@/lib/claude-fallback";
 import type { Lang } from "@/lib/i18n";
 import { saveMeal } from "@/lib/storage";
