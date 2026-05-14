@@ -223,7 +223,7 @@ export async function analyzeMealImage(
   const mediaType = detectMediaType(imageBase64);
 
   const response = await client.messages.create({
-    model: "claude-sonnet-4-6",
+    model: "claude-sonnet-4-20250514",
     max_tokens: 4000,
     system: SYSTEM_PROMPT + profileNote,
     messages: [{
