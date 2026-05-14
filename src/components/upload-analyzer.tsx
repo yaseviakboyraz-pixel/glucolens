@@ -294,7 +294,7 @@ export function UploadAnalyzer({ userType = "healthy", lang, onAnalysisComplete 
           </button>
         </div>
       )}
-      <div className="grid grid-cols-4 gap-1.5">
+      <div className="grid grid-cols-5 gap-1.5">
         {([  
           { key: "normal",   label: "📷", sub: "Analyze" },
           { key: "url",      label: "🔗", sub: "URL / QR" },
@@ -309,6 +309,11 @@ export function UploadAnalyzer({ userType = "healthy", lang, onAnalysisComplete 
             <div>{m.sub}</div>
           </button>
         ))}
+        <button onClick={() => setShowBarcode(true)}
+          className="py-2.5 rounded-xl text-xs font-medium bg-gray-900 text-gray-400 hover:bg-gray-800 border border-gray-800 transition-all">
+          <div className="text-base">🏷️</div>
+          <div>Barcode</div>
+        </button>
       </div>
 
       {/* Barcode Scanner Modal */}

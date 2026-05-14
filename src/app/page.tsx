@@ -10,6 +10,7 @@ import { DrinkAnalyzer } from "@/components/drink-analyzer";
 import { MealPlanGenerator } from "@/components/meal-plan";
 import { AuthScreen } from "@/components/auth-screen";
 import { Paywall } from "@/components/paywall";
+import { AICoach } from "@/components/ai-coach";
 import { getProfile, saveProfile, syncFromCloud, type UserProfile } from "@/lib/storage";
 import { detectBrowserLang, type Lang } from "@/lib/i18n";
 import { onAuthStateChange, signOut, type User } from "@/lib/auth";
@@ -189,6 +190,11 @@ export default function Home() {
             onNewMeal={() => setView("analyze")}
             onEditProfile={() => setView("setup")}
           />
+        )}
+        {view === "history" && (
+          <div style={{ padding: "0 0 8px" }}>
+            <AICoach />
+          </div>
         )}
       </div>
 
