@@ -7,6 +7,10 @@ import {
   getLast7DaysStats, getLast30DaysStats,
   type SleepLog, type FastingSession, type HomaIRRecord,
 } from "@/lib/storage";
+import {
+  requestHealthPermissions, syncHealthData, getLastHealthSync,
+  isHealthAvailable, isHealthPermitted,
+} from "@/lib/health-kit";
 
 type Tab = "sleep" | "fasting" | "homa" | "trends";
 
@@ -14,6 +18,26 @@ export function HealthTracker() {
   const [tab, setTab] = useState<Tab>("sleep");
   const [, forceUpdate] = useState(0);
   const refresh = useCallback(() => forceUpdate(n => n + 1), []);
+  const [healthSyncing, setHealthSyncing] = useState(false);
+  const [healthSynced, setHealthSynced] = useState(false);
+  const lastSync = getLastHealthSync();
+
+  async function handleHealthSync() {
+    setHealthSyncing(true);
+    try {
+      if (!isHealthPermitted()) {
+        await requestHealthPermissions();
+      }
+      await syncHealthData();
+      setHealthSynced(true);
+      refresh();
+      setTimeout(() => setHealthSynced(false), 2000);
+    } catch (e) {
+      console.error("Health sync error:", e);
+    } finally {
+      setHealthSyncing(false);
+    }
+  }
 
   // ── Sleep ────────────────────────────────────────
   const [sleepHours, setSleepHours] = useState(7.5);
@@ -94,6 +118,29 @@ export function HealthTracker() {
 
   return (
     <div className="space-y-4 pb-4">
+      {/* Apple Health / Google Fit sync banner */}
+      {isHealthAvailable() && (
+        <div className="bg-gray-900 border border-gray-800 rounded-xl p-3 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <span className="text-lg">{typeof navigator !== "undefined" && navigator.userAgent.includes("iPhone") ? "" : "💪"}</span>
+            <div>
+              <div className="text-white text-xs font-medium">
+                {typeof navigator !== "undefined" && navigator.userAgent.includes("iPhone") ? "Apple Health" : "Google Fit"}
+              </div>
+              <div className="text-gray-600 text-xs">
+                {lastSync?.syncedAt
+                  ? `Son sync: ${new Date(lastSync.syncedAt).toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit" })}`
+                  : "Uyku ve adım verilerini çek"}
+              </div>
+            </div>
+          </div>
+          <button onClick={handleHealthSync} disabled={healthSyncing}
+            className="px-3 py-1.5 bg-teal-600 hover:bg-teal-500 disabled:opacity-50 text-white rounded-lg text-xs font-medium transition-all">
+            {healthSyncing ? "⏳" : healthSynced ? "✓" : "Sync"}
+          </button>
+        </div>
+      )}
+
       {/* Tab bar */}
       <div className="grid grid-cols-4 gap-1 bg-gray-900 rounded-xl p-1">
         {([

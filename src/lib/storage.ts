@@ -517,7 +517,7 @@ export function getWeeklyReport() {
   };
 }
 
-// ── SLEEP TRACKING ───────────────────────────────
+export type WeeklyReport = NonNullable<ReturnType<typeof getWeeklyReport>>;
 
 export interface SleepLog {
   id: string;

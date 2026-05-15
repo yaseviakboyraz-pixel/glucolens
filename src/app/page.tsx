@@ -11,6 +11,7 @@ import { MealPlanGenerator } from "@/components/meal-plan";
 import { AuthScreen } from "@/components/auth-screen";
 import { Paywall } from "@/components/paywall";
 import { HealthTracker } from "@/components/health-tracker";
+import { NotificationSettings } from "@/components/notification-settings";
 import { getProfile, saveProfile, syncFromCloud, type UserProfile } from "@/lib/storage";
 import { detectBrowserLang, type Lang } from "@/lib/i18n";
 import { onAuthStateChange, signOut, type User } from "@/lib/auth";
@@ -185,8 +186,13 @@ export default function Home() {
         )}
         {view === "health" && (
           <div className="px-4 py-4">
-            <h2 className="text-white font-bold text-lg mb-4">🧘 Sağlık Takibi</h2>
+            <h2 className="text-white font-bold text-lg mb-1">🧘 Sağlık Takibi</h2>
+            <p className="text-gray-500 text-xs mb-4">Uyku, oruç, HOMA-IR ve trend analizi</p>
             <HealthTracker />
+            <div className="mt-6">
+              <h3 className="text-white font-semibold text-sm mb-3">🔔 Bildirim Ayarları</h3>
+              <NotificationSettings />
+            </div>
           </div>
         )}
         {view === "history" && profile && (
