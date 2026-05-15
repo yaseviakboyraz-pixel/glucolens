@@ -2,7 +2,7 @@
 import { useState, useEffect, useMemo } from "react";
 import {
   getMeals, getTodayStats, getStreak, getWeeklyAvgGL,
-  generateInsights, deleteMeal, getTodayActivityGL,
+  generateInsights, deleteMeal, getTodayActivityGL, getTodayWater, getAvgSleepHours,
   type MealRecord, type UserProfile,
 } from "@/lib/storage";
 import { GLChart } from "./gl-chart";
@@ -46,6 +46,35 @@ export function HistoryDashboard({ profile, lang, onNewMeal, onEditProfile }: Pr
   }
 
   const insights = generateInsights(meals, profile.userType);
+
+  // PDF Export
+  async function exportPDF() {
+    try {
+      const res = await fetch("/api/report", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          meals: meals.slice(0, 50),
+          profile,
+          waterAvg: Math.round(getTodayWater()),
+          sleepAvg: getAvgSleepHours ? getAvgSleepHours() : null,
+        }),
+      });
+      const data = await res.json();
+      if (!data.html) return;
+      const blob = new Blob([data.html], { type: "text/html" });
+      const url = URL.createObjectURL(blob);
+      const win = window.open(url, "_blank");
+      if (win) {
+        win.addEventListener("load", () => {
+          win.print();
+          URL.revokeObjectURL(url);
+        });
+      }
+    } catch (e) {
+      console.error("PDF export failed", e);
+    }
+  }
 
   // CSV Export
   function exportCSV() {
@@ -203,10 +232,16 @@ export function HistoryDashboard({ profile, lang, onNewMeal, onEditProfile }: Pr
           ))}
         </div>
         {meals.length > 0 && (
-          <button onClick={exportCSV} title="CSV olarak indir"
-            className="py-2 px-3 bg-gray-900 hover:bg-gray-800 border border-gray-800 rounded-xl text-xs text-gray-400 hover:text-gray-200 transition-all">
-            ⬇ CSV
-          </button>
+          <div className="flex gap-2">
+            <button onClick={exportPDF} title="PDF rapor oluştur"
+              className="py-2 px-3 bg-gray-900 hover:bg-gray-800 border border-gray-800 rounded-xl text-xs text-gray-400 hover:text-gray-200 transition-all">
+              📄 PDF
+            </button>
+            <button onClick={exportCSV} title="CSV olarak indir"
+              className="py-2 px-3 bg-gray-900 hover:bg-gray-800 border border-gray-800 rounded-xl text-xs text-gray-400 hover:text-gray-200 transition-all">
+              ⬇ CSV
+            </button>
+          </div>
         )}
       </div>
 

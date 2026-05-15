@@ -517,4 +517,156 @@ export function getWeeklyReport() {
   };
 }
 
-export type WeeklyReport = NonNullable<ReturnType<typeof getWeeklyReport>>;
+// ── SLEEP TRACKING ───────────────────────────────
+
+export interface SleepLog {
+  id: string;
+  hours: number;
+  quality: "poor" | "fair" | "good" | "excellent";
+  bedtime?: string;  // HH:MM
+  wakeTime?: string; // HH:MM
+  timestamp: number;
+}
+
+export function getSleepLogs(): SleepLog[] {
+  if (typeof window === "undefined") return [];
+  try {
+    const raw = localStorage.getItem("glucolens_sleep");
+    return raw ? JSON.parse(raw) : [];
+  } catch { return []; }
+}
+
+export function logSleep(hours: number, quality: SleepLog["quality"], bedtime?: string, wakeTime?: string): void {
+  const log: SleepLog = {
+    id: Math.random().toString(36).slice(2),
+    hours, quality, bedtime, wakeTime,
+    timestamp: Date.now(),
+  };
+  const logs = getSleepLogs();
+  logs.unshift(log);
+  if (logs.length > 90) logs.splice(90);
+  localStorage.setItem("glucolens_sleep", JSON.stringify(logs));
+}
+
+export function getTodaySleep(): SleepLog | null {
+  const today = new Date().toDateString();
+  return getSleepLogs().find(l => new Date(l.timestamp).toDateString() === today) ?? null;
+}
+
+export function getAvgSleepHours(days = 7): number {
+  const cutoff = Date.now() - days * 24 * 60 * 60 * 1000;
+  const logs = getSleepLogs().filter(l => l.timestamp > cutoff);
+  if (!logs.length) return 0;
+  return parseFloat((logs.reduce((s, l) => s + l.hours, 0) / logs.length).toFixed(1));
+}
+
+// ── FASTING TRACKING ──────────────────────────────
+
+export interface FastingSession {
+  id: string;
+  startTime: number;  // unix ms
+  endTime?: number;   // unix ms — undefined if active
+  targetHours: number;
+  protocol: "16:8" | "18:6" | "20:4" | "5:2" | "OMAD" | "custom";
+}
+
+export function getFastingSessions(): FastingSession[] {
+  if (typeof window === "undefined") return [];
+  try {
+    const raw = localStorage.getItem("glucolens_fasting");
+    return raw ? JSON.parse(raw) : [];
+  } catch { return []; }
+}
+
+export function startFasting(targetHours: number, protocol: FastingSession["protocol"] = "16:8"): FastingSession {
+  // End any active session first
+  stopFasting();
+  const session: FastingSession = {
+    id: Math.random().toString(36).slice(2),
+    startTime: Date.now(),
+    targetHours, protocol,
+  };
+  const sessions = getFastingSessions();
+  sessions.unshift(session);
+  if (sessions.length > 90) sessions.splice(90);
+  localStorage.setItem("glucolens_fasting", JSON.stringify(sessions));
+  return session;
+}
+
+export function stopFasting(): void {
+  const sessions = getFastingSessions();
+  const active = sessions.find(s => !s.endTime);
+  if (active) {
+    active.endTime = Date.now();
+    localStorage.setItem("glucolens_fasting", JSON.stringify(sessions));
+  }
+}
+
+export function getActiveFasting(): FastingSession | null {
+  return getFastingSessions().find(s => !s.endTime) ?? null;
+}
+
+export function getFastingElapsedHours(): number {
+  const active = getActiveFasting();
+  if (!active) return 0;
+  return parseFloat(((Date.now() - active.startTime) / 3_600_000).toFixed(1));
+}
+
+// ── HOMA-IR CALCULATOR ────────────────────────────
+
+export interface HomaIRRecord {
+  id: string;
+  fastingGlucose_mgdl: number;
+  fastingInsulin_uIUml: number;
+  homaIR: number;
+  interpretation: "normal" | "borderline" | "insulin_resistant";
+  timestamp: number;
+}
+
+export function calculateHomaIR(fastingGlucose_mgdl: number, fastingInsulin_uIUml: number): HomaIRRecord {
+  const homaIR = parseFloat(((fastingGlucose_mgdl * fastingInsulin_uIUml) / 405).toFixed(2));
+  const interpretation: HomaIRRecord["interpretation"] =
+    homaIR < 1.9 ? "normal" : homaIR < 2.9 ? "borderline" : "insulin_resistant";
+  const record: HomaIRRecord = {
+    id: Math.random().toString(36).slice(2),
+    fastingGlucose_mgdl, fastingInsulin_uIUml,
+    homaIR, interpretation,
+    timestamp: Date.now(),
+  };
+  const records = getHomaIRHistory();
+  records.unshift(record);
+  if (records.length > 20) records.splice(20);
+  localStorage.setItem("glucolens_homa", JSON.stringify(records));
+  return record;
+}
+
+export function getHomaIRHistory(): HomaIRRecord[] {
+  if (typeof window === "undefined") return [];
+  try {
+    const raw = localStorage.getItem("glucolens_homa");
+    return raw ? JSON.parse(raw) : [];
+  } catch { return []; }
+}
+
+// ── MONTHLY STATS ─────────────────────────────────
+
+export function getLast30DaysStats(): DailyStats[] {
+  const meals = getMeals();
+  const days: DailyStats[] = [];
+  const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+  for (let i = 29; i >= 0; i--) {
+    const d = new Date();
+    d.setDate(d.getDate() - i);
+    const dateStr = d.toDateString();
+    const dayMeals = meals.filter(m => new Date(m.timestamp).toDateString() === dateStr);
+    const totalGL = parseFloat(dayMeals.reduce((s, m) => s + m.analysis.total_glycemic_load, 0).toFixed(1));
+    days.push({
+      date: dateStr,
+      dayLabel: dayNames[d.getDay()],
+      totalGL,
+      mealCount: dayMeals.length,
+      avgGL: dayMeals.length ? parseFloat((totalGL / dayMeals.length).toFixed(1)) : 0,
+    });
+  }
+  return days;
+}

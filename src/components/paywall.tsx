@@ -45,8 +45,8 @@ export function Paywall({ onClose, onUpgrade }: Props) {
     if (plan !== "free") onUpgrade(plan);
   }
 
-  const proPrice = billing === "yearly" ? "$39.99/yr" : "$4.99/mo";
-  const proPriceNote = billing === "yearly" ? "~$3.33/mo — save 33%" : "";
+  const proPrice = billing === "yearly" ? "$49.99/yr" : "$5.99/mo";
+  const proPriceNote = billing === "yearly" ? "~$4.17/mo — save 30%" : "";
 
   return (
     <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-4">
@@ -56,8 +56,8 @@ export function Paywall({ onClose, onUpgrade }: Props) {
         <div className="p-6 pb-4">
           <div className="flex justify-between items-start mb-4">
             <div>
-              <h2 className="text-white text-2xl font-bold">Upgrade GlucoLens</h2>
-              <p className="text-gray-500 text-sm mt-1">Unlock all features for better glucose control</p>
+              <h2 className="text-white text-2xl font-bold">GlucoLens Pro</h2>
+              <p className="text-gray-500 text-sm mt-1">14 gün ücretsiz dene, istediğinde iptal et</p>
             </div>
             <button onClick={onClose} className="text-gray-600 hover:text-gray-400 text-2xl leading-none">×</button>
           </div>
@@ -70,7 +70,7 @@ export function Paywall({ onClose, onUpgrade }: Props) {
             </button>
             <button onClick={() => setBilling("yearly")}
               className={`flex-1 py-2 rounded-lg text-sm font-medium transition-all ${billing === "yearly" ? "bg-teal-600 text-white" : "text-gray-500"}`}>
-              Yearly 🏷️ -33%
+              Yearly 🏷️ -30%
             </button>
           </div>
         </div>
@@ -133,7 +133,7 @@ export function Paywall({ onClose, onUpgrade }: Props) {
                   ? "bg-gray-800 text-gray-500 cursor-default"
                   : "bg-teal-600 hover:bg-teal-500 text-white"
               } disabled:opacity-50`}>
-              {loading === "pro" ? "Processing..." : currentPlan === "pro" ? "Current Plan" : "Get Pro"}
+              {loading === "pro" ? "Processing..." : currentPlan === "pro" ? "Current Plan" : billing === "yearly" ? "🏷️ 14 Gün Ücretsiz Başla" : "⚡ Pro'ya Geç"}
             </button>
           </div>
 
@@ -149,7 +149,7 @@ export function Paywall({ onClose, onUpgrade }: Props) {
           </button>
 
           <p className="text-center text-gray-700 text-xs">
-            Subscriptions auto-renew. Cancel anytime in App Store settings.
+            14 gün ücretsiz deneme · Otomatik yenilenir · App Store’dan istediğin zaman iptal edebilirsin
           </p>
         </div>
       </div>

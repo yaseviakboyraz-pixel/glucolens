@@ -34,8 +34,8 @@ export const PLANS: Record<PlanId, Plan> = {
   pro: {
     id: "pro",
     name: "Pro",
-    monthlyPrice: "$4.99/mo",
-    yearlyPrice: "$39.99/yr",
+    monthlyPrice: "$5.99/mo",
+    yearlyPrice: "$49.99/yr",
     glLimit: -1,
     color: "teal",
     features: [

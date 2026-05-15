@@ -10,6 +10,7 @@ import { DrinkAnalyzer } from "@/components/drink-analyzer";
 import { MealPlanGenerator } from "@/components/meal-plan";
 import { AuthScreen } from "@/components/auth-screen";
 import { Paywall } from "@/components/paywall";
+import { HealthTracker } from "@/components/health-tracker";
 import { getProfile, saveProfile, syncFromCloud, type UserProfile } from "@/lib/storage";
 import { detectBrowserLang, type Lang } from "@/lib/i18n";
 import { onAuthStateChange, signOut, type User } from "@/lib/auth";
@@ -17,7 +18,7 @@ import { initPushNotifications } from "@/lib/push-notifications";
 import { initNetworkMonitor, onNetworkChange, isOnline, type NetworkStatus } from "@/lib/network";
 import { getCurrentPlan, type PlanId } from "@/lib/subscriptions";
 
-type View = "setup" | "analyze" | "history" | "ingredient" | "menu" | "drink" | "plan";
+type View = "setup" | "analyze" | "history" | "ingredient" | "menu" | "drink" | "plan" | "health";
 
 export default function Home() {
   const [lang, setLang] = useState<Lang>("en");
@@ -182,6 +183,12 @@ export default function Home() {
         {view === "plan" && (
           <MealPlanGenerator lang={lang} userType={profile?.userType || "healthy"} />
         )}
+        {view === "health" && (
+          <div className="px-4 py-4">
+            <h2 className="text-white font-bold text-lg mb-4">🧘 Sağlık Takibi</h2>
+            <HealthTracker />
+          </div>
+        )}
         {view === "history" && profile && (
           <HistoryDashboard
             profile={profile}
@@ -226,6 +233,13 @@ export default function Home() {
           <i className="ti ti-heart-rate-monitor" />
           <span>Plan</span>
           {view === "plan" && <div className="nova-nav-dot" />}
+        </button>
+
+        <button className={`nova-nav-item ${view === "health" ? "active" : ""}`}
+          onClick={() => setView("health")}>
+          <i className="ti ti-activity" />
+          <span>Health</span>
+          {view === "health" && <div className="nova-nav-dot" />}
         </button>
       </nav>
 
