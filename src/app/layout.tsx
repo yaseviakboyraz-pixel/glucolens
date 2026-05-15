@@ -16,10 +16,10 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  title: "GlucoLens — AI Food Sugar & Glucose Analyzer",
+  title: "GlucoLens — AI Food Glucose Estimator",
   description:
-    "Upload a meal photo and instantly see sugar content, glycemic index, and glycemic load. Supports 10 languages including Turkish, English, Chinese, Hindi, Spanish.",
-  keywords: ["glucose tracker", "glycemic index", "blood sugar", "food analyzer", "AI nutrition", "diabetes", "GlucoLens"],
+    "Snap a photo of your meal and get instant AI-based estimates of sugar content, glycemic index (GI), and glycemic load (GL). A food awareness tool — not a medical device. Available in 10 languages.",
+  keywords: ["glycemic index estimator", "food glucose tracker", "GL calculator", "AI nutrition", "blood sugar awareness", "GlucoLens"],
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
@@ -27,8 +27,8 @@ export const metadata: Metadata = {
     title: "GlucoLens",
   },
   openGraph: {
-    title: "GlucoLens — AI Food Sugar & Glucose Analyzer",
-    description: "Upload any meal photo. See sugar, GI & glycemic load instantly.",
+    title: "GlucoLens — AI Food Glucose Estimator",
+    description: "Snap any meal photo. Get AI estimates of sugar, GI & glycemic load. Food awareness, not medical advice.",
     type: "website",
   },
 };

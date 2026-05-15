@@ -10,14 +10,15 @@ interface Props {
 
 const profileLabels: Record<UserType, { title: string; desc: string; color: string }> = {
   healthy:      { title: "Healthy", desc: "General wellness & sugar awareness", color: "border-green-500 bg-green-950/50" },
-  pre_diabetic: { title: "Pre-diabetic", desc: "Managing borderline blood sugar", color: "border-amber-500 bg-amber-950/50" },
-  diabetic:     { title: "Diabetic", desc: "Active diabetes management", color: "border-red-500 bg-red-950/50" },
+  pre_diabetic: { title: "Pre-diabetic", desc: "Monitoring borderline blood sugar patterns", color: "border-amber-500 bg-amber-950/50" },
+  diabetic:     { title: "Diabetic", desc: "Glucose awareness support — consult your doctor", color: "border-red-500 bg-red-950/50" },
 };
 
 export function UserProfileSetup({ lang, onComplete }: Props) {
   const [step, setStep] = useState(1);
   const [name, setName] = useState("");
   const [userType, setUserType] = useState<UserType>("healthy");
+  const [disclaimerAccepted, setDisclaimerAccepted] = useState(false);
 
   const targets = getGLTargets(userType);
 
@@ -111,6 +112,27 @@ export function UserProfileSetup({ lang, onComplete }: Props) {
               </div>
             </div>
 
+            {/* Disclaimer */}
+            <div className="bg-amber-950/30 border border-amber-500/20 rounded-xl p-4">
+              <p className="text-amber-200/80 text-xs leading-relaxed">
+                ⚠️ <strong>Important:</strong> GlucoLens provides <strong>AI-based estimates only</strong>.
+                Results are not medical diagnoses or treatment recommendations.
+                Always consult a qualified healthcare professional for medical decisions.
+              </p>
+              <label className="flex items-start gap-3 mt-3 cursor-pointer">
+                <input type="checkbox" checked={disclaimerAccepted}
+                  onChange={e => setDisclaimerAccepted(e.target.checked)}
+                  className="mt-0.5 w-4 h-4 accent-teal-500 shrink-0" />
+                <span className="text-xs text-gray-400">
+                  I understand GlucoLens is an estimation tool, not a medical device.
+                  I agree to the{" "}
+                  <a href="/privacy" target="_blank" className="text-teal-400 underline">Privacy Policy</a>
+                  {" "}and{" "}
+                  <a href="/terms" target="_blank" className="text-teal-400 underline">Terms of Use</a>.
+                </span>
+              </label>
+            </div>
+
             <div className="flex gap-3">
               <button
                 onClick={() => setStep(1)}
@@ -120,7 +142,8 @@ export function UserProfileSetup({ lang, onComplete }: Props) {
               </button>
               <button
                 onClick={handleComplete}
-                className="flex-1 py-4 rounded-xl font-semibold text-white bg-teal-600 hover:bg-teal-500 transition-all"
+                disabled={!disclaimerAccepted}
+                className="flex-1 py-4 rounded-xl font-semibold text-white bg-teal-600 hover:bg-teal-500 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
               >
                 Start Tracking
               </button>
