@@ -454,6 +454,7 @@ export function UploadAnalyzer({ userType = "healthy", lang, onAnalysisComplete 
                     setError("QR tarama başarısız. URL’yi manuel girin.");
                   }
                 };
+                img.onerror = () => URL.revokeObjectURL(objectUrl);
                 img.src = objectUrl;
               } else {
                 setError("Bu tarayıcı QR okumayı desteklemiyor. URL’yi manuel girin.");

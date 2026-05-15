@@ -54,15 +54,17 @@ export function SingleIngredientAnalyzer({ lang: _lang, onSaved }: Props) {
   function calculateForPortion() {
     const ratio = portionG / 100;
     if (aiResult) {
+      // aiResult values are per 100g — scale to portionG
+      const carbs   = parseFloat((aiResult.carb_g   * ratio).toFixed(1));
+      const fiber   = parseFloat((aiResult.fiber_g   * ratio).toFixed(1));
+      const netCarb = parseFloat((aiResult.net_carb_g * ratio).toFixed(1));
+      const protein = parseFloat((aiResult.protein_g  * ratio).toFixed(1));
+      const fat     = parseFloat((aiResult.fat_g      * ratio).toFixed(1));
+      const cal     = parseFloat((aiResult.calories   * ratio).toFixed(0));
+      const gl      = parseFloat(((aiResult.gi * netCarb) / 100).toFixed(1));
       return {
-        carbs: parseFloat((aiResult.carb_g).toFixed(1)),
-        fiber: parseFloat((aiResult.fiber_g).toFixed(1)),
-        netCarb: parseFloat((aiResult.net_carb_g).toFixed(1)),
-        gi: aiResult.gi,
-        gl: parseFloat((aiResult.gl).toFixed(1)),
-        protein: parseFloat((aiResult.protein_g).toFixed(1)),
-        fat: parseFloat((aiResult.fat_g).toFixed(1)),
-        cal: aiResult.calories,
+        carbs, fiber, netCarb, gi: aiResult.gi, gl,
+        protein, fat, cal,
         confidence: aiResult.confidence,
         source: aiResult.source,
         notes: aiResult.notes,

@@ -352,7 +352,7 @@ export function HistoryDashboard({ profile, lang, onNewMeal, onEditProfile }: Pr
         </div>
       )}
 
-      {activeTab !== "wellness" && displayMeals.length > 0 && (
+      {activeTab !== "wellness" && filteredMeals.length > 0 && (
         <button onClick={onNewMeal}
           className="w-full py-3 rounded-xl font-semibold text-white bg-teal-600 hover:bg-teal-500 transition-all text-sm">
           + Analyze New Meal

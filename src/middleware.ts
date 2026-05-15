@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 
 // Simple in-memory rate limiter
-// For production, use Redis (Upstash) for distributed rate limiting
+// NOTE: On Vercel serverless, each invocation is isolated — this map resets per cold start.
+// For production distributed rate limiting, use Upstash Redis:
+// https://upstash.com/docs/redis/quickstarts/nextjs
+// For now this provides basic protection within a single warm instance.
 const rateMap = new Map<string, { count: number; reset: number }>();
 
 const LIMITS: Record<string, { max: number; windowMs: number }> = {

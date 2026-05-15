@@ -82,8 +82,6 @@ function extractEmbeddedData(html: string): string {
   if (nextData?.[1]) {
     try {
       const obj = JSON.parse(nextData[1]);
-      const str = JSON.stringify(obj);
-      // Extract menu-relevant keys
       const relevant = extractRelevantKeys(obj);
       if (relevant) chunks.push("[NEXT_DATA] " + relevant);
     } catch { /* ignore */ }
