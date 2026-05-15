@@ -21,8 +21,6 @@
     "@capacitor/status-bar": "^8.0.2",
     "@revenuecat/purchases-capacitor": "^13.0.1",
     "@supabase/supabase-js": "^2.104.1",
-    "@zxing/browser": "^0.1.5",
-    "@zxing/library": "^0.21.3",
     "capacitor-health": "^8.1.0",
     "lucide-react": "^1.8.0",
     "next": "16.2.4",

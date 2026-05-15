@@ -34,6 +34,7 @@ export function BarcodeScanner({ lang, onResult, onClose }: Props) {
   const [mode, setMode] = useState<"camera" | "manual">("camera");
   const streamRef = useRef<MediaStream | null>(null);
   const scannerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const scanningRef = useRef(false); // stale closure fix — useRef stays current in setInterval
 
   const stopCamera = useCallback(() => {
     if (streamRef.current) {
@@ -44,6 +45,7 @@ export function BarcodeScanner({ lang, onResult, onClose }: Props) {
       clearInterval(scannerRef.current);
       scannerRef.current = null;
     }
+    scanningRef.current = false;
     setScanning(false);
   }, []);
 
@@ -75,6 +77,7 @@ export function BarcodeScanner({ lang, onResult, onClose }: Props) {
         videoRef.current.srcObject = stream;
         await videoRef.current.play();
       }
+      scanningRef.current = true;
       setScanning(true);
       startScanning();
     } catch {
@@ -86,7 +89,7 @@ export function BarcodeScanner({ lang, onResult, onClose }: Props) {
   function startScanning() {
     // Use canvas to capture frames and decode barcode
     scannerRef.current = setInterval(async () => {
-      if (!videoRef.current || !scanning) return;
+      if (!videoRef.current || !scanningRef.current) return;
       const canvas = document.createElement("canvas");
       canvas.width = videoRef.current.videoWidth;
       canvas.height = videoRef.current.videoHeight;
@@ -244,6 +247,7 @@ export function BarcodeScanner({ lang, onResult, onClose }: Props) {
                   // Read as data URL and try BarcodeDetector
                   const url = URL.createObjectURL(file);
                   const img = new Image();
+                  img.onerror = () => URL.revokeObjectURL(url);
                   img.onload = async () => {
                     if ("BarcodeDetector" in window) {
                       try {
@@ -251,11 +255,13 @@ export function BarcodeScanner({ lang, onResult, onClose }: Props) {
                         const detector = new BarcodeDetector({ formats: ["ean_13", "ean_8", "upc_a", "upc_e", "code_128"] });
                         const barcodes = await detector.detect(img);
                         if (barcodes.length > 0) {
+                          URL.revokeObjectURL(url);
                           await fetchProduct(barcodes[0].rawValue);
                           return;
                         }
                       } catch { /* fall through */ }
                     }
+                    URL.revokeObjectURL(url);
                     setError("Could not read barcode from image. Try manual entry.");
                     setLoading(false);
                   };

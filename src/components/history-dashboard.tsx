@@ -109,10 +109,6 @@ export function HistoryDashboard({ profile, lang, onNewMeal, onEditProfile }: Pr
     refresh();
   }
 
-  const today = new Date().toISOString().slice(0, 10);
-  const todayMeals = meals.filter((m) => new Date(m.timestamp).toISOString().slice(0, 10) === today);
-  const displayMeals = activeTab === "today" ? todayMeals : meals;
-
   // Net GL after activity
   const netGL = Math.max(0, parseFloat((todayStats.totalGL - activityGLReduction).toFixed(1)));
 
