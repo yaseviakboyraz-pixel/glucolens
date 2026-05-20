@@ -469,3 +469,6 @@ body {
 .light .text-gray-400 { color: rgba(10,10,20,0.55) !important; }
 .light .text-gray-500 { color: rgba(10,10,20,0.4) !important; }
 .light .text-gray-600 { color: rgba(10,10,20,0.3) !important; }
+
+@keyframes progress-bar { 0% { margin-left:0; width:0 } 50% { margin-left:15%; width:70% } 100% { margin-left:100%; width:0 } }
+@keyframes shimmer { 0%,100% { opacity:0.2 } 50% { opacity:0.8 } }

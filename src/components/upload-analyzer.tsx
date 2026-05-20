@@ -2,6 +2,7 @@
 import { useState, useRef, useCallback } from "react";
 import { GlucoseMeter } from "./glucose-meter";
 import { BarcodeScanner } from "./barcode-scanner";
+import { HolographicFigure } from "./holographic-figure";
 import { canAnalyze, recordAnalysis } from "@/lib/subscriptions";
 import { Paywall } from "./paywall";
 import { TimingNudges } from "./timing-nudges";
@@ -602,12 +603,27 @@ export function UploadAnalyzer({ userType = "healthy", lang, onAnalysisComplete 
       <input ref={gallery2Ref} type="file" accept="image/jpeg,image/png,image/webp,image/heic" className="hidden"
         onChange={(e) => { const f = e.target.files?.[0]; if (f) handleFile(f, 2); e.target.value = ""; }} />
 
-      {/* Loading */}
+      {/* Loading — Holographic Figure */}
       {(loading || urlLoading) && (
-        <div className="text-center py-12 space-y-4">
-          <div className="text-5xl animate-bounce">{mode === "url" ? "🔗" : "🔬"}</div>
-          <p className="text-teal-400 font-medium text-lg">{mode === "url" ? "URL analiz ediliyor..." : tx.analyzing}</p>
-          {preview && <img src={preview} alt="analyzing" className="max-h-40 mx-auto rounded-xl object-contain opacity-50" />}
+        <div className="relative rounded-2xl overflow-hidden" style={{ background: "radial-gradient(ellipse 80% 70% at 50% 35%, #030f20 0%, #01080f 55%, #010308 100%)", minHeight: 380 }}>
+          {/* Holographic figure — centered */}
+          <div className="flex justify-center pt-2">
+            <HolographicFigure size="small" />
+          </div>
+
+          {/* Analysing text + progress bar */}
+          <div className="w-full px-6 pb-4 space-y-2">
+            <div className="text-center" style={{ fontSize: 8, color: "rgba(14,165,233,0.55)", letterSpacing: "2.5px", fontFamily: "monospace" }}>
+              {mode === "url" ? "URL ANALİZ EDİLİYOR···" : "ANALİZ EDİLİYOR···"}
+            </div>
+            <div style={{ height: 2, background: "rgba(14,165,233,0.1)", borderRadius: 1, overflow: "hidden" }}>
+              <div style={{ height: 2, background: "linear-gradient(90deg,transparent,rgba(14,165,233,0.85),rgba(139,92,246,0.6),transparent)", borderRadius: 1, animation: "progress-bar 2.5s ease-in-out infinite" }} />
+            </div>
+            <div className="flex justify-between">
+              <span style={{ fontSize: 7, color: "rgba(14,165,233,0.3)", fontFamily: "monospace", letterSpacing: 1 }}>GL·SCAN</span>
+              <span style={{ fontSize: 7, color: "rgba(139,92,246,0.3)", fontFamily: "monospace", letterSpacing: 1 }}>AI·PROC</span>
+            </div>
+          </div>
         </div>
       )}
 
