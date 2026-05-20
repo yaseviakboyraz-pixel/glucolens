@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Geist } from "next/font/google";
 import { ErrorBoundary } from "@/components/error-boundary";
+import Script from "next/script";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -44,6 +45,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className="min-h-screen antialiased" style={{background:'var(--nova-bg)',color:'var(--nova-text-1)'}}>
         <div className="nova-aurora" aria-hidden="true" />
         <ErrorBoundary>{children}</ErrorBoundary>
+        <Script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js" strategy="afterInteractive" />
       </body>
     </html>
   );

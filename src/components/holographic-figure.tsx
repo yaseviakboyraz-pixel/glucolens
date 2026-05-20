@@ -14,12 +14,23 @@ export function HolographicFigure({ size = "full" }: { size?: "full" | "small" }
     const container = mountRef.current;
     let renderer: any = null;
 
+    // If Three.js already loaded (preloaded in layout), init directly
+    const T: any = (window as any).THREE;
+    if (T) {
+      initThree(T);
+      return;
+    }
+
+    // Otherwise load dynamically
     const script = document.createElement("script");
     script.src = "https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js";
-
     script.onload = () => {
-      const T: any = (window as any).THREE;
-      if (!T) return;
+      const T2: any = (window as any).THREE;
+      if (T2) initThree(T2);
+    };
+    document.head.appendChild(script);
+
+    function initThree(T: any) {
 
       renderer = new T.WebGLRenderer({ antialias: true, alpha: false });
       renderer.setSize(W, H);
@@ -288,9 +299,7 @@ export function HolographicFigure({ size = "full" }: { size?: "full" | "small" }
         renderer.render(scene, camera);
       }
       animate();
-    };
-
-    document.head.appendChild(script);
+    }
 
     return () => {
       cancelAnimationFrame(frameRef.current);
