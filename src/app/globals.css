@@ -472,3 +472,58 @@ body {
 
 @keyframes progress-bar { 0% { margin-left:0; width:0 } 50% { margin-left:15%; width:70% } 100% { margin-left:100%; width:0 } }
 @keyframes shimmer { 0%,100% { opacity:0.2 } 50% { opacity:0.8 } }
+
+/* ── LOADING SCREEN — NOVA AURORA RINGS ───────────────────────── */
+@keyframes ring-spin-cw  { to { stroke-dashoffset: -440 } }
+@keyframes ring-spin-ccw { to { stroke-dashoffset:  440 } }
+@keyframes ring-expand   { 0% { r:68; opacity:.7 } 100% { r:108; opacity:0 } }
+@keyframes ring-float-p  { 0%{transform:translateY(0) translateX(0);opacity:0} 15%{opacity:.9} 75%{opacity:.5} 100%{transform:translateY(-52px) translateX(var(--dx));opacity:0} }
+@keyframes ring-hb       { 0%,100%{transform:scale(1)} 15%{transform:scale(1.22)} 40%{transform:scale(1)} 55%{transform:scale(1.1)} }
+@keyframes ring-scanbar  { 0%{transform:translateY(-100%)} 100%{transform:translateY(2000%)} }
+@keyframes ring-flicker  { 0%,100%{opacity:.22} 45%{opacity:.72} 55%{opacity:.72} }
+@keyframes ring-tick     { 0%{opacity:0} 50%{opacity:1} 100%{opacity:0} }
+@keyframes ring-breathe  { 0%,100%{opacity:.35;transform:scale(.97)} 50%{opacity:.85;transform:scale(1.06)} }
+@keyframes ring-prog     { 0%{width:0%} 65%{width:72%} 100%{width:72%} }
+@keyframes ring-shimmer  { 0%{transform:translateX(-100%)} 100%{transform:translateX(400%)} }
+
+/* Ring color tokens — adapt to light/dark */
+:root {
+  --ring-gl:          #00ccff;
+  --ring-neural:      #8b5cf6;
+  --ring-heart:       #ff2d55;
+  --ring-gl-dim:      rgba(0,200,255,0.07);
+  --ring-neural-dim:  rgba(139,92,246,0.07);
+  --ring-heart-dim:   rgba(255,45,80,0.07);
+  --ring-center-bg:   rgba(255,255,255,0.03);
+  --ring-center-bd:   rgba(255,255,255,0.08);
+  --ring-scan:        rgba(0,180,255,0.035);
+  --ring-shimmer:     rgba(255,255,255,0.06);
+  --ring-data-l:      rgba(0,190,255,0.30);
+  --ring-data-r:      rgba(139,92,246,0.28);
+  --ring-prog-track:  rgba(255,255,255,0.05);
+  --ring-tick:        rgba(0,220,80,0.85);
+  --ring-legend:      rgba(255,255,255,0.20);
+  --ring-scan-txt:    rgba(0,200,255,0.50);
+  --ring-prog-l:      rgba(0,200,255,0.25);
+  --ring-prog-r:      rgba(139,92,246,0.25);
+}
+.light {
+  --ring-gl:          #0088ee;
+  --ring-neural:      #6d28d9;
+  --ring-heart:       #e8003a;
+  --ring-gl-dim:      rgba(0,136,238,0.10);
+  --ring-neural-dim:  rgba(109,40,217,0.10);
+  --ring-heart-dim:   rgba(232,0,58,0.10);
+  --ring-center-bg:   rgba(255,255,255,0.85);
+  --ring-center-bd:   rgba(0,0,0,0.08);
+  --ring-scan:        rgba(0,120,220,0.025);
+  --ring-shimmer:     rgba(0,0,0,0.04);
+  --ring-data-l:      rgba(0,100,220,0.35);
+  --ring-data-r:      rgba(109,40,217,0.30);
+  --ring-prog-track:  rgba(0,0,0,0.06);
+  --ring-tick:        rgba(0,160,70,0.85);
+  --ring-legend:      rgba(0,0,0,0.30);
+  --ring-scan-txt:    rgba(0,100,220,0.55);
+  --ring-prog-l:      rgba(0,100,220,0.25);
+  --ring-prog-r:      rgba(109,40,217,0.25);
+}

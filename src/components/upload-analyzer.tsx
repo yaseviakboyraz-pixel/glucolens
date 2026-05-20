@@ -2,7 +2,6 @@
 import { useState, useRef, useCallback } from "react";
 import { GlucoseMeter } from "./glucose-meter";
 import { BarcodeScanner } from "./barcode-scanner";
-import { HolographicFigure } from "./holographic-figure";
 import { canAnalyze, recordAnalysis } from "@/lib/subscriptions";
 import { Paywall } from "./paywall";
 import { TimingNudges } from "./timing-nudges";
@@ -603,25 +602,144 @@ export function UploadAnalyzer({ userType = "healthy", lang, onAnalysisComplete 
       <input ref={gallery2Ref} type="file" accept="image/jpeg,image/png,image/webp,image/heic" className="hidden"
         onChange={(e) => { const f = e.target.files?.[0]; if (f) handleFile(f, 2); e.target.value = ""; }} />
 
-      {/* Loading — Holographic Figure */}
+      {/* Loading — Nova Aurora Activity Rings */}
       {(loading || urlLoading) && (
-        <div className="relative rounded-2xl overflow-hidden" style={{ background: "radial-gradient(ellipse 80% 70% at 50% 35%, #030f20 0%, #01080f 55%, #010308 100%)", minHeight: 380 }}>
-          {/* Holographic figure — centered */}
-          <div className="flex justify-center pt-2">
-            <HolographicFigure size="small" />
+        <div style={{ position: "relative", overflow: "hidden", borderRadius: 20, background: "var(--nova-bg)", minHeight: 420, display: "flex", flexDirection: "column" }}>
+
+          {/* Aurora inner glow */}
+          <div style={{ position: "absolute", inset: 0, background: "radial-gradient(ellipse 200% 60% at 30% -10%, rgba(139,92,246,0.08) 0%, transparent 60%), radial-gradient(ellipse 150% 40% at 80% 20%, rgba(236,72,153,0.05) 0%, transparent 50%), radial-gradient(ellipse 200% 80% at 10% 80%, rgba(6,182,212,0.04) 0%, transparent 60%)", pointerEvents: "none" }} />
+
+          {/* Scanline beam */}
+          <div style={{ position: "absolute", left: 0, right: 0, height: 80, background: "linear-gradient(180deg,transparent,var(--ring-scan),var(--ring-scan),transparent)", animation: "ring-scanbar 5s linear infinite", pointerEvents: "none", zIndex: 3 }} />
+
+          {/* Header row */}
+          <div style={{ position: "absolute", top: 0, left: 0, right: 0, padding: "16px 16px 0", display: "flex", justifyContent: "space-between", alignItems: "flex-start", zIndex: 6 }}>
+            <div>
+              <div style={{ fontSize: 7, color: "var(--nova-text-4)", letterSpacing: 4, fontWeight: 500 }}>GLUCOLENS</div>
+              <div style={{ fontSize: 7, color: "var(--nova-purple)", letterSpacing: 2, marginTop: 2, animation: "ring-flicker 2.5s infinite" }}>AI · ACTIVE</div>
+            </div>
+            <div style={{ display: "flex", gap: 3, marginTop: 4 }}>
+              {[0, 0.4, 0.8].map((d, i) => (
+                <div key={i} style={{ width: 4, height: 4, borderRadius: "50%", background: "var(--ring-tick)", animation: `ring-tick 1.2s ${d}s infinite` }} />
+              ))}
+            </div>
           </div>
 
-          {/* Analysing text + progress bar */}
-          <div className="w-full px-6 pb-4 space-y-2">
-            <div className="text-center" style={{ fontSize: 8, color: "rgba(14,165,233,0.55)", letterSpacing: "2.5px", fontFamily: "monospace" }}>
-              {mode === "url" ? "URL ANALİZ EDİLİYOR···" : "ANALİZ EDİLİYOR···"}
+          {/* Rings container */}
+          <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", paddingTop: 32, paddingBottom: 60, position: "relative" }}>
+
+            {/* Expand pulse SVG */}
+            <svg width="210" height="210" viewBox="0 0 210 210" style={{ position: "absolute", overflow: "visible", pointerEvents: "none" }}>
+              <circle cx="105" cy="105" r="68" fill="none" stroke="var(--ring-gl)" strokeWidth="0.5">
+                <animate attributeName="r" values="68;108;68" dur="2.6s" repeatCount="indefinite" />
+                <animate attributeName="opacity" values="0.5;0;0.5" dur="2.6s" repeatCount="indefinite" />
+              </circle>
+              <circle cx="105" cy="105" r="68" fill="none" stroke="var(--ring-gl)" strokeWidth="0.5">
+                <animate attributeName="r" values="68;108;68" dur="2.6s" begin="1.3s" repeatCount="indefinite" />
+                <animate attributeName="opacity" values="0.4;0;0.4" dur="2.6s" begin="1.3s" repeatCount="indefinite" />
+              </circle>
+            </svg>
+
+            {/* Main rings SVG */}
+            <svg width="210" height="210" viewBox="0 0 210 210" style={{ position: "absolute", overflow: "visible" }}>
+              <defs>
+                <filter id="rl-glow1" x="-30%" y="-30%" width="160%" height="160%">
+                  <feGaussianBlur stdDeviation="2.5" result="b" />
+                  <feMerge><feMergeNode in="b" /><feMergeNode in="SourceGraphic" /></feMerge>
+                </filter>
+                <filter id="rl-glow2" x="-60%" y="-60%" width="220%" height="220%">
+                  <feGaussianBlur stdDeviation="5" result="b" />
+                  <feMerge><feMergeNode in="b" /><feMergeNode in="SourceGraphic" /></feMerge>
+                </filter>
+                <filter id="rl-glow3" x="-80%" y="-80%" width="260%" height="260%">
+                  <feGaussianBlur stdDeviation="8" result="b" />
+                  <feMerge><feMergeNode in="b" /><feMergeNode in="SourceGraphic" /></feMerge>
+                </filter>
+              </defs>
+              {/* Track rings */}
+              <circle cx="105" cy="105" r="93" fill="none" stroke="var(--ring-gl-dim)"    strokeWidth="10" />
+              <circle cx="105" cy="105" r="74" fill="none" stroke="var(--ring-neural-dim)" strokeWidth="10" />
+              <circle cx="105" cy="105" r="55" fill="none" stroke="var(--ring-heart-dim)"  strokeWidth="10" />
+              {/* GL ring — cyan, clockwise */}
+              <g filter="url(#rl-glow1)">
+                <circle cx="105" cy="105" r="93" fill="none" stroke="var(--ring-gl)" strokeWidth="10" strokeLinecap="round" strokeDasharray="345 540"
+                  style={{ transformOrigin: "105px 105px", animation: "ring-spin-cw 7s cubic-bezier(0.45,0.05,0.55,0.95) infinite" }} />
+                <circle cx="105" cy="12" r="6.5" fill="var(--ring-gl)" filter="url(#rl-glow2)"
+                  style={{ transformOrigin: "105px 105px", animation: "ring-spin-cw 7s cubic-bezier(0.45,0.05,0.55,0.95) infinite" }} />
+              </g>
+              {/* Neural ring — purple, counter-clockwise */}
+              <g filter="url(#rl-glow1)">
+                <circle cx="105" cy="105" r="74" fill="none" stroke="var(--ring-neural)" strokeWidth="10" strokeLinecap="round" strokeDasharray="255 428"
+                  style={{ transformOrigin: "105px 105px", animation: "ring-spin-ccw 5.5s cubic-bezier(0.45,0.05,0.55,0.95) infinite" }} />
+                <circle cx="105" cy="31" r="5.5" fill="var(--ring-neural)" filter="url(#rl-glow2)"
+                  style={{ transformOrigin: "105px 105px", animation: "ring-spin-ccw 5.5s cubic-bezier(0.45,0.05,0.55,0.95) infinite" }} />
+              </g>
+              {/* Heart ring — red, clockwise fast */}
+              <g filter="url(#rl-glow1)">
+                <circle cx="105" cy="105" r="55" fill="none" stroke="var(--ring-heart)" strokeWidth="10" strokeLinecap="round" strokeDasharray="188 318"
+                  style={{ transformOrigin: "105px 105px", animation: "ring-spin-cw 4s cubic-bezier(0.45,0.05,0.55,0.95) infinite" }} />
+                <circle cx="105" cy="50" r="5" fill="var(--ring-heart)" filter="url(#rl-glow3)"
+                  style={{ transformOrigin: "105px 105px", animation: "ring-spin-cw 4s cubic-bezier(0.45,0.05,0.55,0.95) infinite" }}>
+                  <animate attributeName="r" values="5;7.5;5" dur="0.85s" repeatCount="indefinite" />
+                </circle>
+              </g>
+            </svg>
+
+            {/* Center disk */}
+            <div style={{ width: 78, height: 78, borderRadius: "50%", background: "var(--ring-center-bg)", border: "1px solid var(--ring-center-bd)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", position: "relative", boxShadow: "0 0 0 8px var(--nova-purple-dim)", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)" }}>
+              <svg width="24" height="22" viewBox="0 0 24 22" fill="none" style={{ animation: "ring-hb 0.85s ease-in-out infinite", marginBottom: 4 }}>
+                <path d="M12 20C12 20 1 13 1 6C1 3.2 3.2 1 6 1C8.2 1 10.4 2.4 12 4.5C13.6 2.4 15.8 1 18 1C20.8 1 23 3.2 23 6C23 13 12 20 12 20Z"
+                  fill="rgba(255,45,80,0.15)" stroke="var(--ring-heart)" strokeWidth="1.3" strokeLinejoin="round" />
+              </svg>
+              <div style={{ fontSize: 7, color: "var(--nova-text-3)", letterSpacing: 2, fontFamily: "monospace" }}>·—·</div>
+              <div style={{ position: "absolute", inset: -6, borderRadius: "50%", border: "1px solid var(--nova-purple-border)", animation: "ring-breathe 3s ease-in-out infinite" }} />
             </div>
-            <div style={{ height: 2, background: "rgba(14,165,233,0.1)", borderRadius: 1, overflow: "hidden" }}>
-              <div style={{ height: 2, background: "linear-gradient(90deg,transparent,rgba(14,165,233,0.85),rgba(139,92,246,0.6),transparent)", borderRadius: 1, animation: "progress-bar 2.5s ease-in-out infinite" }} />
+
+            {/* Side data labels */}
+            <div style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-40%)", fontFamily: "monospace", fontSize: 7, lineHeight: "20px", color: "var(--ring-data-l)" }}>
+              {["GL", "GI", "HR", "O₂", "AI"].map((l, i) => (
+                <div key={l} style={{ animation: `ring-flicker 3s ${i * 0.4}s infinite` }}>{l}</div>
+              ))}
             </div>
-            <div className="flex justify-between">
-              <span style={{ fontSize: 7, color: "rgba(14,165,233,0.3)", fontFamily: "monospace", letterSpacing: 1 }}>GL·SCAN</span>
-              <span style={{ fontSize: 7, color: "rgba(139,92,246,0.3)", fontFamily: "monospace", letterSpacing: 1 }}>AI·PROC</span>
+            <div style={{ position: "absolute", right: 12, top: "50%", transform: "translateY(-40%)", fontFamily: "monospace", fontSize: 7, lineHeight: "20px", color: "var(--ring-data-r)", textAlign: "right" }}>
+              {["—", "—", "72", "99", "ON"].map((v, i) => (
+                <div key={i} style={{ animation: `ring-flicker 2.8s ${i * 0.4 + 0.2}s infinite` }}>{v}</div>
+              ))}
+            </div>
+
+            {/* Floating particles */}
+            {[
+              { c: "var(--ring-gl)",    l: "22%", d: "3.5s", dx: "-5px" },
+              { c: "var(--ring-neural)", l: "74%", d: "4.2s", dx: "6px",  delay: "0.9s" },
+              { c: "var(--ring-heart)", l: "50%", d: "3.8s", dx: "-3px", delay: "2.2s" },
+              { c: "var(--ring-gl)",    l: "36%", d: "3s",   dx: "4px",  delay: "1.4s" },
+            ].map((p, i) => (
+              <div key={i} style={{ position: "absolute", width: 2.5, height: 2.5, background: p.c, borderRadius: "50%", bottom: "28%", left: p.l, animation: `ring-float-p ${p.d} ${p.delay || "0s"} ease-in-out infinite`, ["--dx" as string]: p.dx, opacity: 0 } as React.CSSProperties} />
+            ))}
+          </div>
+
+          {/* Legend */}
+          <div style={{ position: "absolute", bottom: 52, left: 0, right: 0, display: "flex", justifyContent: "center", gap: 14, zIndex: 4 }}>
+            {[{c:"var(--ring-gl)",l:"GL"},{c:"var(--ring-neural)",l:"NEURAL"},{c:"var(--ring-heart)",l:"HEART"}].map(item=>(
+              <div key={item.l} style={{ display: "flex", alignItems: "center", gap: 5 }}>
+                <div style={{ width: 6, height: 6, borderRadius: "50%", background: item.c, boxShadow: `0 0 5px ${item.c}` }} />
+                <span style={{ fontSize: 7, color: "var(--ring-legend)", letterSpacing: 1, fontFamily: "monospace" }}>{item.l}</span>
+              </div>
+            ))}
+          </div>
+
+          {/* Bottom progress */}
+          <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, padding: "0 16px 14px", zIndex: 6 }}>
+            <div style={{ fontSize: 8, color: "var(--ring-scan-txt)", letterSpacing: 2.5, fontFamily: "monospace", textAlign: "center", marginBottom: 8, animation: "ring-flicker 1.8s infinite" }}>
+              {mode === "url" ? "URL ANALİZ EDİLİYOR" : "ANALİZ EDİLİYOR"}
+            </div>
+            <div style={{ height: 2, borderRadius: 1, overflow: "hidden", background: "var(--ring-prog-track)", marginBottom: 6, position: "relative" }}>
+              <div style={{ position: "absolute", inset: 0, background: "linear-gradient(90deg,transparent,var(--ring-shimmer),transparent)", animation: "ring-shimmer 2.2s ease-in-out infinite" }} />
+              <div style={{ height: 2, borderRadius: 1, background: "linear-gradient(90deg,var(--ring-gl),var(--ring-neural))", boxShadow: "0 0 8px var(--ring-gl)", animation: "ring-prog 4s ease-out infinite", position: "relative", zIndex: 1 }} />
+            </div>
+            <div style={{ display: "flex", justifyContent: "space-between" }}>
+              <span style={{ fontSize: 6, fontFamily: "monospace", letterSpacing: 1, color: "var(--ring-prog-l)" }}>GL · SCAN</span>
+              <span style={{ fontSize: 6, fontFamily: "monospace", letterSpacing: 1, color: "var(--ring-prog-r)" }}>AI · PROC</span>
             </div>
           </div>
         </div>
