@@ -169,25 +169,23 @@ export function HistoryDashboard({ profile, lang, onNewMeal, onEditProfile }: Pr
           </div>
         </div>
       )}
-      {/* Header stats */}
-      <div className="grid grid-cols-3 gap-3">
-        <div className="bg-gray-900 rounded-xl p-3 text-center border border-gray-800">
-          <div className={`text-2xl font-bold ${netGL > profile.dailyGLTarget ? "text-red-400" : "text-teal-400"}`}>
-            {netGL || 0}
-          </div>
-          <div className="text-xs text-gray-500 mt-1">Net GL</div>
-          <div className="text-xs text-gray-600">/ {profile.dailyGLTarget}</div>
+      {/* Header stats — Nova Aurora */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 8 }}>
+        <div style={{ background: "var(--nova-surface)", border: "0.5px solid var(--nova-border)", borderRadius: 14, padding: "10px 12px", textAlign: "center" }}>
+          <div style={{ fontSize: 22, fontWeight: 200, letterSpacing: -1, color: netGL > profile.dailyGLTarget ? "rgba(239,68,68,0.85)" : "rgba(20,184,166,0.9)", lineHeight: 1 }}>{netGL || 0}</div>
+          <div style={{ fontSize: 7, color: "var(--nova-text-3)", letterSpacing: 1, marginTop: 3 }}>Net GL</div>
+          <div style={{ fontSize: 6, color: "var(--nova-text-4)", marginTop: 1 }}>/ {profile.dailyGLTarget}</div>
           {activityGLReduction > 0 && (
-            <div className="text-xs text-green-500 mt-0.5">-{activityGLReduction} activity</div>
+            <div style={{ fontSize: 7, color: "rgba(16,185,129,0.7)", marginTop: 3 }}>-{activityGLReduction} aktivite</div>
           )}
         </div>
-        <div className="bg-gray-900 rounded-xl p-3 text-center border border-gray-800">
-          <div className="text-2xl font-bold text-blue-400">{weeklyAvg || "—"}</div>
-          <div className="text-xs text-gray-500 mt-1">7-Day Avg</div>
+        <div style={{ background: "var(--nova-surface)", border: "0.5px solid var(--nova-border)", borderRadius: 14, padding: "10px 12px", textAlign: "center" }}>
+          <div style={{ fontSize: 22, fontWeight: 200, letterSpacing: -1, color: "rgba(59,130,246,0.85)", lineHeight: 1 }}>{weeklyAvg || "—"}</div>
+          <div style={{ fontSize: 7, color: "var(--nova-text-3)", letterSpacing: 1, marginTop: 3 }}>7 Gün Ort.</div>
         </div>
-        <div className="bg-gray-900 rounded-xl p-3 text-center border border-gray-800">
-          <div className="text-2xl font-bold text-amber-400">{streak > 0 ? `${streak}🔥` : "0"}</div>
-          <div className="text-xs text-gray-500 mt-1">Streak</div>
+        <div style={{ background: "var(--nova-surface)", border: "0.5px solid var(--nova-border)", borderRadius: 14, padding: "10px 12px", textAlign: "center" }}>
+          <div style={{ fontSize: 22, fontWeight: 200, letterSpacing: -1, color: "rgba(245,158,11,0.85)", lineHeight: 1 }}>{streak > 0 ? streak : "0"}{streak > 0 ? "🔥" : ""}</div>
+          <div style={{ fontSize: 7, color: "var(--nova-text-3)", letterSpacing: 1, marginTop: 3 }}>Seri</div>
         </div>
       </div>
 
@@ -205,40 +203,44 @@ export function HistoryDashboard({ profile, lang, onNewMeal, onEditProfile }: Pr
       ))}
 
       {/* Profile info + edit */}
-      <div className="flex items-center justify-between bg-gray-900 rounded-xl px-4 py-3 border border-gray-800">
-        <div className="text-xs text-gray-500">
-          <span className="text-gray-300 capitalize">{profile.name || "User"}</span>
-          <span className="text-gray-600 ml-2">· {profile.userType.replace("_", "-")} · GL {profile.dailyGLTarget}/day</span>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", background: "var(--nova-surface)", border: "0.5px solid var(--nova-border)", borderRadius: 14, padding: "8px 14px" }}>
+        <div style={{ fontSize: 11, color: "var(--nova-text-3)" }}>
+          <span style={{ color: "var(--nova-text-2)", fontWeight: 400 }}>{profile.name || "User"}</span>
+          <span style={{ color: "var(--nova-text-4)", marginLeft: 6 }}>· {profile.userType.replace("_", "-")} · GL {profile.dailyGLTarget}/gün</span>
         </div>
-        <button onClick={onEditProfile} className="text-xs text-teal-500 hover:text-teal-400 transition-colors">
-          Edit
+        <button onClick={onEditProfile} style={{ fontSize: 11, color: "var(--nova-purple)", background: "none", border: "none", cursor: "pointer" }}>
+          Düzenle
         </button>
       </div>
 
-      {/* Tabs + Export */}
-      <div className="flex gap-2 items-center">
-        <div className="flex gap-1.5 flex-1">
+      {/* Tabs + Export — Nova Aurora */}
+      <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+        <div style={{ display: "flex", gap: 5, flex: 1 }}>
           {([
-            { key: "today", label: `Bugün (${meals.filter(m => new Date(m.timestamp).toISOString().slice(0,10) === new Date().toISOString().slice(0,10)).length})` },
+            { key: "today",   label: `Bugün (${meals.filter(m => new Date(m.timestamp).toISOString().slice(0,10) === new Date().toISOString().slice(0,10)).length})` },
             { key: "history", label: `Tümü (${meals.length})` },
             { key: "wellness", label: "💧🏃" },
           ] as { key: "today" | "history" | "wellness"; label: string }[]).map(tab => (
             <button key={tab.key} onClick={() => setActiveTab(tab.key)}
-              className={`flex-1 py-2 rounded-xl text-xs font-medium transition-all ${
-                activeTab === tab.key ? "bg-teal-600 text-white" : "bg-gray-900 text-gray-400 hover:bg-gray-800"
-              }`}>
+              style={{
+                flex: 1, padding: "8px 4px", borderRadius: 12, fontSize: 8, fontWeight: 400,
+                background: activeTab === tab.key ? "rgba(20,184,166,0.12)" : "var(--nova-surface)",
+                border: activeTab === tab.key ? "0.5px solid rgba(20,184,166,0.3)" : "0.5px solid var(--nova-border)",
+                color: activeTab === tab.key ? "rgba(20,184,166,0.9)" : "var(--nova-text-3)",
+                cursor: "pointer", transition: "all 0.2s",
+              }}>
               {tab.label}
             </button>
           ))}
         </div>
         {meals.length > 0 && (
-          <div className="flex gap-2">
-            <button onClick={exportPDF} title="PDF rapor oluştur"
-              className="py-2 px-3 bg-gray-900 hover:bg-gray-800 border border-gray-800 rounded-xl text-xs text-gray-400 hover:text-gray-200 transition-all">
+          <div style={{ display: "flex", gap: 5 }}>
+            <button onClick={exportPDF}
+              style={{ padding: "7px 10px", background: "var(--nova-surface)", border: "0.5px solid var(--nova-border)", borderRadius: 10, fontSize: 9, color: "var(--nova-text-3)", cursor: "pointer" }}>
               📄 PDF
             </button>
-            <button onClick={exportCSV} title="CSV olarak indir"
-              className="py-2 px-3 bg-gray-900 hover:bg-gray-800 border border-gray-800 rounded-xl text-xs text-gray-400 hover:text-gray-200 transition-all">
+            <button onClick={exportCSV}
+              style={{ padding: "7px 10px", background: "var(--nova-surface)", border: "0.5px solid var(--nova-border)", borderRadius: 10, fontSize: 9, color: "var(--nova-text-3)", cursor: "pointer" }}>
               ⬇ CSV
             </button>
           </div>
@@ -295,89 +297,89 @@ export function HistoryDashboard({ profile, lang, onNewMeal, onEditProfile }: Pr
             </div>
           ) : (
             filteredMeals.map((meal) => {
-              const isExpanded = expandedMealId === meal.id;
-              return (
-                <div key={meal.id} className="bg-gray-900 rounded-xl border border-gray-800 overflow-hidden">
-                  {/* Meal row */}
-                  <div
-                    className="p-4 flex items-start gap-3 cursor-pointer hover:bg-gray-800/40 transition-colors"
-                    onClick={() => setExpandedMealId(isExpanded ? null : meal.id)}
-                  >
-                    {(meal.photo_url || meal.photo_base64) && (
-                      <img
-                        src={meal.photo_url || `data:image/jpeg;base64,${meal.photo_base64}`}
-                        alt="meal"
-                        className="w-14 h-14 rounded-xl object-cover shrink-0"
-                      />
-                    )}
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1">
-                        <div className={`w-2 h-2 rounded-full shrink-0 ${riskBg(meal.analysis.glucose_risk)}`} />
-                        <span className={`text-sm font-medium ${riskColor(meal.analysis.glucose_risk)}`}>
-                          GL {meal.analysis.total_glycemic_load}
-                        </span>
-                        {meal.analysis.total_calories > 0 && (
-                          <span className="text-xs text-gray-600">· {meal.analysis.total_calories} kcal</span>
-                        )}
-                      </div>
-                      <div className="text-xs text-gray-600">
-                        {new Date(meal.timestamp).toLocaleString(lang === "tr" ? "tr-TR" : "en-US", {
-                          month: "short", day: "numeric", hour: "2-digit", minute: "2-digit",
-                        })}
-                        {meal.mealType && <span className="ml-2 capitalize">· {meal.mealType}</span>}
-                      </div>
-                      <div className="text-xs text-gray-500 mt-1.5 truncate">
-                        {meal.analysis.food_items.slice(0, 3).map(f => f.name_tr || f.name).join(", ")}
-                        {meal.analysis.food_items.length > 3 && ` +${meal.analysis.food_items.length - 3}`}
-                      </div>
-                    </div>
-                    <div className="flex flex-col items-end gap-2 shrink-0">
-                      <span className="text-gray-600 text-xs">{isExpanded ? "▲" : "▼"}</span>
-                      <button onClick={(e) => { e.stopPropagation(); handleDelete(meal.id); }}
-                        className="text-gray-700 hover:text-red-400 text-xs transition-colors" aria-label="Delete">✕
-                      </button>
-                    </div>
-                  </div>
+            const isExpanded = expandedMealId === meal.id;
+            const glRisk = meal.analysis.glucose_risk;
+            const riskAccent = glRisk === "low" ? "rgba(16,185,129,0.8)" : glRisk === "medium" ? "rgba(245,158,11,0.8)" : "rgba(239,68,68,0.8)";
+            const riskGlColor = glRisk === "low" ? "rgba(16,185,129,0.85)" : glRisk === "medium" ? "rgba(245,158,11,0.85)" : "rgba(239,68,68,0.85)";
+            return (
+            <div key={meal.id} style={{ background: "var(--nova-surface)", border: "0.5px solid var(--nova-border)", borderRadius: 14, overflow: "hidden", marginBottom: 6 }}>
+            {/* Meal row */}
+            <div
+            style={{ padding: "10px 12px", display: "flex", alignItems: "center", gap: 10, cursor: "pointer" }}
+            onClick={() => setExpandedMealId(isExpanded ? null : meal.id)}
+            >
+            {(meal.photo_url || meal.photo_base64) ? (
+            <img
+              src={meal.photo_url || `data:image/jpeg;base64,${meal.photo_base64}`}
+                alt="meal"
+                style={{ width: 44, height: 44, borderRadius: 10, objectFit: "cover", flexShrink: 0 }}
+            />
+            ) : (
+            <div style={{ width: 44, height: 44, borderRadius: 10, background: "var(--nova-surface-hover)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+            <i className="ti ti-bowl-chopsticks" style={{ fontSize: 20, color: "var(--nova-text-4)" }} aria-hidden="true" />
+            </div>
+            )}
+            <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 2 }}>
+              <div style={{ width: 7, height: 7, borderRadius: "50%", background: riskAccent, flexShrink: 0 }} />
+              <span style={{ fontSize: 13, fontWeight: 500, color: riskGlColor }}>GL {meal.analysis.total_glycemic_load}</span>
+            {meal.analysis.total_calories > 0 && (
+            <span style={{ fontSize: 8, color: "var(--nova-text-4)" }}>· {meal.analysis.total_calories} kcal</span>
+            )}
+            </div>
+            <div style={{ fontSize: 7, color: "var(--nova-text-4)" }}>
+              {new Date(meal.timestamp).toLocaleString(lang === "tr" ? "tr-TR" : "en-US", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
+            {meal.mealType && <span style={{ marginLeft: 6 }}>· {meal.mealType}</span>}
+            </div>
+            <div style={{ fontSize: 9, color: "var(--nova-text-3)", marginTop: 3, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                {meal.analysis.food_items.slice(0, 3).map(f => f.name_tr || f.name).join(", ")}
+                {meal.analysis.food_items.length > 3 && ` +${meal.analysis.food_items.length - 3}`}
+            </div>
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 6, flexShrink: 0 }}>
+            <span style={{ fontSize: 9, color: "var(--nova-text-4)" }}>{isExpanded ? "▲" : "▼"}</span>
+              <button
+                  onClick={(e) => { e.stopPropagation(); handleDelete(meal.id); }}
+                        style={{ fontSize: 9, color: "var(--nova-text-4)", background: "none", border: "none", cursor: "pointer" }}
+                  aria-label="Delete">✕
+                </button>
+            </div>
+            </div>
 
-                  {/* Expanded detail */}
-                  {isExpanded && (
-                    <div className="border-t border-gray-800 px-4 pb-4 pt-3 space-y-3">
-                      {/* Macro grid */}
-                      <div className="grid grid-cols-4 gap-2">
-                        {[
-                          { label: "Protein", value: `${meal.analysis.total_protein_g}g`, color: "text-purple-400" },
-                          { label: "Yağ", value: `${meal.analysis.total_fat_g}g`, color: "text-amber-400" },
-                          { label: "Net Karb", value: `${meal.analysis.total_net_carb_g}g`, color: "text-blue-400" },
-                          { label: "Lif", value: `${meal.analysis.total_fiber_g}g`, color: "text-green-400" },
-                        ].map(s => (
-                          <div key={s.label} className="bg-gray-800 rounded-xl p-2 text-center">
-                            <div className={`text-sm font-bold ${s.color}`}>{s.value}</div>
-                            <div className="text-xs text-gray-600">{s.label}</div>
-                          </div>
-                        ))}
-                      </div>
-                      {/* Food items */}
-                      <div className="space-y-1.5">
-                        {meal.analysis.food_items.map((f, i) => (
-                          <div key={i} className="flex justify-between items-center text-xs">
-                            <span className="text-gray-400">{f.name_tr || f.name} ({f.portion_g}g)</span>
-                            <div className="flex gap-2 text-gray-600">
-                              <span>GI {f.glycemic_index}</span>
-                              <span className={riskColor(f.glycemic_load < 10 ? "low" : f.glycemic_load <= 20 ? "medium" : "high")}>
-                                GL {f.glycemic_load}
-                              </span>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                      {/* Recommendations */}
-                      {meal.analysis.recommendations?.length > 0 && (
-                        <div className="text-xs text-gray-500 italic">{meal.analysis.recommendations[0]}</div>
-                      )}
-                    </div>
-                  )}
+            {/* Expanded detail */}
+            {isExpanded && (
+            <div style={{ borderTop: "0.5px solid var(--nova-border)", padding: "10px 12px 12px" }}>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 5, marginBottom: 10 }}>
+            {[
+              { label: "Protein", value: `${meal.analysis.total_protein_g}g`, color: "rgba(139,92,246,0.85)" },
+            { label: "Yağ", value: `${meal.analysis.total_fat_g}g`, color: "rgba(245,158,11,0.85)" },
+            { label: "Net Karb", value: `${meal.analysis.total_net_carb_g}g`, color: "rgba(59,130,246,0.85)" },
+            { label: "Lif", value: `${meal.analysis.total_fiber_g}g`, color: "rgba(16,185,129,0.85)" },
+            ].map(s => (
+              <div key={s.label} style={{ background: "var(--nova-surface-hover)", borderRadius: 10, padding: "6px 8px", textAlign: "center" }}>
+                  <div style={{ fontSize: 11, fontWeight: 600, color: s.color }}>{s.value}</div>
+                  <div style={{ fontSize: 6, color: "var(--nova-text-4)", marginTop: 2 }}>{s.label}</div>
                 </div>
-              );
+            ))}
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+            {meal.analysis.food_items.map((f, i) => (
+            <div key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: 9 }}>
+            <span style={{ color: "var(--nova-text-2)" }}>{f.name_tr || f.name} ({f.portion_g}g)</span>
+            <div style={{ display: "flex", gap: 8, color: "var(--nova-text-4)" }}>
+            <span>GI {f.glycemic_index}</span>
+              <span style={{ color: f.glycemic_load < 10 ? "rgba(16,185,129,0.75)" : f.glycemic_load <= 20 ? "rgba(245,158,11,0.75)" : "rgba(239,68,68,0.75)" }}>GL {f.glycemic_load}</span>
+              </div>
+              </div>
+              ))}
+            </div>
+            {meal.analysis.recommendations?.length > 0 && (
+            <div style={{ fontSize: 9, color: "var(--nova-text-3)", fontStyle: "italic", marginTop: 6 }}>{meal.analysis.recommendations[0]}</div>
+            )}
+            </div>
+            )}
+            </div>
+            );
             })
           )}
         </div>

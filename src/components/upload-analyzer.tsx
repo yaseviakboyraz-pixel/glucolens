@@ -286,33 +286,44 @@ export function UploadAnalyzer({ userType = "healthy", lang, onAnalysisComplete 
 
       {/* Free plan indicator */}
       {currentPlan === "free" && (
-        <div className="flex items-center justify-between bg-gray-900 border border-gray-800 rounded-xl px-4 py-2">
-          <span className="text-xs text-gray-500">Free plan · 5 analyses/day</span>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", background: "var(--nova-surface)", border: "0.5px solid var(--nova-border)", borderRadius: 14, padding: "8px 14px" }}>
+          <span style={{ fontSize: 11, color: "var(--nova-text-3)" }}>Free plan · 5 analyses/day</span>
           <button onClick={() => setShowPaywall(true)}
-            className="text-xs text-teal-400 font-medium hover:text-teal-300">
+            style={{ fontSize: 11, color: "var(--nova-purple)", fontWeight: 500, background: "none", border: "none", cursor: "pointer" }}>
             Upgrade ↗
           </button>
         </div>
       )}
-      <div className="grid grid-cols-5 gap-1.5">
-        {([  
-          { key: "normal",   label: "📷", sub: "Analyze" },
-          { key: "url",      label: "🔗", sub: "URL / QR" },
-          { key: "pre_meal", label: "🤔", sub: "Before" },
-          { key: "compare",  label: "⚖️", sub: "Compare" },
-        ] as { key: Mode; label: string; sub: string }[]).map((m) => (
+      {/* Mode pills — Nova Aurora */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(5,1fr)", gap: 5 }}>
+        {([
+          { key: "normal",   icon: "ti-camera",   sub: "Analiz" },
+          { key: "url",      icon: "ti-link",     sub: "URL/QR" },
+          { key: "pre_meal", icon: "ti-clock",    sub: "Önce" },
+          { key: "compare",  icon: "ti-scale",    sub: "Karş." },
+        ] as { key: Mode; icon: string; sub: string }[]).map((m) => (
           <button key={m.key} onClick={() => { setMode(m.key); reset(); }}
-            className={`py-2.5 rounded-xl text-xs font-medium transition-all ${
-              mode === m.key ? "bg-teal-600 text-white" : "bg-gray-900 text-gray-400 hover:bg-gray-800 border border-gray-800"
-            }`}>
-            <div className="text-base">{m.label}</div>
-            <div>{m.sub}</div>
+            style={{
+              padding: "8px 2px", borderRadius: 12, textAlign: "center",
+              fontSize: 7, letterSpacing: 0.5, cursor: "pointer",
+              background: mode === m.key ? "rgba(20,184,166,0.12)" : "var(--nova-surface)",
+              border: mode === m.key ? "0.5px solid rgba(20,184,166,0.3)" : "0.5px solid var(--nova-border)",
+              color: mode === m.key ? "rgba(20,184,166,0.9)" : "var(--nova-text-3)",
+              transition: "all 0.2s",
+            }}>
+            <i className={`ti ${m.icon}`} style={{ fontSize: 16, display: "block", marginBottom: 3, color: mode === m.key ? "rgba(20,184,166,0.9)" : "var(--nova-text-3)" }} aria-hidden="true" />
+            {m.sub}
           </button>
         ))}
         <button onClick={() => setShowBarcode(true)}
-          className="py-2.5 rounded-xl text-xs font-medium bg-gray-900 text-gray-400 hover:bg-gray-800 border border-gray-800 transition-all">
-          <div className="text-base">🏷️</div>
-          <div>Barcode</div>
+          style={{
+            padding: "8px 2px", borderRadius: 12, textAlign: "center",
+            fontSize: 7, letterSpacing: 0.5, cursor: "pointer",
+            background: "var(--nova-surface)", border: "0.5px solid var(--nova-border)",
+            color: "var(--nova-text-3)", transition: "all 0.2s",
+          }}>
+          <i className="ti ti-barcode" style={{ fontSize: 16, display: "block", marginBottom: 3, color: "var(--nova-text-3)" }} aria-hidden="true" />
+          Barkod
         </button>
       </div>
 
@@ -557,40 +568,85 @@ export function UploadAnalyzer({ userType = "healthy", lang, onAnalysisComplete 
         </div>
       )}
 
-      {/* Upload area */}
+      {/* Upload zone — Nova Aurora */}
       {mode !== "url" && !preview && !loading && !barcodeProduct && (
-        <div className={mode === "compare" ? "grid grid-cols-2 gap-3" : "space-y-3"}>
-          <div className="space-y-3">
-            <button onClick={() => cameraRef.current?.click()}
-              className="w-full py-5 rounded-2xl font-semibold text-white bg-teal-600 hover:bg-teal-500 active:scale-95 transition-all flex items-center justify-center gap-3 text-lg">
-              <span className="text-2xl">📸</span>
-              {mode === "compare" ? "Meal A — Camera" : "Take Photo"}
-            </button>
-            <button onClick={() => galleryRef.current?.click()}
-              className="w-full py-4 rounded-2xl font-semibold text-gray-300 bg-gray-900 hover:bg-gray-800 active:scale-95 transition-all flex items-center justify-center gap-3 border border-gray-700">
-              <span className="text-xl">🖼️</span>
-              {mode === "compare" ? "Meal A — Gallery" : "Choose from Gallery"}
-            </button>
-          </div>
-          {mode === "compare" && (
-            <div className="space-y-3">
-              <button onClick={() => gallery2Ref.current?.click()}
-                className="w-full py-5 rounded-2xl font-semibold text-white bg-purple-700 hover:bg-purple-600 active:scale-95 transition-all flex items-center justify-center gap-3 text-lg">
-                <span className="text-2xl">🖼️</span>
-                Meal B
+        <div className={mode === "compare" ? "grid grid-cols-2 gap-3" : ""}>
+          {/* Main upload zone */}
+          <div
+            onDrop={mode !== "compare" ? (e) => { e.preventDefault(); const f = e.dataTransfer.files[0]; if (f) handleFile(f); } : undefined}
+            onDragOver={mode !== "compare" ? (e) => e.preventDefault() : undefined}
+            style={{
+              flex: 1, minHeight: 200,
+              background: "rgba(139,92,246,0.025)",
+              border: "1.5px dashed rgba(139,92,246,0.18)",
+              borderRadius: 20,
+              display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
+              gap: 10, padding: "24px 20px", position: "relative", overflow: "hidden",
+            }}>
+            {/* Corner accents */}
+            {[["top:10px","left:10px","borderWidth:"1px 0 0 1px""],
+              ["top:10px","right:10px","borderWidth:"1px 1px 0 0""],
+              ["bottom:10px","left:10px","borderWidth:"0 0 1px 1px""],
+              ["bottom:10px","right:10px","borderWidth:"0 1px 1px 0""]
+            ].map((_, i) => (
+              <div key={i} style={{
+                position: "absolute", width: 12, height: 12,
+                borderColor: "rgba(139,92,246,0.35)", borderStyle: "solid",
+                ...(i===0 ? {top:10,left:10,borderWidth:"1px 0 0 1px"} :
+                   i===1 ? {top:10,right:10,borderWidth:"1px 1px 0 0"} :
+                   i===2 ? {bottom:10,left:10,borderWidth:"0 0 1px 1px"} :
+                           {bottom:10,right:10,borderWidth:"0 1px 1px 0"})
+              }} />
+            ))}
+            {/* Icon */}
+            <div style={{ width: 48, height: 48, borderRadius: "50%", background: "var(--nova-purple-dim)", border: "1px solid var(--nova-purple-border)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <i className="ti ti-camera" style={{ fontSize: 22, color: "var(--nova-purple)" }} aria-hidden="true" />
+            </div>
+            <div style={{ fontSize: 12, color: "var(--nova-text-1)", fontWeight: 400, textAlign: "center" }}>
+              {mode === "compare" ? "Meal A" : "Yemek Fotoğrafı Çek"}
+            </div>
+            <div style={{ fontSize: 9, color: "var(--nova-text-3)", textAlign: "center", lineHeight: 1.6 }}>
+              {mode === "compare" ? "Kamera veya galeriden seç" : "Veya galeriden seç · sürükle bırak"}
+            </div>
+            {/* Buttons */}
+            <div style={{ display: "flex", gap: 8, width: "100%" }}>
+              <button onClick={() => cameraRef.current?.click()}
+                style={{ flex: 1, padding: 9, borderRadius: 12, border: "0.5px solid var(--nova-purple-border)", background: "rgba(139,92,246,0.10)", color: "rgba(139,92,246,0.85)", fontSize: 9, cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", gap: 3 }}>
+                <i className="ti ti-camera" style={{ fontSize: 15 }} aria-hidden="true" />
+                Kamera
               </button>
-              {preview2 && <img src={preview2} alt="B" className="w-full h-24 rounded-xl object-cover" />}
+              <button onClick={() => galleryRef.current?.click()}
+                style={{ flex: 1, padding: 9, borderRadius: 12, border: "0.5px solid var(--nova-border)", background: "var(--nova-surface)", color: "var(--nova-text-2)", fontSize: 9, cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", gap: 3 }}>
+                <i className="ti ti-photo" style={{ fontSize: 15 }} aria-hidden="true" />
+                Galeri
+              </button>
+            </div>
+          </div>
+
+          {/* Compare — Meal B slot */}
+          {mode === "compare" && (
+            <div style={{
+              minHeight: 200, background: "rgba(139,92,246,0.025)",
+              border: "1.5px dashed rgba(139,92,246,0.18)", borderRadius: 20,
+              display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
+              gap: 10, padding: "24px 16px", position: "relative",
+            }}>
+              {preview2
+                ? <img src={preview2} alt="B" style={{ width: "100%", height: 120, borderRadius: 12, objectFit: "cover" }} />
+                : (
+                  <>
+                    <div style={{ width: 48, height: 48, borderRadius: "50%", background: "rgba(139,92,246,0.10)", border: "1px solid var(--nova-purple-border)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                      <i className="ti ti-photo" style={{ fontSize: 22, color: "var(--nova-purple)" }} aria-hidden="true" />
+                    </div>
+                    <div style={{ fontSize: 12, color: "var(--nova-text-1)" }}>Meal B</div>
+                    <button onClick={() => gallery2Ref.current?.click()}
+                      style={{ padding: "8px 16px", borderRadius: 12, border: "0.5px solid var(--nova-purple-border)", background: "rgba(139,92,246,0.10)", color: "rgba(139,92,246,0.85)", fontSize: 9, cursor: "pointer" }}>
+                      Galeri
+                    </button>
+                  </>
+                )}
             </div>
           )}
-        </div>
-      )}
-
-      {/* Drag and drop — desktop */}
-      {!preview && !loading && !barcodeProduct && mode === "normal" && (
-        <div onDrop={(e) => { e.preventDefault(); const f = e.dataTransfer.files[0]; if (f) handleFile(f); }}
-          onDragOver={(e) => e.preventDefault()}
-          className="border-2 border-dashed border-gray-800 rounded-2xl py-4 text-center text-gray-600 text-sm hover:border-gray-700 transition-colors">
-          or drag & drop here
         </div>
       )}
 
@@ -850,18 +906,28 @@ export function UploadAnalyzer({ userType = "healthy", lang, onAnalysisComplete 
 
           <GlucoseMeter risk={result.glucose_risk} gl={result.total_glycemic_load} lang={lang} />
 
-          <div className="grid grid-cols-3 gap-3">
+          {/* Stat grid — Nova Aurora 2-col with accent borders */}
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6 }}>
             {[
-              { label: tx.total_sugar, value: `${result.total_sugar_g}g`, color: "text-amber-400" },
-              { label: tx.net_carbs, value: `${result.total_net_carb_g}g`, color: "text-blue-400" },
-              { label: tx.fiber, value: `${result.total_fiber_g}g`, color: "text-green-400" },
-              { label: "Protein", value: `${result.total_protein_g ?? 0}g`, color: "text-purple-400" },
-              { label: "Fat", value: `${result.total_fat_g ?? 0}g`, color: "text-orange-400" },
-              { label: "Calories", value: `${result.total_calories ?? 0}`, color: "text-rose-400" },
+              { label: tx.total_sugar, value: `${result.total_sugar_g}g`,      color: "rgba(239,68,68,0.85)",   accent: "rgba(239,68,68,0.55)",   icon: "ti-droplet",   iconBg: "rgba(239,68,68,0.07)" },
+              { label: tx.net_carbs,   value: `${result.total_net_carb_g}g`,    color: "rgba(59,130,246,0.85)",  accent: "rgba(59,130,246,0.55)",  icon: "ti-grain",    iconBg: "rgba(59,130,246,0.07)" },
+              { label: "Protein",      value: `${result.total_protein_g ?? 0}g`, color: "rgba(139,92,246,0.85)", accent: "rgba(139,92,246,0.55)", icon: "ti-bolt",     iconBg: "rgba(139,92,246,0.07)" },
+              { label: "Yağ",         value: `${result.total_fat_g ?? 0}g`,     color: "rgba(245,158,11,0.85)", accent: "rgba(245,158,11,0.55)", icon: "ti-flame",    iconBg: "rgba(245,158,11,0.07)" },
+              { label: tx.fiber,       value: `${result.total_fiber_g}g`,        color: "rgba(16,185,129,0.85)", accent: "rgba(16,185,129,0.55)", icon: "ti-leaf",     iconBg: "rgba(16,185,129,0.07)" },
+              { label: "kcal",         value: `${result.total_calories ?? 0}`,   color: "rgba(255,255,255,0.4)", accent: "rgba(255,255,255,0.12)", icon: "ti-fire",     iconBg: "rgba(255,255,255,0.04)" },
             ].map((s) => (
-              <div key={s.label} className="bg-gray-900 rounded-xl p-3 text-center border border-gray-800">
-                <div className={`text-xl font-bold ${s.color}`}>{s.value}</div>
-                <div className="text-xs text-gray-500 mt-1">{s.label}</div>
+              <div key={s.label} style={{
+                background: "var(--nova-surface)", border: "0.5px solid var(--nova-border)",
+                borderRadius: 12, padding: "8px 10px", display: "flex", alignItems: "center", gap: 8,
+                borderLeft: `2px solid ${s.accent}`,
+              }}>
+                <div style={{ width: 24, height: 24, borderRadius: 7, background: s.iconBg, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                  <i className={`ti ${s.icon}`} style={{ fontSize: 13, color: s.color }} aria-hidden="true" />
+                </div>
+                <div>
+                  <div style={{ fontSize: 15, fontWeight: 600, color: s.color, lineHeight: 1 }}>{s.value}</div>
+                  <div style={{ fontSize: 7, color: "var(--nova-text-3)", letterSpacing: 0.5, textTransform: "uppercase", marginTop: 2 }}>{s.label}</div>
+                </div>
               </div>
             ))}
           </div>
@@ -881,20 +947,31 @@ export function UploadAnalyzer({ userType = "healthy", lang, onAnalysisComplete 
             </div>
           )}
 
-          <div className="bg-gray-900 rounded-xl p-4 border border-gray-800 space-y-2">
-            <h3 className="text-sm font-medium text-gray-400">{tx.detected_foods}</h3>
-            {result.food_items.map((item, i) => (
-              <div key={i} className="flex justify-between items-center py-2 border-b border-gray-800 last:border-0">
-                <div className="min-w-0 flex-1">
-                  <span className="text-gray-200 text-sm truncate block">{foodName(item)}</span>
-                  <span className="text-gray-600 text-xs">{item.portion_g}g{item.cooking_method ? ` · ${item.cooking_method}` : ""}</span>
+          {/* Food items — Nova Aurora cards */}
+          <div>
+            <div style={{ fontSize: 7, color: "var(--nova-text-4)", letterSpacing: 3, textTransform: "uppercase", marginBottom: 6 }}>{tx.detected_foods}</div>
+            {result.food_items.map((item, i) => {
+              const gl = item.glycemic_load;
+              const accent = gl < 10 ? "rgba(16,185,129,0.65)" : gl <= 20 ? "rgba(245,158,11,0.65)" : "rgba(239,68,68,0.65)";
+              const glColor = gl < 10 ? "rgba(16,185,129,0.85)" : gl <= 20 ? "rgba(245,158,11,0.85)" : "rgba(239,68,68,0.85)";
+              return (
+                <div key={i} style={{
+                  background: "var(--nova-surface)", border: "0.5px solid var(--nova-border)",
+                  borderRadius: 12, padding: "8px 10px", display: "flex", alignItems: "center",
+                  gap: 8, marginBottom: 5,
+                }}>
+                  <div style={{ width: 2, borderRadius: 1, alignSelf: "stretch", flexShrink: 0, background: accent }} />
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 10, color: "var(--nova-text-2)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{foodName(item)}</div>
+                    <div style={{ fontSize: 7, color: "var(--nova-text-4)", marginTop: 2 }}>{item.portion_g}g{item.cooking_method ? ` · ${item.cooking_method}` : ""}</div>
+                  </div>
+                  <div style={{ textAlign: "right", flexShrink: 0 }}>
+                    <div style={{ fontSize: 13, fontWeight: 600, color: glColor, lineHeight: 1 }}>{item.glycemic_load}</div>
+                    <div style={{ fontSize: 6, color: "var(--nova-text-4)", letterSpacing: 0.5 }}>GI {item.glycemic_index}</div>
+                  </div>
                 </div>
-                <div className="text-right ml-2 shrink-0">
-                  <div className="text-amber-400 text-sm font-medium">{item.total_sugar_g}g sugar</div>
-                  <div className="text-gray-600 text-xs">GI:{item.glycemic_index} GL:{item.glycemic_load}</div>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
 
           {result.hidden_ingredients_note && (
@@ -920,9 +997,8 @@ export function UploadAnalyzer({ userType = "healthy", lang, onAnalysisComplete 
 
           <p className="text-xs text-gray-600 text-center">{tx.disclaimer}</p>
 
-          <button onClick={reset}
-            className="w-full py-4 rounded-xl font-semibold text-white bg-teal-600 hover:bg-teal-500 active:scale-95 transition-all">
-            📸 Analyze Another Meal
+          <button onClick={reset} className="nova-btn-primary">
+            <i className="ti ti-camera" aria-hidden="true" /> Yeni Analiz
           </button>
         </div>
       )}
