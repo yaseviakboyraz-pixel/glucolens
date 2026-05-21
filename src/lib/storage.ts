@@ -1,8 +1,14 @@
-// GlucoLens Storage v2.0
+// GlucoLens Storage v2.1
 // Hybrid: localStorage (instant) + Supabase (cloud sync)
+// Security: no console.error in production, localStorage quota monitoring
 
 import { supabase, getDeviceId, getOwnerId, uploadMealPhoto } from "./supabase";
 import type { MealAnalysis } from "./claude-vision";
+
+// Dev-only logger
+const devLog = process.env.NODE_ENV === "development"
+  ? (msg: string, ...args: unknown[]) => console.error(msg, ...args)
+  : () => {};
 
 // ── INTERFACES ────────────────────────────────────
 
@@ -73,7 +79,7 @@ export function getProfile(): UserProfile | null {
 export function saveProfile(profile: UserProfile): void {
   if (typeof window === "undefined") return;
   localStorage.setItem("glucolens_profile", JSON.stringify(profile));
-  syncProfileToCloud(profile).catch(console.error);
+  syncProfileToCloud(profile).catch(err => devLog("[storage] syncProfile failed", err));
 }
 
 async function syncProfileToCloud(profile: UserProfile) {
@@ -101,6 +107,26 @@ export function getMeals(): MealRecord[] {
   } catch { return []; }
 }
 
+// ── localStorage quota monitor ───────────────────
+function safeLocalStorageSet(key: string, value: string): void {
+  try {
+    localStorage.setItem(key, value);
+  } catch (e) {
+    // Quota exceeded — prune oldest meals
+    devLog("[storage] localStorage quota exceeded, pruning", e);
+    try {
+      const meals = getMeals();
+      if (meals.length > 20) {
+        // Keep only last 20 meals
+        localStorage.setItem("glucolens_meals", JSON.stringify(meals.slice(0, 20)));
+        localStorage.setItem(key, value);
+      }
+    } catch {
+      // Silent fail — cloud sync will handle it
+    }
+  }
+}
+
 export function saveMeal(analysis: MealAnalysis, mealType = "other", photo_base64?: string): MealRecord {
   const record: MealRecord = {
     id: Math.random().toString(36).slice(2) + Date.now().toString(36),
@@ -113,8 +139,8 @@ export function saveMeal(analysis: MealAnalysis, mealType = "other", photo_base6
   meals.unshift(record);
   if (meals.length > 100) meals.splice(100);
   // Store without photo in localStorage to save space
-  localStorage.setItem("glucolens_meals", JSON.stringify(meals.map(m => ({ ...m, photo_base64: undefined }))));
-  syncMealToCloud(record, photo_base64).catch(console.error);
+  safeLocalStorageSet("glucolens_meals", JSON.stringify(meals.map(m => ({ ...m, photo_base64: undefined }))));
+  syncMealToCloud(record, photo_base64).catch(err => devLog("[storage] syncMeal failed", err));
   return record;
 }
 
@@ -234,7 +260,7 @@ export async function syncFromCloud(): Promise<{
     }
     return { meals, profile };
   } catch (err) {
-    console.error("Cloud sync failed:", err);
+    devLog("[storage] Cloud sync failed:", err);
     return { meals: getMeals(), profile: getProfile() };
   }
 }

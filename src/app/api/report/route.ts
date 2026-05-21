@@ -2,6 +2,17 @@ import { NextRequest, NextResponse } from "next/server";
 
 export const maxDuration = 30;
 
+// HTML escape to prevent XSS in PDF
+function esc(s: unknown): string {
+  if (s === null || s === undefined) return "";
+  return String(s)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
 export async function POST(req: NextRequest) {
   try {
     const { meals, profile, waterAvg, activityMin, sleepAvg } = await req.json();
@@ -66,8 +77,8 @@ export async function POST(req: NextRequest) {
 <div class="header-row">
   <div>
     <h1>GlucoLens Sağlık Raporu</h1>
-    <div class="subtitle">${profile?.name || "Kullanıcı"} · ${profile?.userType === "diabetic" ? "Diyabetik" : profile?.userType === "pre_diabetic" ? "Pre-diyabetik" : "Sağlıklı"}</div>
-    <div class="meta">Rapor tarihi: ${reportDate} · Analiz dönemi: ${dateRange}</div>
+    <div class="subtitle">${esc(profile?.name) || "Kullanıcı"} · ${profile?.userType === "diabetic" ? "Diyabetik" : profile?.userType === "pre_diabetic" ? "Pre-diyabetik" : "Sağlıklı"}</div>
+    <div class="meta">Rapor tarihi: ${esc(reportDate)} · Analiz dönemi: ${esc(dateRange)}</div>
   </div>
   <div class="badge">GlucoLens AI</div>
 </div>
@@ -134,11 +145,11 @@ ${waterAvg || activityMin || sleepAvg ? `
     }) => `
     <tr>
       <td>${new Date(m.timestamp).toLocaleDateString("tr-TR", { month: "short", day: "numeric" })}</td>
-      <td>${m.analysis.food_items?.slice(0, 2).map((f) => f.name_tr || f.name).join(", ") || "—"}${m.analysis.food_items?.length > 2 ? ` +${m.analysis.food_items.length - 2}` : ""}</td>
-      <td><strong>${m.analysis.total_glycemic_load}</strong></td>
-      <td>${m.analysis.total_calories} kcal</td>
-      <td>${m.analysis.total_protein_g}g</td>
-      <td class="risk-${m.analysis.glucose_risk}">${m.analysis.glucose_risk === "low" ? "✅ Düşük" : m.analysis.glucose_risk === "medium" ? "⚠️ Orta" : "🔴 Yüksek"}</td>
+      <td>${m.analysis.food_items?.slice(0, 2).map((f) => esc(f.name_tr || f.name)).join(", ") || "—"}${m.analysis.food_items?.length > 2 ? ` +${m.analysis.food_items.length - 2}` : ""}</td>
+      <td><strong>${esc(m.analysis.total_glycemic_load)}</strong></td>
+      <td>${esc(m.analysis.total_calories)} kcal</td>
+      <td>${esc(m.analysis.total_protein_g)}g</td>
+      <td class="risk-${esc(m.analysis.glucose_risk)}">${m.analysis.glucose_risk === "low" ? "✅ Düşük" : m.analysis.glucose_risk === "medium" ? "⚠️ Orta" : "🔴 Yüksek"}</td>
     </tr>`).join("")}
   </tbody>
 </table>
@@ -155,6 +166,6 @@ ${waterAvg || activityMin || sleepAvg ? `
 
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : String(err);
-    return NextResponse.json({ error: message }, { status: 500 });
+    return NextResponse.json({ error: "Report generation failed. Please try again." }, { status: 500 });
   }
 }

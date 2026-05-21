@@ -6,11 +6,19 @@ const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 // Device ID — fallback for anonymous/offline use only
+// Uses crypto.randomUUID() for cryptographically secure ID
 export function getDeviceId(): string {
   if (typeof window === "undefined") return "server";
   let id = localStorage.getItem("glucolens_device_id");
   if (!id) {
-    id = "gl_" + Math.random().toString(36).slice(2) + Date.now().toString(36);
+    // Use crypto.randomUUID() if available (modern browsers), fallback to crypto.getRandomValues
+    if (typeof crypto !== "undefined" && crypto.randomUUID) {
+      id = "gl_" + crypto.randomUUID().replace(/-/g, "");
+    } else {
+      const arr = new Uint8Array(16);
+      crypto.getRandomValues(arr);
+      id = "gl_" + Array.from(arr).map(b => b.toString(16).padStart(2, "0")).join("");
+    }
     localStorage.setItem("glucolens_device_id", id);
   }
   return id;
@@ -33,13 +41,13 @@ export async function getOwnerId(): Promise<{ userId: string | null; deviceId: s
 }
 
 // Upload meal photo to Supabase Storage
+// Uses signed URLs — photos are private, not public
 export async function uploadMealPhoto(base64: string, mealId: string): Promise<string | null> {
   try {
     const userId = await getUserId();
     if (!userId) return null; // Only upload for authenticated users
 
-    const folder = userId;
-    const filename = `${folder}/${mealId}.jpg`;
+    const filename = `${userId}/${mealId}.jpg`;
     const blob = base64ToBlob(base64, "image/jpeg");
 
     const { error } = await supabase.storage
@@ -47,14 +55,19 @@ export async function uploadMealPhoto(base64: string, mealId: string): Promise<s
       .upload(filename, blob, { upsert: true, contentType: "image/jpeg" });
 
     if (error) {
-      console.error("Photo upload error:", error);
+      if (process.env.NODE_ENV === "development") console.error("Photo upload error:", error);
       return null;
     }
 
-    const { data } = supabase.storage.from("meal-photos").getPublicUrl(filename);
-    return data.publicUrl;
+    // Return signed URL (1 hour) instead of public URL
+    const { data: signedData, error: signErr } = await supabase.storage
+      .from("meal-photos")
+      .createSignedUrl(filename, 3600);
+
+    if (signErr || !signedData) return null;
+    return signedData.signedUrl;
   } catch (err) {
-    console.error("uploadMealPhoto error:", err);
+    if (process.env.NODE_ENV === "development") console.error("uploadMealPhoto error:", err);
     return null;
   }
 }
