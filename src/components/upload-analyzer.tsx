@@ -1,5 +1,5 @@
 "use client";
-import { useState, useRef, useCallback } from "react";
+import React, { useState, useRef, useCallback } from "react";
 import { GlucoseMeter } from "./glucose-meter";
 import { BarcodeScanner } from "./barcode-scanner";
 import { canAnalyze, recordAnalysis } from "@/lib/subscriptions";
@@ -584,19 +584,8 @@ export function UploadAnalyzer({ userType = "healthy", lang, onAnalysisComplete 
               gap: 10, padding: "24px 20px", position: "relative", overflow: "hidden",
             }}>
             {/* Corner accents */}
-            {[["top:10px","left:10px","borderWidth:"1px 0 0 1px""],
-              ["top:10px","right:10px","borderWidth:"1px 1px 0 0""],
-              ["bottom:10px","left:10px","borderWidth:"0 0 1px 1px""],
-              ["bottom:10px","right:10px","borderWidth:"0 1px 1px 0""]
-            ].map((_, i) => (
-              <div key={i} style={{
-                position: "absolute", width: 12, height: 12,
-                borderColor: "rgba(139,92,246,0.35)", borderStyle: "solid",
-                ...(i===0 ? {top:10,left:10,borderWidth:"1px 0 0 1px"} :
-                   i===1 ? {top:10,right:10,borderWidth:"1px 1px 0 0"} :
-                   i===2 ? {bottom:10,left:10,borderWidth:"0 0 1px 1px"} :
-                           {bottom:10,right:10,borderWidth:"0 1px 1px 0"})
-              }} />
+            {([{top:10,left:10,borderWidth:"1px 0 0 1px"},{top:10,right:10,borderWidth:"1px 1px 0 0"},{bottom:10,left:10,borderWidth:"0 0 1px 1px"},{bottom:10,right:10,borderWidth:"0 1px 1px 0"}] as React.CSSProperties[]).map((style, i) => (
+              <div key={i} style={{ position: "absolute", width: 12, height: 12, borderColor: "rgba(139,92,246,0.35)", borderStyle: "solid", ...style }} />
             ))}
             {/* Icon */}
             <div style={{ width: 48, height: 48, borderRadius: "50%", background: "var(--nova-purple-dim)", border: "1px solid var(--nova-purple-border)", display: "flex", alignItems: "center", justifyContent: "center" }}>
