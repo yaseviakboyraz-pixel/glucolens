@@ -1,0 +1,28 @@
+name: GlucoLens Uptime Monitor
+
+on:
+  schedule:
+    - cron: '*/5 * * * *'
+  workflow_dispatch:
+
+jobs:
+  health-check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check API Health
+        run: |
+          RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" --max-time 15 https://glucolens-nine.vercel.app/api/health)
+          echo "Health check status: $RESPONSE"
+          if [ "$RESPONSE" != "200" ]; then
+            echo "::error::GlucoLens API DOWN - Status: $RESPONSE"
+            exit 1
+          fi
+
+      - name: Check Main App
+        run: |
+          RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" --max-time 15 https://glucolens-nine.vercel.app)
+          echo "Main app status: $RESPONSE"
+          if [ "$RESPONSE" != "200" ]; then
+            echo "::error::GlucoLens Main App DOWN - Status: $RESPONSE"
+            exit 1
+          fi
