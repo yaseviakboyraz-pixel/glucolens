@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Geist } from "next/font/google";
 import { ErrorBoundary } from "@/components/error-boundary";
+import { UpdateBanner } from "@/components/update-banner";
 import Script from "next/script";
 import "./globals.css";
 
@@ -43,6 +44,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
       </head>
       <body className="min-h-screen antialiased" style={{background:'var(--nova-bg)',color:'var(--nova-text-1)'}}>
+        <UpdateBanner />
         <div className="nova-aurora" aria-hidden="true" />
         <ErrorBoundary>{children}</ErrorBoundary>
         <Script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js" strategy="afterInteractive" />
