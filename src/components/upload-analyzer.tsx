@@ -195,7 +195,7 @@ export function UploadAnalyzer({ userType = "healthy", lang, onAnalysisComplete 
       avg_glycemic_index: gi,
       total_glycemic_load: gl,
       glucose_risk: risk,
-      glucose_peak_estimate: risk === "high" ? "Blood sugar may spike significantly" : risk === "medium" ? "Moderate blood sugar rise expected" : "Minimal blood sugar impact",
+      glucose_peak_estimate: risk === "high" ? "Sharp glucose response expected (illustrative)" : risk === "medium" ? "Moderate glucose response expected (illustrative)" : "Gentle glucose response (illustrative)",
       glucose_curve_description: `Based on ${portionG}g serving of ${p.name}. GI estimated from product category and nutrient profile.`,
       recommendations: [
         fiber < 2 ? "Low fiber — pair with vegetables or nuts to slow glucose absorption" : "Good fiber content helps moderate glucose response",

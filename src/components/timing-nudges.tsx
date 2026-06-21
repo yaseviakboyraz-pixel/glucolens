@@ -142,7 +142,7 @@ export function TimingNudges({ analysis }: Props) {
         <div className={`rounded-2xl border p-4 ${riskBorderBg}`}>
           <div className="flex items-center justify-between mb-3">
             <div>
-              <h3 className="text-white font-semibold text-sm">📈 Predicted Glucose Curve</h3>
+              <h3 className="text-white font-semibold text-sm">📈 Illustrative Glucose Response</h3>
               <p className={`text-xs mt-0.5 ${riskTextColor}`}>{peakLabel}</p>
             </div>
             <div className="text-right">
@@ -154,6 +154,10 @@ export function TimingNudges({ analysis }: Props) {
           </div>
 
           <GlucoseCurveChart curve={glucose_curve} risk={glucose_risk} />
+
+          <p className="text-[10px] text-gray-500 mt-2 leading-relaxed">
+            Illustrative relative response based on this meal&apos;s glycemic load — not a blood-glucose measurement or a personal prediction.
+          </p>
 
           <div className="flex justify-between mt-3 text-xs">
             <div className="text-center">

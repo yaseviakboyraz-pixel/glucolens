@@ -10,6 +10,7 @@ CRITICAL DISCLAIMER RULES (always apply):
 - Never claim to diagnose any medical condition
 - Never recommend insulin doses or medication changes
 - Never state "your blood sugar will be X" — use "estimated GL" or "approximate"
+- NEVER output specific blood glucose numbers in any unit (mg/dL, mmol/L). Describe response only in RELATIVE terms (gentle/moderate/sharp rise). Specific blood-glucose predictions are clinical claims this app must never make.
 - GI/GL values are population averages and vary by individual metabolism, cooking method, and ripeness
 - If user type is diabetic/pre-diabetic, always include a reminder to consult their healthcare provider
 
@@ -78,7 +79,7 @@ Return exactly this JSON structure:
   "avg_glycemic_index": 55,
   "total_glycemic_load": 24.8,
   "glucose_risk": "medium",
-  "glucose_peak_estimate": "Blood sugar may peak at ~140-160 mg/dL within 1-1.5 hours",
+  "glucose_peak_estimate": "Relative glucose response: moderate rise expected, easing within ~1.5-2 hours. Illustrative estimate only — not a blood-glucose measurement.",
   "glucose_curve_description": "Moderate rise, returning to baseline within 2 hours",
   "glucose_curve": {
     "shape": "moderate_rise",
@@ -313,38 +314,17 @@ export async function analyzeMealImage(
     data.total_glycemic_load < 10 ? "low" :
     data.total_glycemic_load <= 20 ? "medium" : "high";
 
-  // Ensure curve exists — calibrate for user type
+  // Ensure curve exists — illustrative, GL-based only
   if (!data.glucose_curve) {
     data.glucose_curve = generateFallbackCurve(data.total_glycemic_load);
   }
 
-  // Calibrate curve based on user type
-  const curve = data.glucose_curve;
-  if (userType === "type1" || userType === "type2" || userType === "diabetic") {
-    // Diabetic: higher peak, longer duration
-    curve.peak_minutes = Math.round(curve.peak_minutes * 0.85); // faster spike
-    curve.baseline_minutes = Math.round(curve.baseline_minutes * 1.5); // slower return
-    curve.peak_level = "high";
-    curve.points = curve.points.map(p => ({
-      ...p,
-      level: Math.min(100, Math.round(p.level * 1.35)), // 35% higher
-    }));
-    // Extend baseline
-    curve.points.push({ minutes: curve.baseline_minutes, level: 0 });
-    curve.points = curve.points.filter(p => p.minutes <= curve.baseline_minutes);
-  } else if (userType === "pre_diabetic") {
-    curve.baseline_minutes = Math.round(curve.baseline_minutes * 1.25);
-    curve.points = curve.points.map(p => ({
-      ...p,
-      level: Math.min(100, Math.round(p.level * 1.15)),
-    }));
-  } else if (userType === "athlete") {
-    curve.baseline_minutes = Math.round(curve.baseline_minutes * 0.7); // faster clearance
-    curve.points = curve.points.map(p => ({
-      ...p,
-      level: Math.max(0, Math.round(p.level * 0.85)),
-    }));
-  }
+  // NOTE: Per-user-type curve magnitude manipulation was REMOVED here.
+  // It previously multiplied diabetic levels ×1.35, pre-diabetic ×1.15 etc.,
+  // fabricating false clinical precision and presenting it as a personalized
+  // prediction. The curve is now purely ILLUSTRATIVE — a 0-100 normalized
+  // relative response derived only from the meal's glycemic load (NOT mg/dL,
+  // NOT a per-person clinical prediction). UI must label it "illustrative".
 
   return data;
 }

@@ -13,14 +13,16 @@ export async function POST(req: NextRequest) {
     const response = await client.messages.create({
       model: "claude-sonnet-4-20250514",
       max_tokens: 600,
-      system: "You are GlucoLens AI Coach — a friendly, knowledgeable nutrition coach specializing in blood sugar and glycemic management. Be concise (3-5 sentences), warm, specific, and actionable. Respond in the same language as the user. Never give medical diagnoses. Always suggest consulting a doctor for medical decisions. When referencing data, be specific (use actual numbers). When giving food advice, include GL estimates.",
+      system: "You are GlucoLens AI Coach — a friendly, knowledgeable nutrition coach specializing in blood sugar and glycemic management. Be concise (3-5 sentences), warm, specific, and actionable. Respond in the same language as the user. Never give medical diagnoses. Never recommend insulin doses or medication changes. NEVER output specific blood glucose numbers in any unit (mg/dL or mmol/L) — describe glucose response only in relative terms (gentle/moderate/sharp). Always suggest consulting a doctor for medical decisions. When referencing data, be specific with GL and nutrition numbers (never blood-glucose values). When giving food advice, include GL estimates.",
       messages: [{ role: "user", content: prompt }],
     });
 
     const message = (response.content[0] as { type: string; text: string }).text.trim();
     return NextResponse.json({ message });
   } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : String(err);
-    return NextResponse.json({ error: message }, { status: 500 });
+    if (process.env.NODE_ENV === "development") {
+      console.error("[GlucoLens coach]", err instanceof Error ? err.message : String(err));
+    }
+    return NextResponse.json({ error: "Coach is unavailable right now. Please try again." }, { status: 500 });
   }
 }
