@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { rateLimit, clientKey } from "@/lib/rate-limit";
 
 export const maxDuration = 30;
 
@@ -166,6 +167,8 @@ function htmlToText(html: string): string {
 
 // ── Main handler ─────────────────────────────────────────────────────────────
 export async function POST(req: NextRequest) {
+  const { allowed } = await rateLimit(clientKey(req, "menu-fetch"), 10, 60);
+  if (!allowed) return NextResponse.json({ error: "Too many requests. Please slow down." }, { status: 429 });
   try {
     const { url } = await req.json();
     if (!url) return NextResponse.json({ error: "URL required" }, { status: 400 });
@@ -177,8 +180,23 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Invalid URL" }, { status: 400 });
     }
 
-    const hostname = parsedUrl.hostname;
-    if (hostname === "localhost" || hostname.startsWith("192.168") || hostname.startsWith("10.")) {
+    // Only allow public http(s) targets — block SSRF to internal / cloud-metadata hosts
+    if (parsedUrl.protocol !== "http:" && parsedUrl.protocol !== "https:") {
+      return NextResponse.json({ error: "Only http(s) URLs are allowed" }, { status: 400 });
+    }
+    const hostname = parsedUrl.hostname.toLowerCase();
+    const isPrivate =
+      hostname === "localhost" ||
+      hostname === "0.0.0.0" ||
+      hostname === "::1" ||
+      hostname.endsWith(".local") ||
+      hostname.endsWith(".internal") ||
+      /^127\./.test(hostname) ||
+      /^10\./.test(hostname) ||
+      /^192\.168\./.test(hostname) ||
+      /^169\.254\./.test(hostname) ||                  // link-local + cloud metadata (169.254.169.254)
+      /^172\.(1[6-9]|2[0-9]|3[01])\./.test(hostname);  // 172.16.0.0–172.31.255.255
+    if (isPrivate) {
       return NextResponse.json({ error: "Private URLs not allowed" }, { status: 400 });
     }
 
@@ -246,7 +264,9 @@ export async function POST(req: NextRequest) {
     });
 
   } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : String(err);
-    return NextResponse.json({ error: `Failed to fetch: ${message}` }, { status: 500 });
+    if (process.env.NODE_ENV === "development") {
+      console.error("[GlucoLens menu-fetch]", err instanceof Error ? err.message : String(err));
+    }
+    return NextResponse.json({ error: "Could not load that URL. Please check the link and try again." }, { status: 500 });
   }
 }
