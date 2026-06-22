@@ -14,10 +14,11 @@ import { HealthTracker } from "@/components/health-tracker";
 import { NotificationSettings } from "@/components/notification-settings";
 import { getProfile, saveProfile, syncFromCloud, type UserProfile } from "@/lib/storage";
 import { detectBrowserLang, type Lang } from "@/lib/i18n";
-import { onAuthStateChange, signOut, type User } from "@/lib/auth";
+import { onAuthStateChange, type User } from "@/lib/auth";
 import { initPushNotifications } from "@/lib/push-notifications";
 import { initNetworkMonitor, onNetworkChange, isOnline, type NetworkStatus } from "@/lib/network";
 import { getCurrentPlan, type PlanId } from "@/lib/subscriptions";
+import { AccountSettings } from "@/components/account-settings";
 
 type View = "setup" | "analyze" | "history" | "ingredient" | "menu" | "drink" | "plan" | "health";
 
@@ -32,6 +33,7 @@ export default function Home() {
   const [currentPlan, setCurrentPlan] = useState<PlanId>("free");
   const [networkStatus, setNetworkStatus] = useState<NetworkStatus>("unknown");
   const [theme, setTheme] = useState<"dark" | "light">("dark");
+  const [showAccount, setShowAccount] = useState(false);
 
   useEffect(() => {
     const saved = localStorage.getItem("glucolens_lang") as Lang | null;
@@ -134,12 +136,12 @@ export default function Home() {
             </span>
           )}
 
-          {/* Auth */}
-          {user ? (
-            <button onClick={() => signOut().catch(console.error)} className="nova-hbtn" title="Sign out">
-              <i className="ti ti-logout" />
-            </button>
-          ) : (
+          {/* Account / settings */}
+          <button onClick={() => setShowAccount(true)} className="nova-hbtn" title="Account & data">
+            <i className="ti ti-settings" />
+          </button>
+          {/* Sign in (only when signed out) */}
+          {!user && (
             <button onClick={() => setShowAuth(true)} className="nova-hbtn" title="Sign in">
               <i className="ti ti-user" />
             </button>
@@ -255,6 +257,11 @@ export default function Home() {
           onClose={() => setShowPaywall(false)}
           onUpgrade={(plan) => { setCurrentPlan(plan); setShowPaywall(false); }}
         />
+      )}
+
+      {/* Account & data settings */}
+      {showAccount && (
+        <AccountSettings user={user} onClose={() => setShowAccount(false)} />
       )}
     </div>
   );
