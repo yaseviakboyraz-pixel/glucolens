@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
+import { rateLimit, clientKey } from "@/lib/rate-limit";
 
 export const maxDuration = 60;
 
@@ -58,6 +59,8 @@ Return exactly this JSON:
 }`;
 
 export async function POST(req: NextRequest) {
+  const { allowed } = await rateLimit(clientKey(req, "meal-plan"), 10, 60);
+  if (!allowed) return NextResponse.json({ error: "Too many requests. Please slow down." }, { status: 429 });
   try {
     const { userType = "healthy", preferences = "", lang = "en" } = await req.json();
 
@@ -100,7 +103,9 @@ Make it realistic and culturally relevant. Include a shopping list.`;
     return NextResponse.json({ plan });
 
   } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : String(err);
-    return NextResponse.json({ error: message }, { status: 500 });
+    if (process.env.NODE_ENV === "development") {
+      console.error("[GlucoLens MealPlan]", err instanceof Error ? err.message : String(err));
+    }
+    return NextResponse.json({ error: "Meal plan generation failed. Please try again." }, { status: 500 });
   }
 }

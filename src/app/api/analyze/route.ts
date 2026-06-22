@@ -1,36 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { analyzeMealImage } from "@/lib/claude-vision";
+import { rateLimit, clientKey } from "@/lib/rate-limit";
 
 export const maxDuration = 60;
 
-// ── Rate limiting (in-memory, per IP) ─────────────────────────────────────────
-const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
-const RATE_LIMIT = 20;        // max requests per window
-const RATE_WINDOW_MS = 60_000; // 1 minute window
-
-function checkRateLimit(ip: string): { allowed: boolean; remaining: number } {
-  const now = Date.now();
-  const entry = rateLimitMap.get(ip);
-
-  if (!entry || now > entry.resetAt) {
-    rateLimitMap.set(ip, { count: 1, resetAt: now + RATE_WINDOW_MS });
-    return { allowed: true, remaining: RATE_LIMIT - 1 };
-  }
-
-  entry.count++;
-  if (entry.count > RATE_LIMIT) {
-    return { allowed: false, remaining: 0 };
-  }
-  return { allowed: true, remaining: RATE_LIMIT - entry.count };
-}
-
-// Cleanup stale entries every 5 minutes
-setInterval(() => {
-  const now = Date.now();
-  for (const [key, val] of rateLimitMap.entries()) {
-    if (now > val.resetAt) rateLimitMap.delete(key);
-  }
-}, 5 * 60_000);
+// ── Rate limiting (shared — distributed when Upstash configured, else in-memory) ──
+const RATE_LIMIT = 20;       // max requests per IP per minute
+const RATE_WINDOW_SEC = 60;
 
 // ── Allowed userType values ────────────────────────────────────────────────────
 const VALID_USER_TYPES = new Set([
@@ -43,13 +19,8 @@ function sanitizeString(s: unknown, maxLen = 200): string {
 }
 
 export async function POST(req: NextRequest) {
-  // ── Rate limit ──────────────────────────────────────────────────────────────
-  const ip =
-    req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
-    req.headers.get("x-real-ip") ||
-    "unknown";
-
-  const { allowed, remaining } = checkRateLimit(ip);
+  // Shared rate limit (distributed when Upstash is configured, else in-memory)
+  const { allowed, remaining } = await rateLimit(clientKey(req, "analyze"), RATE_LIMIT, RATE_WINDOW_SEC);
   if (!allowed) {
     return NextResponse.json(
       { error: "Too many requests. Please try again in a minute." },
@@ -65,6 +36,12 @@ export async function POST(req: NextRequest) {
   }
 
   try {
+    // Reject oversized payloads before buffering the whole body into memory (DoS guard)
+    const contentLength = Number(req.headers.get("content-length") || 0);
+    if (contentLength > 12_000_000) {
+      return NextResponse.json({ error: "Image too large. Max 8MB." }, { status: 413 });
+    }
+
     const body = await req.json();
     const { imageBase64, userType: rawUserType, mealContext: rawContext } = body;
 

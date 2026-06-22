@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
+import { rateLimit, clientKey } from "@/lib/rate-limit";
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
@@ -64,7 +65,7 @@ Return ONLY valid JSON, no markdown:
   "avg_glycemic_index": 52,
   "total_glycemic_load": 44.2,
   "glucose_risk": "high",
-  "glucose_peak_estimate": "Blood sugar may peak significantly within 45-75 minutes",
+  "glucose_peak_estimate": "Sharp glucose response expected within ~45-75 minutes (illustrative, not a blood-glucose measurement)",
   "glucose_curve_description": "Sharp rise expected from high-carb delivery meal",
   "glucose_curve": {
     "shape": "sharp_rise",
@@ -103,6 +104,8 @@ Return ONLY valid JSON, no markdown:
 }`;
 
 export async function POST(req: NextRequest) {
+  const { allowed } = await rateLimit(clientKey(req, "delivery"), 15, 60);
+  if (!allowed) return NextResponse.json({ error: "Too many requests. Please slow down." }, { status: 429 });
   try {
     const body = await req.json();
     const { imageBase64, userType = "healthy", orderText, text, platform } = body;
@@ -164,8 +167,9 @@ export async function POST(req: NextRequest) {
     });
 
   } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : String(err);
-    console.error("[GlucoLens Delivery]", message);
-    return NextResponse.json({ error: message }, { status: 500 });
+    if (process.env.NODE_ENV === "development") {
+      console.error("[GlucoLens Delivery]", err instanceof Error ? err.message : String(err));
+    }
+    return NextResponse.json({ error: "Delivery analysis failed. Please try again." }, { status: 500 });
   }
 }

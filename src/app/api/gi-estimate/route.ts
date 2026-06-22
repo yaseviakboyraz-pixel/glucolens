@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
+import { rateLimit, clientKey } from "@/lib/rate-limit";
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
@@ -22,6 +23,8 @@ Rules:
 - Return ONLY valid JSON. No markdown, no explanation.`;
 
 export async function POST(req: NextRequest) {
+  const { allowed } = await rateLimit(clientKey(req, "gi-estimate"), 30, 60);
+  if (!allowed) return NextResponse.json({ error: "Too many requests. Please slow down." }, { status: 429 });
   try {
     const { food, portion_g = 100, context = "", userType = "healthy" } = await req.json();
 
@@ -81,7 +84,9 @@ Return ONLY this JSON (all values for the ${portion_g}g portion):
 
     return NextResponse.json({ success: true, estimate: data, ai_generated: true });
   } catch (error) {
-    console.error("GI estimate error:", error);
+    if (process.env.NODE_ENV === "development") {
+      console.error("[GlucoLens GI estimate]", error instanceof Error ? error.message : String(error));
+    }
     return NextResponse.json({ error: "Failed to estimate GI values" }, { status: 500 });
   }
 }

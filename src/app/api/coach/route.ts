@@ -1,11 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
+import { rateLimit, clientKey } from "@/lib/rate-limit";
 
 export const maxDuration = 30;
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
 export async function POST(req: NextRequest) {
+  const { allowed } = await rateLimit(clientKey(req, "coach"), 20, 60);
+  if (!allowed) return NextResponse.json({ error: "Too many requests. Please slow down." }, { status: 429 });
   try {
     const { prompt } = await req.json();
     if (!prompt) return NextResponse.json({ error: "Prompt required" }, { status: 400 });

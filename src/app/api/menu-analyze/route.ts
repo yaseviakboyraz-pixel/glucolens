@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
+import { rateLimit, clientKey } from "@/lib/rate-limit";
 
 export const maxDuration = 60;
 
@@ -37,6 +38,8 @@ For bread/rice/pasta/desserts: typically high
 Be realistic — a Turkish kebab with bread is medium-high, without bread is low.`;
 
 export async function POST(req: NextRequest) {
+  const { allowed } = await rateLimit(clientKey(req, "menu"), 15, 60);
+  if (!allowed) return NextResponse.json({ error: "Too many requests. Please slow down." }, { status: 429 });
   try {
     const body = await req.json();
     const { type, text, base64, contentType, userType = "healthy" } = body;
@@ -88,7 +91,9 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ menu: data });
 
   } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : String(err);
-    return NextResponse.json({ error: message }, { status: 500 });
+    if (process.env.NODE_ENV === "development") {
+      console.error("[GlucoLens Menu]", err instanceof Error ? err.message : String(err));
+    }
+    return NextResponse.json({ error: "Menu analysis failed. Please try again." }, { status: 500 });
   }
 }
