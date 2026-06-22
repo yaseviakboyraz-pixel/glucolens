@@ -66,11 +66,9 @@ export default function PrivacyPolicy() {
           </ul>
         </div>
         <div style={{ background: "#0f172a", borderRadius: 10, padding: "16px 20px" }}>
-          <p style={{ color: "#38bdf8", fontWeight: 600, marginBottom: 6 }}>Apple Health / Google Fit (if you enable integration):</p>
+          <p style={{ color: "#38bdf8", fontWeight: 600, marginBottom: 6 }}>Apple Health (if you enable integration):</p>
           <ul style={{ color: "#94a3b8", lineHeight: 1.8, paddingLeft: 20 }}>
-            <li>Sleep duration and quality data</li>
-            <li>Step count</li>
-            <li>Body weight measurements</li>
+            <li>Step count and active-calorie data (for activity-based GL adjustment)</li>
           </ul>
           <p style={{ color: "#64748b", fontSize: 12, marginTop: 8 }}>
             This data is read from HealthKit / Health Connect with your explicit permission and is never sold or shared with third parties.
@@ -141,7 +139,7 @@ export default function PrivacyPolicy() {
         <h2 style={{ fontSize: 18, fontWeight: 600, color: "#e2e8f0", marginBottom: 12, borderBottom: "1px solid #1e293b", paddingBottom: 8 }}>6. Your Rights</h2>
         <ul style={{ color: "#94a3b8", lineHeight: 1.8, paddingLeft: 20 }}>
           <li><strong style={{ color: "#e2e8f0" }}>Access:</strong> You can export all your meal data via the CSV export function in the app.</li>
-          <li><strong style={{ color: "#e2e8f0" }}>Deletion:</strong> You can delete individual meals in the app or request full account deletion by emailing us.</li>
+          <li><strong style={{ color: "#e2e8f0" }}>Deletion:</strong> You can delete individual meals in the app, or permanently delete your entire account and all associated data directly in the app via Account &amp; Data settings.</li>
           <li><strong style={{ color: "#e2e8f0" }}>Portability:</strong> CSV and PDF exports are available in the app.</li>
           <li><strong style={{ color: "#e2e8f0" }}>Opt-out:</strong> You can disable notifications, Apple Health integration, and cloud sync at any time in app settings.</li>
         </ul>
