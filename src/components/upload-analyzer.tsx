@@ -8,6 +8,7 @@ import { TimingNudges } from "./timing-nudges";
 import { ShareCard } from "./share-card";
 import { t, type Lang } from "@/lib/i18n";
 import { saveMeal } from "@/lib/storage";
+import { fileToJpegBase64 } from "@/lib/image-prep";
 import type { MealAnalysis } from "@/lib/claude-vision";
 
 type Mode = "normal" | "pre_meal" | "compare" | "url";
@@ -71,31 +72,33 @@ export function UploadAnalyzer({ userType = "healthy", lang, onAnalysisComplete 
 
   const tx = t[lang];
 
-  const handleFile = useCallback((file: File, slot: 1 | 2 = 1) => {
-    if (!file.type.startsWith("image/")) { setError(tx.error_image); return; }
-    if (file.size > 20 * 1024 * 1024) { setError("Image must be under 20MB"); return; }
+  const handleFile = useCallback(async (file: File, slot: 1 | 2 = 1) => {
+    // Accept anything that looks like an image — iOS HEIC often has an empty MIME type
+    const looksImage = file.type.startsWith("image/") || /\.(heic|heif|jpe?g|png|webp|gif|avif|bmp)$/i.test(file.name);
+    if (!looksImage) { setError(tx.error_image); return; }
+    if (file.size > 25 * 1024 * 1024) { setError("Image must be under 25MB"); return; }
     setError(null);
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const url = e.target?.result as string;
-      if (slot === 1) { setPreview(url); setImage(url.includes(",") ? url.split(",")[1] : url); }
-      else { setPreview2(url); setImage2(url.includes(",") ? url.split(",")[1] : url); }
-    };
-    reader.readAsDataURL(file);
+    try {
+      const { base64, dataUrl } = await fileToJpegBase64(file); // HEIC→JPEG + downscale
+      if (slot === 1) { setPreview(dataUrl); setImage(base64); }
+      else { setPreview2(dataUrl); setImage2(base64); }
+    } catch {
+      setError("Could not read this image. Please try a JPEG or PNG photo.");
+    }
   }, [tx]);
 
-  const handleCameraCapture = useCallback((file: File) => {
-    if (!file.type.startsWith("image/")) { setError(tx.error_image); return; }
+  const handleCameraCapture = useCallback(async (file: File) => {
+    const looksImage = file.type.startsWith("image/") || /\.(heic|heif|jpe?g|png|webp)$/i.test(file.name);
+    if (!looksImage) { setError(tx.error_image); return; }
     setError(null); setResult(null); setSaved(false);
-    const reader = new FileReader();
-    reader.onload = async (e) => {
-      const url = e.target?.result as string;
-      setPreview(url);
-      const base64 = url.includes(",") ? url.split(",")[1] : url;
+    try {
+      const { base64, dataUrl } = await fileToJpegBase64(file); // HEIC→JPEG + downscale
+      setPreview(dataUrl);
       setImage(base64);
       await runAnalysis(base64, null, mode);
-    };
-    reader.readAsDataURL(file);
+    } catch {
+      setError("Could not read this photo. Please try again or pick a JPEG.");
+    }
   }, [tx, mode]); // eslint-disable-line
 
   const runAnalysis = async (b64: string, b64_2: string | null = null, currentMode: Mode = "normal") => {
