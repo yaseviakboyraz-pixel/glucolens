@@ -63,6 +63,11 @@ export const RC_PRODUCT_IDS = {
 
 // ── Web Mock (for development/web use) ───────────
 
+// Real purchases happen only on native via RevenueCat. On production web there
+// is no payment path, so the mock is disabled and web is always "free". This
+// closes the "fake purchase" and "set localStorage to pro" bypasses in prod.
+const WEB_MOCK_ENABLED = process.env.NODE_ENV !== "production";
+
 function getMockPlan(): PlanId {
   if (typeof window === "undefined") return "free";
   return (localStorage.getItem("glucolens_plan") as PlanId) || "free";
@@ -114,12 +119,16 @@ export async function getCurrentPlan(): Promise<PlanId> {
   if (Capacitor.isNativePlatform()) {
     return getNativePlan();
   }
+  // Production web has no verified purchase path — never honor a client-set "pro".
+  if (!WEB_MOCK_ENABLED) return "free";
   return getMockPlan();
 }
 
 export async function purchasePlan(productId: string): Promise<boolean> {
   if (!Capacitor.isNativePlatform()) {
-    // Web mock — simulate purchase
+    // No real purchase path on web. Simulate only in dev; in production, web
+    // purchases are unavailable (Pro is sold through the native app stores).
+    if (!WEB_MOCK_ENABLED) return false;
     if (productId.includes("pro")) setMockPlan("pro");
     else setMockPlan("free");
     return true;
@@ -138,7 +147,7 @@ export async function purchasePlan(productId: string): Promise<boolean> {
 
 export async function restorePurchases(): Promise<PlanId> {
   if (!Capacitor.isNativePlatform()) {
-    return getMockPlan();
+    return WEB_MOCK_ENABLED ? getMockPlan() : "free";
   }
   try {
     const { Purchases } = await import("@revenuecat/purchases-capacitor");
