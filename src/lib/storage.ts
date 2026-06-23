@@ -10,6 +10,15 @@ const devLog = process.env.NODE_ENV === "development"
   ? (msg: string, ...args: unknown[]) => console.error(msg, ...args)
   : () => {};
 
+// Stable unique id — uses crypto.randomUUID in secure contexts, falling back to
+// a timestamp+random scheme so it never throws in older runtimes.
+function newId(): string {
+  try {
+    if (typeof crypto !== "undefined" && crypto.randomUUID) return crypto.randomUUID();
+  } catch { /* fall through */ }
+  return Math.random().toString(36).slice(2) + Date.now().toString(36);
+}
+
 // ── INTERFACES ────────────────────────────────────
 
 export interface UserProfile {
@@ -129,7 +138,7 @@ function safeLocalStorageSet(key: string, value: string): void {
 
 export function saveMeal(analysis: MealAnalysis, mealType = "other", photo_base64?: string): MealRecord {
   const record: MealRecord = {
-    id: Math.random().toString(36).slice(2) + Date.now().toString(36),
+    id: newId(),
     analysis,
     timestamp: Date.now(),
     mealType,
@@ -297,7 +306,7 @@ export function getWaterLogs(): WaterLog[] {
 
 export function logWater(amount_ml: number): void {
   const log: WaterLog = {
-    id: Math.random().toString(36).slice(2),
+    id: newId(),
     amount_ml,
     timestamp: Date.now(),
   };
@@ -309,7 +318,7 @@ export function logWater(amount_ml: number): void {
       ...(userId ? { user_id: userId } : { device_id: deviceId }),
       amount_ml,
       logged_at: new Date().toISOString(),
-    }).then(null, console.error);
+    }).then(null, err => devLog("[storage] water sync failed", err));
   });
 }
 
@@ -358,7 +367,7 @@ export function logActivity(
     ((ACTIVITY_GL_REDUCTION[type] || 0.6) * durationMin / 30).toFixed(1)
   );
   const record: ActivityRecord = {
-    id: Math.random().toString(36).slice(2),
+    id: newId(),
     type,
     durationMin,
     glReduction,
@@ -374,7 +383,7 @@ export function logActivity(
       duration_minutes: durationMin,
       gl_reduction: glReduction,
       logged_at: new Date().toISOString(),
-    }).then(null, console.error);
+    }).then(null, err => devLog("[storage] activity sync failed", err));
   });
 }
 
@@ -584,7 +593,7 @@ export function getSleepLogs(): SleepLog[] {
 
 export function logSleep(hours: number, quality: SleepLog["quality"], bedtime?: string, wakeTime?: string): void {
   const log: SleepLog = {
-    id: Math.random().toString(36).slice(2),
+    id: newId(),
     hours, quality, bedtime, wakeTime,
     timestamp: Date.now(),
   };
@@ -628,7 +637,7 @@ export function startFasting(targetHours: number, protocol: FastingSession["prot
   // End any active session first
   stopFasting();
   const session: FastingSession = {
-    id: Math.random().toString(36).slice(2),
+    id: newId(),
     startTime: Date.now(),
     targetHours, protocol,
   };
@@ -674,7 +683,7 @@ export function calculateHomaIR(fastingGlucose_mgdl: number, fastingInsulin_uIUm
   const interpretation: HomaIRRecord["interpretation"] =
     homaIR < 1.9 ? "normal" : homaIR < 2.9 ? "borderline" : "insulin_resistant";
   const record: HomaIRRecord = {
-    id: Math.random().toString(36).slice(2),
+    id: newId(),
     fastingGlucose_mgdl, fastingInsulin_uIUml,
     homaIR, interpretation,
     timestamp: Date.now(),
