@@ -46,10 +46,7 @@ For timing_actions, provide SPECIFIC and ACTIONABLE nudges:
 - meal_mods: 2-3 meal modifications (e.g. "Squeeze lemon on rice — lowers GI by 10-15%")
 - swap_suggestion: ONE specific lower-GL alternative dish
 
-For glucose_curve, provide realistic peak timing based on total GL:
-- low GL (<10): gentle_rise, peak ~45min, baseline ~90min
-- medium GL (10-20): moderate_rise, peak ~60-75min, baseline ~2h
-- high GL (>20): sharp_rise, peak ~30-45min, baseline ~2.5-3h
+Do NOT output a glucose_curve object — the app computes the response curve itself from total GL. Omit it entirely.
 
 Return exactly this JSON structure:
 {
@@ -82,21 +79,6 @@ Return exactly this JSON structure:
   "glucose_risk": "medium",
   "glucose_peak_estimate": "Relative glucose response: moderate rise expected, easing within ~1.5-2 hours. Illustrative estimate only — not a blood-glucose measurement.",
   "glucose_curve_description": "Moderate rise, returning to baseline within 2 hours",
-  "glucose_curve": {
-    "shape": "moderate_rise",
-    "peak_minutes": 70,
-    "baseline_minutes": 120,
-    "peak_level": "moderate",
-    "points": [
-      {"minutes": 0, "level": 0},
-      {"minutes": 20, "level": 25},
-      {"minutes": 45, "level": 65},
-      {"minutes": 70, "level": 100},
-      {"minutes": 100, "level": 60},
-      {"minutes": 120, "level": 20},
-      {"minutes": 150, "level": 0}
-    ]
-  },
   "timing_actions": {
     "pre_meal": [
       "Walk briskly for 10 minutes — reduces glucose peak by ~20%",
@@ -232,10 +214,14 @@ export async function analyzeMealImage(
 
   const mediaType = detectMediaType(imageBase64);
 
+  const startedAt = Date.now();
   const response = await client.messages.create({
     model: AI_MODEL,
     max_tokens: 4000,
-    system: SYSTEM_PROMPT + profileNote,
+    system: [
+      { type: "text", text: SYSTEM_PROMPT, cache_control: { type: "ephemeral" } },
+      { type: "text", text: profileNote },
+    ],
     messages: [{
       role: "user",
       content: [
@@ -250,6 +236,21 @@ export async function analyzeMealImage(
       ],
     }],
   });
+
+  // Lightweight metrics (PII-free) — visible in Vercel logs to measure real
+  // latency, token usage and cache effectiveness. Safe to remove post-launch.
+  const u = response.usage as {
+    input_tokens?: number; output_tokens?: number;
+    cache_read_input_tokens?: number; cache_creation_input_tokens?: number;
+  };
+  console.log("[metrics] analyze " + JSON.stringify({
+    model: AI_MODEL,
+    ms: Date.now() - startedAt,
+    in: u?.input_tokens,
+    out: u?.output_tokens,
+    cache_read: u?.cache_read_input_tokens,
+    cache_write: u?.cache_creation_input_tokens,
+  }));
 
   let raw = (response.content[0] as { type: string; text: string }).text.trim();
 
