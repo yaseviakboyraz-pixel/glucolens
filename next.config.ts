@@ -12,9 +12,17 @@ const nextConfig: NextConfig = {
     ],
   },
   async headers() {
+    const isDev = process.env.NODE_ENV !== "production";
+    // 'unsafe-eval' is only needed by the dev/HMR runtime — drop it in production.
+    // 'unsafe-inline' stays for now: Next.js injects inline bootstrap scripts and
+    // the UI relies heavily on inline style attributes, so removing it requires a
+    // per-request nonce (proxy.ts) — deferred as a larger, separately-tested change.
+    const scriptSrc = isDev
+      ? "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net"
+      : "script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net";
     const csp = [
       "default-src 'self'",
-      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net",
+      scriptSrc,
       "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net",
       "img-src 'self' data: blob: https://*.supabase.co https://lh3.googleusercontent.com",
       "connect-src 'self' https://*.supabase.co https://api.anthropic.com https://api.revenuecat.com wss://*.supabase.co",
