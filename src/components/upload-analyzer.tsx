@@ -33,6 +33,25 @@ function detectUrlType(url: string): "delivery" | "image" | "menu" {
   return "menu";
 }
 
+// Wrap fetch with an abort-based timeout so a slow AI call can't leave the UI
+// stuck on "loading" forever. Throws a tagged error on timeout so callers can
+// show a clear message instead of a generic failure.
+class TimeoutError extends Error {
+  constructor() { super("timeout"); this.name = "TimeoutError"; }
+}
+async function fetchWithTimeout(input: string, init: RequestInit, ms = 35000): Promise<Response> {
+  const ctrl = new AbortController();
+  const tid = setTimeout(() => ctrl.abort(), ms);
+  try {
+    return await fetch(input, { ...init, signal: ctrl.signal });
+  } catch (e) {
+    if (e instanceof DOMException && e.name === "AbortError") throw new TimeoutError();
+    throw e;
+  } finally {
+    clearTimeout(tid);
+  }
+}
+
 interface Props {
   userType?: string;
   lang: Lang;
@@ -102,7 +121,6 @@ export function UploadAnalyzer({ userType = "healthy", lang, onAnalysisComplete 
   }, [tx, mode]); // eslint-disable-line
 
   const runAnalysis = async (b64: string, b64_2: string | null = null, currentMode: Mode = "normal") => {
-    // Check subscription limit
     const { allowed, plan } = await canAnalyze();
     setCurrentPlan(plan);
     if (!allowed) {
@@ -115,7 +133,7 @@ export function UploadAnalyzer({ userType = "healthy", lang, onAnalysisComplete 
         ? "[PRE-MEAL ANALYSIS] User is asking about this food BEFORE eating. Emphasize glucose spike prediction and suggest optimal timing/pairing. " + mealContext
         : mealContext;
 
-      const res = await fetch("/api/analyze", {
+      const res = await fetchWithTimeout("/api/analyze", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ imageBase64: b64, userType, mealContext: contextNote }),
@@ -126,7 +144,7 @@ export function UploadAnalyzer({ userType = "healthy", lang, onAnalysisComplete 
       recordAnalysis();
 
       if (currentMode === "compare" && b64_2) {
-        const res2 = await fetch("/api/analyze", {
+        const res2 = await fetchWithTimeout("/api/analyze", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ imageBase64: b64_2, userType, mealContext }),
@@ -144,7 +162,8 @@ export function UploadAnalyzer({ userType = "healthy", lang, onAnalysisComplete 
         setSaved(true);
       }
     } catch (e) {
-      setError(e instanceof Error ? e.message : tx.error_failed);
+      if (e instanceof TimeoutError) setError("Analysis timed out — the server took too long. Check your connection and try again.");
+      else setError(e instanceof Error ? e.message : tx.error_failed);
     } finally {
       setLoading(false);
     }
@@ -228,7 +247,7 @@ export function UploadAnalyzer({ userType = "healthy", lang, onAnalysisComplete 
     setUrlLoading(true); setError(null); setMenuResult(null); setResult(null); setSaved(false);
     try {
       if (urlType === "image") {
-        const fetchRes = await fetch("/api/menu-fetch", {
+        const fetchRes = await fetchWithTimeout("/api/menu-fetch", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ url }),
@@ -239,7 +258,7 @@ export function UploadAnalyzer({ userType = "healthy", lang, onAnalysisComplete 
         await runAnalysis(fetchData.base64, null, "normal");
         return;
       }
-      const fetchRes = await fetch("/api/menu-fetch", {
+      const fetchRes = await fetchWithTimeout("/api/menu-fetch", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ url }),
@@ -248,7 +267,7 @@ export function UploadAnalyzer({ userType = "healthy", lang, onAnalysisComplete 
       if (!fetchRes.ok) throw new Error(fetchData.error || "Could not load page");
 
       if (urlType === "delivery") {
-        const analyzeRes = await fetch("/api/delivery-analyze", {
+        const analyzeRes = await fetchWithTimeout("/api/delivery-analyze", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ text: fetchData.text, url, userType, platform: fetchData.platform }),
@@ -258,7 +277,7 @@ export function UploadAnalyzer({ userType = "healthy", lang, onAnalysisComplete 
         setResult(analyzeData.analysis);
         setSaved(true);
       } else {
-        const analyzeRes = await fetch("/api/menu-analyze", {
+        const analyzeRes = await fetchWithTimeout("/api/menu-analyze", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ ...fetchData, userType }),
@@ -268,7 +287,8 @@ export function UploadAnalyzer({ userType = "healthy", lang, onAnalysisComplete 
         setMenuResult(analyzeData.menu);
       }
     } catch (e) {
-      setError(e instanceof Error ? e.message : "URL analysis failed");
+      if (e instanceof TimeoutError) setError("Request timed out — the server took too long. Check your connection and try again.");
+      else setError(e instanceof Error ? e.message : "URL analysis failed");
     } finally {
       setUrlLoading(false);
     }
