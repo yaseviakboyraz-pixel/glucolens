@@ -70,6 +70,7 @@ export function UploadAnalyzer({ userType = "healthy", lang, onAnalysisComplete 
   const [error, setError] = useState<string | null>(null);
   const [mealContext, setMealContext] = useState("");
   const [saved, setSaved] = useState(false);
+  const [feedback, setFeedback] = useState<null | "up" | "down">(null);
   const [showBarcode, setShowBarcode] = useState(false);
   const [barcodeProduct, setBarcodeProduct] = useState<{
     name: string; brand?: string; gi_estimate?: number; gl_estimate?: number;
@@ -238,7 +239,7 @@ export function UploadAnalyzer({ userType = "healthy", lang, onAnalysisComplete 
     setImage(null); setPreview(null); setImage2(null); setPreview2(null);
     setResult(null); setResult2(null); setError(null); setSaved(false);
     setMealContext(""); setBarcodeProduct(null); setPortionG(100);
-    setUrlInput(""); setMenuResult(null);
+    setUrlInput(""); setMenuResult(null); setFeedback(null);
   };
 
   const runUrlAnalysis = async (url: string) => {
@@ -296,6 +297,23 @@ export function UploadAnalyzer({ userType = "healthy", lang, onAnalysisComplete 
 
   const foodName = (item: MealAnalysis["food_items"][number]) =>
     lang === "tr" ? (item.name_tr || item.name) : item.name;
+
+  // Lightweight local accuracy feedback. Sets honest expectations and collects
+  // a calibration signal; syncing/acting on it is a deliberate future step.
+  const submitFeedback = (verdict: "up" | "down") => {
+    setFeedback(verdict);
+    try {
+      const key = "glucolens_feedback";
+      const prev = JSON.parse(localStorage.getItem(key) || "[]");
+      prev.push({
+        ts: Date.now(),
+        verdict,
+        gl: result?.total_glycemic_load ?? null,
+        confidence: result?.confidence_score ?? null,
+      });
+      localStorage.setItem(key, JSON.stringify(prev.slice(-200)));
+    } catch { /* ignore storage errors */ }
+  };
 
   return (
     <div className="max-w-xl mx-auto space-y-4">
@@ -918,6 +936,29 @@ export function UploadAnalyzer({ userType = "healthy", lang, onAnalysisComplete 
 
           <GlucoseMeter risk={result.glucose_risk} gl={result.total_glycemic_load} lang={lang} />
 
+          {/* Honesty: AI estimate + confidence — for a health app, trust is the product */}
+          {(() => {
+            const c = result.confidence_score ?? 0.7;
+            const band = c >= 0.8
+              ? { label: lang === "tr" ? "Yüksek güven" : "High confidence", color: "rgba(16,185,129,0.9)" }
+              : c >= 0.6
+              ? { label: lang === "tr" ? "Orta güven" : "Moderate confidence", color: "rgba(245,158,11,0.9)" }
+              : { label: lang === "tr" ? "Düşük güven — kontrol edin" : "Low confidence — double-check", color: "rgba(239,68,68,0.9)" };
+            return (
+              <div className="bg-gray-900 rounded-xl p-3 border border-gray-800 flex items-center gap-3">
+                <div style={{ width: 8, height: 8, borderRadius: "50%", background: band.color, flexShrink: 0 }} />
+                <div className="min-w-0">
+                  <div className="text-sm" style={{ color: band.color }}>{band.label}</div>
+                  <div className="text-xs text-gray-500 mt-0.5">
+                    {lang === "tr"
+                      ? "Bu bir AI tahminidir — porsiyon, pişirme ve markaya göre gerçek değerler ±%20-40 değişebilir."
+                      : "This is an AI estimate — actual values can vary ±20-40% with portion, cooking and brand."}
+                  </div>
+                </div>
+              </div>
+            );
+          })()}
+
           {/* Stat grid — Nova Aurora 2-col with accent borders */}
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6 }}>
             {[
@@ -1006,6 +1047,33 @@ export function UploadAnalyzer({ userType = "healthy", lang, onAnalysisComplete 
               ))}
             </div>
           )}
+
+          {/* "Was this accurate?" — honest feedback loop (sets expectations, collects signal) */}
+          <div className="bg-gray-900 rounded-xl p-3 border border-gray-800">
+            {feedback === null ? (
+              <div className="flex items-center justify-between gap-3">
+                <span className="text-sm text-gray-400">
+                  {lang === "tr" ? "Bu analiz doğru muydu?" : "Was this analysis accurate?"}
+                </span>
+                <div className="flex gap-2">
+                  <button onClick={() => submitFeedback("up")}
+                    className="px-3 py-1.5 rounded-lg text-sm bg-gray-800 hover:bg-green-900/40 text-gray-300 border border-gray-700 transition-all">
+                    👍 {lang === "tr" ? "Doğru" : "Yes"}
+                  </button>
+                  <button onClick={() => submitFeedback("down")}
+                    className="px-3 py-1.5 rounded-lg text-sm bg-gray-800 hover:bg-red-900/40 text-gray-300 border border-gray-700 transition-all">
+                    👎 {lang === "tr" ? "Tam değil" : "Not quite"}
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="text-sm text-gray-400 text-center">
+                {feedback === "up"
+                  ? (lang === "tr" ? "Teşekkürler!" : "Thanks!")
+                  : (lang === "tr" ? "Teşekkürler — geri bildiriminiz kaydedildi." : "Thanks — your feedback was saved.")}
+              </div>
+            )}
+          </div>
 
           <p className="text-xs text-gray-600 text-center">{tx.disclaimer}</p>
 
