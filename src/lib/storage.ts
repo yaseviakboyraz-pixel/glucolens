@@ -230,7 +230,7 @@ export async function syncFromCloud(): Promise<{
 
     let meals: MealRecord[] = [];
     if (mealsRes.data && mealsRes.data.length > 0) {
-      meals = mealsRes.data.map(m => ({
+      const cloudMeals: MealRecord[] = mealsRes.data.map(m => ({
         id: m.id,
         timestamp: new Date(m.logged_at).getTime(),
         mealType: m.meal_type,
@@ -256,7 +256,27 @@ export async function syncFromCloud(): Promise<{
           glucose_curve_description: "",
         },
       }));
-      localStorage.setItem("glucolens_meals", JSON.stringify(meals));
+
+      // Merge: keep local meals not yet in the cloud (e.g. logged offline) so a
+      // cloud pull never erases them. A synced meal shares an exact ms timestamp
+      // with its cloud row, so timestamp identity is a reliable de-dup key.
+      const cloudTs = new Set(cloudMeals.map(m => m.timestamp));
+      const localUnsynced = getMeals().filter(m => !cloudTs.has(m.timestamp));
+
+      // Retry: push those un-synced local meals up to the cloud. Idempotent — we
+      // only push meals the cloud doesn't already have. Fire-and-forget; failures
+      // stay local and get retried on the next sync.
+      if (localUnsynced.length && typeof navigator !== "undefined" && navigator.onLine) {
+        for (const m of localUnsynced) {
+          syncMealToCloud(m, m.photo_base64).catch(e => devLog("[storage] offline meal retry failed", e));
+        }
+      }
+
+      meals = [...localUnsynced, ...cloudMeals].sort((a, b) => b.timestamp - a.timestamp);
+      localStorage.setItem("glucolens_meals", JSON.stringify(meals.map(m => ({ ...m, photo_base64: undefined }))));
+    } else {
+      // No cloud meals returned — preserve local data instead of returning empty.
+      meals = getMeals();
     }
     return { meals, profile };
   } catch (err) {
