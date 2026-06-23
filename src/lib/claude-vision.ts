@@ -1,5 +1,6 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { lookupGI } from "./gi-index";
+import { AI_MODEL } from "./ai-model";
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
@@ -232,7 +233,7 @@ export async function analyzeMealImage(
   const mediaType = detectMediaType(imageBase64);
 
   const response = await client.messages.create({
-    model: "claude-sonnet-4-20250514",
+    model: AI_MODEL,
     max_tokens: 4000,
     system: SYSTEM_PROMPT + profileNote,
     messages: [{

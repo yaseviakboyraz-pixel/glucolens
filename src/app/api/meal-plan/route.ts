@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
 import { rateLimit, clientKey } from "@/lib/rate-limit";
+import { AI_MODEL } from "@/lib/ai-model";
 
 export const maxDuration = 60;
 
@@ -86,7 +87,7 @@ ${prefNote}
 Make it realistic and culturally relevant. Include a shopping list.`;
 
     const response = await client.messages.create({
-      model: "claude-sonnet-4-6",
+      model: AI_MODEL,
       max_tokens: 3000,
       system: SYSTEM,
       messages: [{ role: "user", content: prompt }],
