@@ -60,10 +60,12 @@ export default function PrivacyPolicy() {
         <div style={{ background: "#0f172a", borderRadius: 10, padding: "16px 20px", marginBottom: 12 }}>
           <p style={{ color: "#38bdf8", fontWeight: 600, marginBottom: 6 }}>Automatically collected:</p>
           <ul style={{ color: "#94a3b8", lineHeight: 1.8, paddingLeft: 20 }}>
-            <li>Device type and operating system (for app compatibility)</li>
-            <li>App usage patterns (anonymized, for improving AI accuracy)</li>
-            <li>Crash reports and error logs</li>
+            <li>Device type and operating system (sent with normal web requests, for app compatibility)</li>
+            <li>Standard server logs from our hosting provider (Vercel) &mdash; such as request timing and error messages &mdash; kept only to operate and debug the service</li>
           </ul>
+          <p style={{ color: "#64748b", fontSize: 12, marginTop: 8 }}>
+            We do not currently use a dedicated analytics or crash-reporting service. If we add one in the future, we will update this policy and the third-party list below before doing so.
+          </p>
         </div>
         <div style={{ background: "#0f172a", borderRadius: 10, padding: "16px 20px" }}>
           <p style={{ color: "#38bdf8", fontWeight: 600, marginBottom: 6 }}>Apple Health (if you enable integration):</p>
@@ -85,7 +87,6 @@ export default function PrivacyPolicy() {
           <li>To store your meal history and wellness logs (locally and, if signed in, on our servers)</li>
           <li>To send you notifications you have enabled (meal reminders, alerts)</li>
           <li>To process subscription payments via RevenueCat</li>
-          <li>To improve the accuracy of our AI models (using anonymized, aggregated data only)</li>
         </ul>
         <p style={{ color: "#64748b", fontSize: 13, marginTop: 12 }}>
           We do <strong>not</strong> sell your personal data. We do <strong>not</strong> use your health data for advertising.
