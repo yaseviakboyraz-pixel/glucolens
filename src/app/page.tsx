@@ -34,6 +34,7 @@ export default function Home() {
   const [networkStatus, setNetworkStatus] = useState<NetworkStatus>("unknown");
   const [theme, setTheme] = useState<"dark" | "light">("dark");
   const [showAccount, setShowAccount] = useState(false);
+  const [showHint, setShowHint] = useState(false);
 
   useEffect(() => {
     const saved = localStorage.getItem("glucolens_lang") as Lang | null;
@@ -42,6 +43,7 @@ export default function Home() {
     setProfile(p);
     if (!p || !p.setupComplete) setView("setup");
     setLoaded(true);
+    setShowHint(!localStorage.getItem("glucolens_hint_seen"));
 
     const savedTheme = localStorage.getItem("glucolens_theme") as "dark" | "light" | null;
     const t = savedTheme || "dark";
@@ -90,6 +92,11 @@ export default function Home() {
 
   function refreshProfile() {
     setProfile(getProfile());
+  }
+
+  function dismissHint() {
+    localStorage.setItem("glucolens_hint_seen", "1");
+    setShowHint(false);
   }
 
   // Loading
@@ -168,11 +175,33 @@ export default function Home() {
       {/* ── CONTENT ── */}
       <div style={{ flex: 1, padding: "0 0 8px" }}>
         {view === "analyze" && (
-          <UploadAnalyzer
-            userType={profile?.userType || "healthy"}
-            lang={lang}
-            onAnalysisComplete={refreshProfile}
-          />
+          <>
+            {showHint && (
+              <div style={{ margin: "0 0 4px", padding: "12px 14px", background: "var(--nova-surface)", border: "0.5px solid var(--nova-border)", borderRadius: 16, position: "relative" }}>
+                <button onClick={dismissHint} aria-label="dismiss" style={{ position: "absolute", top: 8, right: 10, background: "none", border: "none", color: "var(--nova-text-4)", fontSize: 16, cursor: "pointer", lineHeight: 1 }}>×</button>
+                <div style={{ fontSize: 11, color: "var(--nova-text-2)", fontWeight: 500, marginBottom: 8 }}>
+                  {lang === "tr" ? "Nasıl çalışır" : "How it works"}
+                </div>
+                <div style={{ display: "flex", gap: 6 }}>
+                  {[
+                    { i: "ti-camera", t: lang === "tr" ? "Fotoğraf çek" : "Snap a photo" },
+                    { i: "ti-chart-line", t: lang === "tr" ? "Glukoz etkisini gör" : "See glucose impact" },
+                    { i: "ti-check", t: lang === "tr" ? "Daha iyi seç" : "Choose better" },
+                  ].map((s, idx) => (
+                    <div key={idx} style={{ flex: 1, textAlign: "center", padding: "8px 4px", background: "var(--nova-bg)", borderRadius: 10, border: "0.5px solid var(--nova-border)" }}>
+                      <i className={`ti ${s.i}`} style={{ fontSize: 16, color: "var(--nova-purple)", display: "block", marginBottom: 4 }} aria-hidden="true" />
+                      <span style={{ fontSize: 8, color: "var(--nova-text-3)", lineHeight: 1.3 }}>{s.t}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+            <UploadAnalyzer
+              userType={profile?.userType || "healthy"}
+              lang={lang}
+              onAnalysisComplete={refreshProfile}
+            />
+          </>
         )}
         {view === "drink" && (
           <DrinkAnalyzer lang={lang} userType={profile?.userType || "healthy"} />
@@ -188,11 +217,11 @@ export default function Home() {
         )}
         {view === "health" && (
           <div className="px-4 py-4">
-            <h2 className="text-white font-bold text-lg mb-1">🧘 Sağlık Takibi</h2>
-            <p className="text-gray-500 text-xs mb-4">Uyku, oruç, HOMA-IR ve trend analizi</p>
+            <h2 className="text-white font-bold text-lg mb-1">🧘 {lang === "tr" ? "Sağlık Takibi" : "Health Tracking"}</h2>
+            <p className="text-gray-500 text-xs mb-4">{lang === "tr" ? "Uyku, oruç, HOMA-IR ve trend analizi" : "Sleep, fasting, HOMA-IR & trends"}</p>
             <HealthTracker />
             <div className="mt-6">
-              <h3 className="text-white font-semibold text-sm mb-3">🔔 Bildirim Ayarları</h3>
+              <h3 className="text-white font-semibold text-sm mb-3">🔔 {lang === "tr" ? "Bildirim Ayarları" : "Notification Settings"}</h3>
               <NotificationSettings />
             </div>
           </div>
