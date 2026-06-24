@@ -189,14 +189,14 @@ export function HistoryDashboard({ profile, lang, onNewMeal, onEditProfile }: Pr
         </div>
       </div>
 
-      {/* GL Chart */}
-      <GLChart dailyTarget={profile.dailyGLTarget} />
+      {/* GL Chart — only once there's data to show */}
+      {meals.length > 0 && <GLChart dailyTarget={profile.dailyGLTarget} />}
 
-      {/* AI Coach */}
-      <AICoach />
+      {/* AI Coach — only meaningful once meals exist */}
+      {meals.length > 0 && <AICoach />}
 
-      {/* Insights */}
-      {insights.map((insight, i) => (
+      {/* Insights — need data to be meaningful */}
+      {meals.length > 0 && insights.map((insight, i) => (
         <div key={i} className="rounded-xl p-3 text-sm border bg-blue-950 border-blue-500/30 text-blue-300">
           {insight}
         </div>
@@ -285,16 +285,37 @@ export function HistoryDashboard({ profile, lang, onNewMeal, onEditProfile }: Pr
       {activeTab !== "wellness" && (
         <div className="space-y-2">
           {filteredMeals.length === 0 ? (
-            <div className="text-center py-12 text-gray-600">
-              <div className="text-4xl mb-3">🍽️</div>
-              <div>{searchQuery || riskFilter !== "all" ? "Filtrele eşleşen öğün yok." : activeTab === "today" ? "Bugün hiç öğün girilmedi." : "Henüz öğün yok."}</div>
-              {!searchQuery && riskFilter === "all" && (
+            (searchQuery || riskFilter !== "all") ? (
+              <div className="text-center py-12 text-gray-600">
+                <div className="text-4xl mb-3">🔍</div>
+                <div>{lang === "tr" ? "Filtreyle eşleşen öğün yok." : "No meals match your filter."}</div>
+              </div>
+            ) : meals.length === 0 ? (
+              <div style={{ textAlign: "center", padding: "28px 20px", background: "var(--nova-surface)", border: "0.5px solid var(--nova-border)", borderRadius: 18 }}>
+                <div style={{ fontSize: 38, marginBottom: 10 }}>📊</div>
+                <div style={{ color: "var(--nova-text-1)", fontSize: 16, fontWeight: 600, marginBottom: 6 }}>
+                  {lang === "tr" ? "Yolculuğun burada başlıyor" : "Your journey starts here"}
+                </div>
+                <div style={{ color: "var(--nova-text-3)", fontSize: 12, lineHeight: 1.5, marginBottom: 18, maxWidth: 280, marginInline: "auto" }}>
+                  {lang === "tr"
+                    ? "İlk öğününü analiz et — panel trendler, seriler ve içgörülerle dolmaya başlasın."
+                    : "Analyze your first meal — your dashboard will fill with trends, streaks and insights."}
+                </div>
+                <button onClick={onNewMeal}
+                  style={{ padding: "12px 28px", borderRadius: 14, fontWeight: 600, fontSize: 14, color: "#fff", background: "var(--nova-purple)", border: "none", cursor: "pointer" }}>
+                  {lang === "tr" ? "📸 İlk öğünü analiz et" : "📸 Analyze your first meal"}
+                </button>
+              </div>
+            ) : (
+              <div className="text-center py-12 text-gray-600">
+                <div className="text-4xl mb-3">🍽️</div>
+                <div>{lang === "tr" ? "Bugün hiç öğün girilmedi." : "No meals logged today."}</div>
                 <button onClick={onNewMeal}
                   className="mt-4 px-6 py-2 bg-teal-600 hover:bg-teal-500 text-white rounded-xl text-sm transition-all">
-                  Analiz et
+                  {lang === "tr" ? "Analiz et" : "Analyze"}
                 </button>
-              )}
-            </div>
+              </div>
+            )
           ) : (
             filteredMeals.map((meal) => {
             const isExpanded = expandedMealId === meal.id;
