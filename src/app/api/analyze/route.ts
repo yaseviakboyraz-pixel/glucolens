@@ -93,6 +93,11 @@ export async function POST(req: NextRequest) {
     // Log the real error in all environments (prod error visibility).
     console.error("[GlucoLens analyze]", rawMessage);
 
-    return NextResponse.json({ error: safeMessage }, { status: 500 });
+    // Diagnostic: raw error exposed only when ?diag=1 is passed (safe for users).
+    const showDiag = new URL(req.url).searchParams.get("diag") === "1";
+    return NextResponse.json(
+      showDiag ? { error: safeMessage, _debug: rawMessage.slice(0, 500) } : { error: safeMessage },
+      { status: 500 }
+    );
   }
 }
