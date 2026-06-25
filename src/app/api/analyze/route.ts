@@ -77,7 +77,6 @@ export async function POST(req: NextRequest) {
     );
   } catch (err: unknown) {
     // ── Sanitized error response — no internal details leaked ──────────────
-    const isDev = process.env.NODE_ENV === "development";
     const rawMessage = err instanceof Error ? err.message : String(err);
 
     // Only expose safe error messages
@@ -91,8 +90,10 @@ export async function POST(req: NextRequest) {
     const safeMessage = safeMessages.find(s => rawMessage.includes(s)) ||
       "Analysis failed. Please try again.";
 
-    if (isDev) console.error("[GlucoLens analyze]", rawMessage);
+    // Log the real error in all environments (prod error visibility).
+    console.error("[GlucoLens analyze]", rawMessage);
 
-    return NextResponse.json({ error: safeMessage }, { status: 500 });
+    // TEMP DIAGNOSTIC: expose raw error to locate the 500. REMOVE after fix.
+    return NextResponse.json({ error: safeMessage, _debug: rawMessage.slice(0, 400) }, { status: 500 });
   }
 }
