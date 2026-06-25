@@ -93,7 +93,6 @@ export async function POST(req: NextRequest) {
     // Log the real error in all environments (prod error visibility).
     console.error("[GlucoLens analyze]", rawMessage);
 
-    // TEMP DIAGNOSTIC: expose raw error to locate the 500. REMOVE after fix.
-    return NextResponse.json({ error: safeMessage, _debug: rawMessage.slice(0, 400) }, { status: 500 });
+    return NextResponse.json({ error: safeMessage }, { status: 500 });
   }
 }

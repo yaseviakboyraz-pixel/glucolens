@@ -8,7 +8,11 @@
 // for the whole app — including when migrating off a deprecated snapshot — is
 // then a one-variable change with zero code edits.
 //
-// The default preserves the core analyze path's current, most-tested model.
-// To move everything onto a newer model (e.g. claude-sonnet-4-6), set
-// ANTHROPIC_MODEL in the environment rather than editing code.
-export const AI_MODEL = process.env.ANTHROPIC_MODEL || "claude-sonnet-4-20250514";
+// The previous default (claude-sonnet-4-20250514) was RETIRED by Anthropic and
+// the API began returning 404 not_found_error, breaking every AI endpoint. The
+// default is now a current model. Override with ANTHROPIC_MODEL at deploy time.
+//
+// IMPORTANT for long-term survival: dated snapshots get deprecated ~12 months
+// out. Prefer a current alias here and revisit this string at each major
+// dependency review so the app never silently dies on a retired model again.
+export const AI_MODEL = process.env.ANTHROPIC_MODEL || "claude-sonnet-4-6";
