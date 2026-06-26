@@ -1,6 +1,6 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { lookupGI } from "./gi-index";
-import { withModelFallback } from "./ai-client";
+import { withModelFallback, modelChainFor } from "./ai-client";
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
@@ -203,7 +203,8 @@ function generateFallbackCurve(gl: number): GlucoseCurve {
 export async function analyzeMealImage(
   imageBase64: string,
   userType = "healthy",
-  mealContext?: string
+  mealContext?: string,
+  tier: "free" | "pro" = "pro"
 ): Promise<MealAnalysis> {
   const profileNote =
     userType === "diabetic"
@@ -236,7 +237,8 @@ export async function analyzeMealImage(
         },
       ],
     }],
-    })
+    }),
+    modelChainFor(tier)
   );
 
   // Lightweight metrics (PII-free) — visible in Vercel logs to measure real

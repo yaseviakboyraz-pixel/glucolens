@@ -43,7 +43,7 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json();
-    const { imageBase64, userType: rawUserType, mealContext: rawContext } = body;
+    const { imageBase64, userType: rawUserType, mealContext: rawContext, plan: rawPlan } = body;
 
     // ── Input validation ────────────────────────────────────────────────────
     if (!imageBase64 || typeof imageBase64 !== "string") {
@@ -56,6 +56,12 @@ export async function POST(req: NextRequest) {
     // Sanitize mealContext — strip HTML, limit length
     const mealContext = rawContext ? sanitizeString(rawContext, 200) : undefined;
 
+    // Tier selection for model: Pro → quality (Sonnet), Free/unknown → cheap+fast
+    // (Haiku). Default is the cost-safe "free". The plan claim is client-supplied
+    // (spoofable, but bounded by the per-IP rate limit above); proper server-side
+    // entitlement verification is the planned hardening step.
+    const tier: "free" | "pro" = rawPlan === "pro" ? "pro" : "free";
+
     // Image size check
     const base64Data = imageBase64.includes(",") ? imageBase64.split(",")[1] : imageBase64;
     const sizeKB = Math.round((base64Data.length * 3) / 4 / 1024);
@@ -64,7 +70,7 @@ export async function POST(req: NextRequest) {
     }
 
     const start = Date.now();
-    const analysis = await analyzeMealImage(base64Data, userType, mealContext);
+    const analysis = await analyzeMealImage(base64Data, userType, mealContext, tier);
 
     return NextResponse.json(
       { analysis, processingMs: Date.now() - start, disclaimer: "Not medical advice." },

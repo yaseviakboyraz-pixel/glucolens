@@ -137,7 +137,7 @@ export function UploadAnalyzer({ userType = "healthy", lang, onAnalysisComplete 
       const res = await fetchWithTimeout("/api/analyze", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ imageBase64: b64, userType, mealContext: contextNote }),
+        body: JSON.stringify({ imageBase64: b64, userType, mealContext: contextNote, plan }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || tx.error_failed);
@@ -148,7 +148,7 @@ export function UploadAnalyzer({ userType = "healthy", lang, onAnalysisComplete 
         const res2 = await fetchWithTimeout("/api/analyze", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ imageBase64: b64_2, userType, mealContext }),
+          body: JSON.stringify({ imageBase64: b64_2, userType, mealContext, plan }),
         });
         const data2 = await res2.json();
         if (res2.ok) setResult2(data2.analysis);
