@@ -1,6 +1,6 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { lookupGI } from "./gi-index";
-import { AI_MODEL } from "./ai-model";
+import { withModelFallback } from "./ai-client";
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
@@ -215,8 +215,9 @@ export async function analyzeMealImage(
   const mediaType = detectMediaType(imageBase64);
 
   const startedAt = Date.now();
-  const response = await client.messages.create({
-    model: AI_MODEL,
+  const { response, modelUsed, fellBack } = await withModelFallback((model) =>
+    client.messages.create({
+    model,
     max_tokens: 4000,
     system: [
       { type: "text", text: SYSTEM_PROMPT, cache_control: { type: "ephemeral" } },
@@ -235,7 +236,8 @@ export async function analyzeMealImage(
         },
       ],
     }],
-  });
+    })
+  );
 
   // Lightweight metrics (PII-free) — visible in Vercel logs to measure real
   // latency, token usage and cache effectiveness. Safe to remove post-launch.
@@ -244,7 +246,8 @@ export async function analyzeMealImage(
     cache_read_input_tokens?: number; cache_creation_input_tokens?: number;
   };
   console.log("[metrics] analyze " + JSON.stringify({
-    model: AI_MODEL,
+    model: modelUsed,
+    fell_back: fellBack,
     ms: Date.now() - startedAt,
     in: u?.input_tokens,
     out: u?.output_tokens,

@@ -1,14 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
-import { AI_MODEL } from "@/lib/ai-model";
+import { MODEL_CHAIN } from "@/lib/ai-client";
 
 export const dynamic = "force-dynamic";
 
 // Health endpoint with two modes:
 //   GET /api/health            → shallow check (env presence). Fast, free, public.
-//   GET /api/health?deep=1&token=…  → ACTIVE model canary: pings the AI model to
-//       prove it is actually reachable. This is the check that would have caught
-//       the retired-model outage (analyze was 100% down while shallow checks
-//       stayed green). Token-gated because it makes a small paid API call.
+//   GET /api/health?deep=1&token=…  → ACTIVE model canary: pings EVERY model in
+//       the fallback chain to prove they are actually reachable. This is the
+//       check that would have caught the retired-model outage (analyze was 100%
+//       down while shallow checks stayed green), and it also verifies the
+//       fallback safety net has no holes. Token-gated: it makes small paid calls.
 export async function GET(req: NextRequest) {
   const start = Date.now();
   const url = new URL(req.url);
@@ -21,7 +22,7 @@ export async function GET(req: NextRequest) {
     version: string;
     environment: string | undefined;
     checks: Record<string, boolean>;
-    model?: { reachable: boolean; model: string; error?: string };
+    model_chain?: { model: string; role: string; reachable: boolean; error?: string }[];
     response_ms: number;
   } = {
     status: "ok",
@@ -45,26 +46,38 @@ export async function GET(req: NextRequest) {
       result.response_ms = Date.now() - start;
       return NextResponse.json(result, { status: 401, headers: { "Cache-Control": "no-store" } });
     }
-    try {
-      const Anthropic = (await import("@anthropic-ai/sdk")).default;
-      const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
-      // Minimal, near-zero-cost probe: 1 output token, tiny prompt, no image.
-      await client.messages.create({
-        model: AI_MODEL,
-        max_tokens: 1,
-        messages: [{ role: "user", content: "ping" }],
-      });
-      result.model = { reachable: true, model: AI_MODEL };
-    } catch (e) {
-      // Model unreachable/retired/auth-failed → report DEGRADED so the uptime
-      // monitor turns red and GitHub emails an alert.
-      result.status = "degraded";
-      result.model = {
-        reachable: false,
-        model: AI_MODEL,
-        error: e instanceof Error ? e.message.slice(0, 200) : String(e),
-      };
-    }
+
+    const Anthropic = (await import("@anthropic-ai/sdk")).default;
+    const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+
+    // Ping every model in the chain with a minimal, near-zero-cost probe.
+    const chain = await Promise.all(
+      MODEL_CHAIN.map(async (model, i) => {
+        const role = i === 0 ? "primary" : "fallback";
+        try {
+          await client.messages.create({
+            model,
+            max_tokens: 1,
+            messages: [{ role: "user", content: "ping" }],
+          });
+          return { model, role, reachable: true };
+        } catch (e) {
+          return {
+            model,
+            role,
+            reachable: false,
+            error: e instanceof Error ? e.message.slice(0, 150) : String(e),
+          };
+        }
+      })
+    );
+    result.model_chain = chain;
+
+    // Red (503 → uptime alert) only if the PRIMARY is down — that means the app
+    // is degraded and needs action. A broken fallback (primary still OK) stays
+    // green but is visible in model_chain for the monthly resilience review, to
+    // avoid alert fatigue while still surfacing a hole in the safety net.
+    if (!chain[0]?.reachable) result.status = "degraded";
   }
 
   result.response_ms = Date.now() - start;
