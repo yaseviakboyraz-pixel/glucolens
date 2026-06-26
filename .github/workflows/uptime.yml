@@ -26,3 +26,21 @@ jobs:
             echo "::error::GlucoLens Main App DOWN - Status: $RESPONSE"
             exit 1
           fi
+
+      # Active model canary: proves the AI model is actually reachable, not just
+      # that the app serves. This catches a retired/invalid model — the exact
+      # failure that took analyze 100% down while the checks above stayed green.
+      - name: Check AI Model (deep canary)
+        run: |
+          check() {
+            curl -s -o /dev/null -w "%{http_code}" --max-time 25 \
+              -H "x-health-token: ${{ secrets.HEALTH_CHECK_TOKEN }}" \
+              "https://glucolens-nine.vercel.app/api/health?deep=1"
+          }
+          R=$(check)
+          if [ "$R" != "200" ]; then sleep 5; R=$(check); fi
+          echo "Deep model canary status: $R"
+          if [ "$R" != "200" ]; then
+            echo "::error::GlucoLens AI MODEL UNREACHABLE - Status: $R (model may be retired/invalid or key failing)"
+            exit 1
+          fi
