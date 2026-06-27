@@ -9,6 +9,17 @@ import {
 } from "@/lib/storage";
 type Tab = "sleep" | "fasting" | "homa" | "trends";
 
+// Compute sleep duration (hours, 0.5 precision) from bed/wake "HH:MM", handling
+// the overnight wrap (wake time falls on the next day when it is ≤ bedtime).
+function computeSleepHours(bed: string, wake: string): number {
+  const [bh, bm] = bed.split(":").map(Number);
+  const [wh, wm] = wake.split(":").map(Number);
+  if ([bh, bm, wh, wm].some((n) => Number.isNaN(n))) return 0;
+  let mins = wh * 60 + wm - (bh * 60 + bm);
+  if (mins <= 0) mins += 24 * 60; // crossed midnight
+  return Math.round((mins / 60) * 2) / 2;
+}
+
 export function HealthTracker() {
   const [tab, setTab] = useState<Tab>("sleep");
   const [, forceUpdate] = useState(0);
@@ -22,6 +33,15 @@ export function HealthTracker() {
   const todaySleep = getTodaySleep();
   const avgSleep7 = getAvgSleepHours(7);
   const recentSleep = getSleepLogs().slice(0, 7);
+
+  // Auto-compute sleep duration from bed/wake times. Previously the hours were
+  // set only by the manual slider and ignored the times entirely — entering
+  // 23:00 → 06:30 did not yield 7.5h. Now the times drive the duration; the
+  // slider remains available as a manual fine-tune afterward.
+  useEffect(() => {
+    const h = computeSleepHours(sleepBed, sleepWake);
+    if (h > 0) setSleepHours(h);
+  }, [sleepBed, sleepWake]);
 
   function handleLogSleep() {
     logSleep(sleepHours, sleepQuality, sleepBed, sleepWake);
@@ -138,7 +158,7 @@ export function HealthTracker() {
           <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 space-y-3">
             <div className="flex justify-between items-center">
               <span className="text-white text-sm font-medium">Uyku Kaydet</span>
-              <span className="text-teal-400 font-bold">{sleepHours}s</span>
+              <span className="text-teal-400 font-bold">{sleepHours}s <span className="text-gray-600 text-xs font-normal">otomatik</span></span>
             </div>
             <input type="range" min="3" max="12" step="0.5"
               value={sleepHours} onChange={e => setSleepHours(parseFloat(e.target.value))}
