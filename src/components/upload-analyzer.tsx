@@ -10,6 +10,7 @@ import { t, type Lang } from "@/lib/i18n";
 import { saveMeal } from "@/lib/storage";
 import { fileToJpegBase64 } from "@/lib/image-prep";
 import type { MealAnalysis } from "@/lib/claude-vision";
+import { Camera, Link as LinkIcon, Clock, Scale, Barcode, Image as ImageIcon, Candy, Wheat, Egg, Droplet, Leaf, Flame } from "lucide-react";
 
 type Mode = "normal" | "pre_meal" | "compare" | "url";
 
@@ -372,11 +373,11 @@ export function UploadAnalyzer({ userType = "healthy", lang, onAnalysisComplete 
       {/* Mode pills — Nova Aurora */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(5,1fr)", gap: 5 }}>
         {([
-          { key: "normal",   icon: "ti-camera",   sub: "Analiz" },
-          { key: "url",      icon: "ti-link",     sub: "URL/QR" },
-          { key: "pre_meal", icon: "ti-clock",    sub: "Önce" },
-          { key: "compare",  icon: "ti-scale",    sub: "Karş." },
-        ] as { key: Mode; icon: string; sub: string }[]).map((m) => (
+          { key: "normal",   Icon: Camera,   sub: "Analiz" },
+          { key: "url",      Icon: LinkIcon, sub: "URL/QR" },
+          { key: "pre_meal", Icon: Clock,    sub: "Önce" },
+          { key: "compare",  Icon: Scale,    sub: "Karş." },
+        ] as { key: Mode; Icon: typeof Camera; sub: string }[]).map((m) => (
           <button key={m.key} onClick={() => { setMode(m.key); reset(); }}
             style={{
               padding: "8px 2px", borderRadius: 12, textAlign: "center",
@@ -386,7 +387,7 @@ export function UploadAnalyzer({ userType = "healthy", lang, onAnalysisComplete 
               color: mode === m.key ? "rgba(20,184,166,0.9)" : "var(--nova-text-3)",
               transition: "all 0.2s",
             }}>
-            <i className={`ti ${m.icon}`} style={{ fontSize: 16, display: "block", marginBottom: 3, color: mode === m.key ? "rgba(20,184,166,0.9)" : "var(--nova-text-3)" }} aria-hidden="true" />
+            <m.Icon size={16} strokeWidth={1.75} style={{ display: "block", margin: "0 auto 3px" }} color={mode === m.key ? "rgba(20,184,166,0.9)" : "var(--nova-text-3)"} aria-hidden="true" />
             {m.sub}
           </button>
         ))}
@@ -397,7 +398,7 @@ export function UploadAnalyzer({ userType = "healthy", lang, onAnalysisComplete 
             background: "var(--nova-surface)", border: "0.5px solid var(--nova-border)",
             color: "var(--nova-text-3)", transition: "all 0.2s",
           }}>
-          <i className="ti ti-barcode" style={{ fontSize: 16, display: "block", marginBottom: 3, color: "var(--nova-text-3)" }} aria-hidden="true" />
+          <Barcode size={16} strokeWidth={1.75} style={{ display: "block", margin: "0 auto 3px" }} color="var(--nova-text-3)" aria-hidden="true" />
           Barkod
         </button>
       </div>
@@ -664,7 +665,7 @@ export function UploadAnalyzer({ userType = "healthy", lang, onAnalysisComplete 
             ))}
             {/* Icon */}
             <div style={{ width: 48, height: 48, borderRadius: "50%", background: "var(--nova-purple-dim)", border: "1px solid var(--nova-purple-border)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-              <i className="ti ti-camera" style={{ fontSize: 22, color: "var(--nova-purple)" }} aria-hidden="true" />
+              <Camera size={22} strokeWidth={1.75} color="var(--nova-purple)" aria-hidden="true" />
             </div>
             <div style={{ fontSize: 12, color: "var(--nova-text-1)", fontWeight: 400, textAlign: "center" }}>
               {mode === "compare" ? "Meal A" : "Yemek Fotoğrafı Çek"}
@@ -676,12 +677,12 @@ export function UploadAnalyzer({ userType = "healthy", lang, onAnalysisComplete 
             <div style={{ display: "flex", gap: 8, width: "100%" }}>
               <button onClick={() => cameraRef.current?.click()}
                 style={{ flex: 1, padding: 9, borderRadius: 12, border: "0.5px solid var(--nova-purple-border)", background: "rgba(139,92,246,0.10)", color: "rgba(139,92,246,0.85)", fontSize: 9, cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", gap: 3 }}>
-                <i className="ti ti-camera" style={{ fontSize: 15 }} aria-hidden="true" />
+                <Camera size={15} strokeWidth={1.75} aria-hidden="true" />
                 Kamera
               </button>
               <button onClick={() => galleryRef.current?.click()}
                 style={{ flex: 1, padding: 9, borderRadius: 12, border: "0.5px solid var(--nova-border)", background: "var(--nova-surface)", color: "var(--nova-text-2)", fontSize: 9, cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", gap: 3 }}>
-                <i className="ti ti-photo" style={{ fontSize: 15 }} aria-hidden="true" />
+                <ImageIcon size={15} strokeWidth={1.75} aria-hidden="true" />
                 Galeri
               </button>
             </div>
@@ -700,7 +701,7 @@ export function UploadAnalyzer({ userType = "healthy", lang, onAnalysisComplete 
                 : (
                   <>
                     <div style={{ width: 48, height: 48, borderRadius: "50%", background: "rgba(139,92,246,0.10)", border: "1px solid var(--nova-purple-border)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                      <i className="ti ti-photo" style={{ fontSize: 22, color: "var(--nova-purple)" }} aria-hidden="true" />
+                      <ImageIcon size={22} strokeWidth={1.75} color="var(--nova-purple)" aria-hidden="true" />
                     </div>
                     <div style={{ fontSize: 12, color: "var(--nova-text-1)" }}>Meal B</div>
                     <button onClick={() => gallery2Ref.current?.click()}
@@ -997,20 +998,20 @@ export function UploadAnalyzer({ userType = "healthy", lang, onAnalysisComplete 
           {/* Stat grid — Nova Aurora 2-col with accent borders */}
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6 }}>
             {[
-              { label: tx.total_sugar, value: `${result.total_sugar_g}g`,      color: "rgba(239,68,68,0.85)",   accent: "rgba(239,68,68,0.55)",   icon: "ti-droplet",   iconBg: "rgba(239,68,68,0.07)" },
-              { label: tx.net_carbs,   value: `${result.total_net_carb_g}g`,    color: "rgba(59,130,246,0.85)",  accent: "rgba(59,130,246,0.55)",  icon: "ti-grain",    iconBg: "rgba(59,130,246,0.07)" },
-              { label: "Protein",      value: `${result.total_protein_g ?? 0}g`, color: "rgba(139,92,246,0.85)", accent: "rgba(139,92,246,0.55)", icon: "ti-bolt",     iconBg: "rgba(139,92,246,0.07)" },
-              { label: "Yağ",         value: `${result.total_fat_g ?? 0}g`,     color: "rgba(245,158,11,0.85)", accent: "rgba(245,158,11,0.55)", icon: "ti-flame",    iconBg: "rgba(245,158,11,0.07)" },
-              { label: tx.fiber,       value: `${result.total_fiber_g}g`,        color: "rgba(16,185,129,0.85)", accent: "rgba(16,185,129,0.55)", icon: "ti-leaf",     iconBg: "rgba(16,185,129,0.07)" },
-              { label: "kcal",         value: `${result.total_calories ?? 0}`,   color: "rgba(255,255,255,0.4)", accent: "rgba(255,255,255,0.12)", icon: "ti-fire",     iconBg: "rgba(255,255,255,0.04)" },
-            ].map((s) => (
+              { label: tx.total_sugar, value: `${result.total_sugar_g}g`,      color: "rgba(239,68,68,0.85)",   accent: "rgba(239,68,68,0.55)",   Icon: Candy,   iconBg: "rgba(239,68,68,0.07)" },
+              { label: tx.net_carbs,   value: `${result.total_net_carb_g}g`,    color: "rgba(59,130,246,0.85)",  accent: "rgba(59,130,246,0.55)",  Icon: Wheat,   iconBg: "rgba(59,130,246,0.07)" },
+              { label: "Protein",      value: `${result.total_protein_g ?? 0}g`, color: "rgba(139,92,246,0.85)", accent: "rgba(139,92,246,0.55)", Icon: Egg,     iconBg: "rgba(139,92,246,0.07)" },
+              { label: "Yağ",         value: `${result.total_fat_g ?? 0}g`,     color: "rgba(245,158,11,0.85)", accent: "rgba(245,158,11,0.55)", Icon: Droplet, iconBg: "rgba(245,158,11,0.07)" },
+              { label: tx.fiber,       value: `${result.total_fiber_g}g`,        color: "rgba(16,185,129,0.85)", accent: "rgba(16,185,129,0.55)", Icon: Leaf,    iconBg: "rgba(16,185,129,0.07)" },
+              { label: "kcal",         value: `${result.total_calories ?? 0}`,   color: "rgba(255,255,255,0.4)", accent: "rgba(255,255,255,0.12)", Icon: Flame,   iconBg: "rgba(255,255,255,0.04)" },
+              ].map((s) => (
               <div key={s.label} style={{
                 background: "var(--nova-surface)", border: "0.5px solid var(--nova-border)",
                 borderRadius: 12, padding: "8px 10px", display: "flex", alignItems: "center", gap: 8,
                 borderLeft: `2px solid ${s.accent}`,
               }}>
                 <div style={{ width: 24, height: 24, borderRadius: 7, background: s.iconBg, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                  <i className={`ti ${s.icon}`} style={{ fontSize: 13, color: s.color }} aria-hidden="true" />
+                  <s.Icon size={13} strokeWidth={1.75} color={s.color} aria-hidden="true" />
                 </div>
                 <div>
                   <div style={{ fontSize: 15, fontWeight: 600, color: s.color, lineHeight: 1 }}>{s.value}</div>
@@ -1113,7 +1114,7 @@ export function UploadAnalyzer({ userType = "healthy", lang, onAnalysisComplete 
           <p className="text-xs text-gray-600 text-center">{tx.disclaimer}</p>
 
           <button onClick={reset} className="nova-btn-primary">
-            <i className="ti ti-camera" aria-hidden="true" /> Yeni Analiz
+            <Camera size={16} strokeWidth={1.75} aria-hidden="true" style={{ display: "inline", verticalAlign: "-2px", marginRight: 4 }} /> Yeni Analiz
           </button>
         </div>
       )}
