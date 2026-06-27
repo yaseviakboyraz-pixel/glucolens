@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useRef, useCallback } from "react";
+import React, { useState, useRef, useCallback, useEffect } from "react";
 import { GlucoseMeter } from "./glucose-meter";
 import { BarcodeScanner } from "./barcode-scanner";
 import { canAnalyze, recordAnalysis } from "@/lib/subscriptions";
@@ -82,6 +82,7 @@ export function UploadAnalyzer({ userType = "healthy", lang, onAnalysisComplete 
 
   const [showPaywall, setShowPaywall] = useState(false);
   const [currentPlan, setCurrentPlan] = useState<"free" | "pro">("free");
+  const [elapsed, setElapsed] = useState(0);
   const [urlInput, setUrlInput] = useState("");
   const [urlLoading, setUrlLoading] = useState(false);
   const [menuResult, setMenuResult] = useState<null | { restaurant_name?: string; cuisine_type?: string; dishes: Array<{ name: string; name_tr?: string; estimated_gl: number; glucose_risk: string; notes: string; category: string; gi_estimate: number }>; top_safe: string[]; top_risky: string[]; meal_tips: string[] }>(null);
@@ -91,6 +92,17 @@ export function UploadAnalyzer({ userType = "healthy", lang, onAnalysisComplete 
   const gallery2Ref = useRef<HTMLInputElement>(null);
 
   const tx = t[lang];
+
+  // Elapsed-time tracker driving staged loading progress (perceived latency).
+  // The analysis is output-bound (~17s), so we can't make it truly fast — but a
+  // blind wait FEELS far longer than a wait that visibly advances through named
+  // steps (the "labor illusion"). This turns dead time into perceived motion.
+  useEffect(() => {
+    if (!loading && !urlLoading) { setElapsed(0); return; }
+    const t0 = Date.now();
+    const id = setInterval(() => setElapsed((Date.now() - t0) / 1000), 250);
+    return () => clearInterval(id);
+  }, [loading, urlLoading]);
 
   const handleFile = useCallback(async (file: File, slot: 1 | 2 = 1) => {
     // Accept anything that looks like an image — iOS HEIC often has an empty MIME type
@@ -314,6 +326,28 @@ export function UploadAnalyzer({ userType = "healthy", lang, onAnalysisComplete 
       localStorage.setItem(key, JSON.stringify(prev.slice(-200)));
     } catch { /* ignore storage errors */ }
   };
+
+  // Staged, elapsed-aware progress — calibrated to the real ~17s timeline. The
+  // bar advances with stages and rests at 95% (never a stuck 100%); the loader
+  // unmounts on completion, which is the real "done" signal.
+  const stages = lang === "tr"
+    ? [
+        { t: 0,   label: "Görüntü işleniyor",                pct: 12 },
+        { t: 2.5, label: "Yemekler tanımlanıyor",            pct: 32 },
+        { t: 6,   label: "Porsiyon ve besinler hesaplanıyor", pct: 52 },
+        { t: 10,  label: "Glisemik yük çıkarılıyor",          pct: 72 },
+        { t: 14,  label: "Öneriler hazırlanıyor",             pct: 88 },
+        { t: 19,  label: "Son rötuşlar",                      pct: 95 },
+      ]
+    : [
+        { t: 0,   label: "Processing image",                 pct: 12 },
+        { t: 2.5, label: "Identifying foods",                pct: 32 },
+        { t: 6,   label: "Calculating portions & nutrients", pct: 52 },
+        { t: 10,  label: "Computing glycemic load",          pct: 72 },
+        { t: 14,  label: "Preparing tips",                   pct: 88 },
+        { t: 19,  label: "Final touches",                    pct: 95 },
+      ];
+  const stage = stages.reduce((acc, s) => (elapsed >= s.t ? s : acc), stages[0]);
 
   return (
     <div className="max-w-xl mx-auto space-y-4">
@@ -816,12 +850,13 @@ export function UploadAnalyzer({ userType = "healthy", lang, onAnalysisComplete 
 
           {/* Bottom progress */}
           <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, padding: "0 16px 14px", zIndex: 6 }}>
-            <div style={{ fontSize: 8, color: "var(--ring-scan-txt)", letterSpacing: 2.5, fontFamily: "monospace", textAlign: "center", marginBottom: 8, animation: "ring-flicker 1.8s infinite" }}>
-              {mode === "url" ? "URL ANALİZ EDİLİYOR" : "ANALİZ EDİLİYOR"}
+            <div style={{ fontSize: 9, color: "var(--ring-scan-txt)", letterSpacing: 1, fontFamily: "monospace", textAlign: "center", marginBottom: 8, transition: "opacity 0.3s" }}>
+              {(mode === "url" && elapsed < 2.5) ? (lang === "tr" ? "Sayfa okunuyor" : "Reading page") : stage.label}
+              <span style={{ opacity: 0.5 }}>{".".repeat(1 + (Math.floor(elapsed * 2) % 3))}</span>
             </div>
             <div style={{ height: 2, borderRadius: 1, overflow: "hidden", background: "var(--ring-prog-track)", marginBottom: 6, position: "relative" }}>
               <div style={{ position: "absolute", inset: 0, background: "linear-gradient(90deg,transparent,var(--ring-shimmer),transparent)", animation: "ring-shimmer 2.2s ease-in-out infinite" }} />
-              <div style={{ height: 2, borderRadius: 1, background: "linear-gradient(90deg,var(--ring-gl),var(--ring-neural))", boxShadow: "0 0 8px var(--ring-gl)", animation: "ring-prog 4s ease-out infinite", position: "relative", zIndex: 1 }} />
+              <div style={{ height: 2, borderRadius: 1, background: "linear-gradient(90deg,var(--ring-gl),var(--ring-neural))", boxShadow: "0 0 8px var(--ring-gl)", width: `${stage.pct}%`, transition: "width 0.7s cubic-bezier(0.25,0.8,0.35,1)", position: "relative", zIndex: 1 }} />
             </div>
             <div style={{ display: "flex", justifyContent: "space-between" }}>
               <span style={{ fontSize: 6, fontFamily: "monospace", letterSpacing: 1, color: "var(--ring-prog-l)" }}>GL · SCAN</span>
