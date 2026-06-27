@@ -13,6 +13,7 @@ import { AICoach } from "./ai-coach";
 import { GoalTracker } from "./goal-tracker";
 import { WeeklyChallenge } from "./weekly-challenge";
 import type { Lang } from "@/lib/i18n";
+import { UtensilsCrossed } from "lucide-react";
 
 interface Props {
   profile: UserProfile;
@@ -337,7 +338,7 @@ export function HistoryDashboard({ profile, lang, onNewMeal, onEditProfile }: Pr
             />
             ) : (
             <div style={{ width: 44, height: 44, borderRadius: 10, background: "var(--nova-surface-hover)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-            <i className="ti ti-bowl-chopsticks" style={{ fontSize: 20, color: "var(--nova-text-4)" }} aria-hidden="true" />
+            <UtensilsCrossed size={20} strokeWidth={1.75} color="var(--nova-text-4)" aria-hidden="true" />
             </div>
             )}
             <div style={{ flex: 1, minWidth: 0 }}>
