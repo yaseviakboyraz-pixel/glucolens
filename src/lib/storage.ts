@@ -615,6 +615,12 @@ export function getAvgSleepHours(days = 7): number {
   return parseFloat((logs.reduce((s, l) => s + l.hours, 0) / logs.length).toFixed(1));
 }
 
+export function deleteSleepLog(id: string): void {
+  if (typeof window === "undefined") return;
+  const logs = getSleepLogs().filter(l => l.id !== id);
+  localStorage.setItem("glucolens_sleep", JSON.stringify(logs));
+}
+
 // ── FASTING TRACKING ──────────────────────────────
 
 export interface FastingSession {
@@ -667,6 +673,12 @@ export function getFastingElapsedHours(): number {
   return parseFloat(((Date.now() - active.startTime) / 3_600_000).toFixed(1));
 }
 
+export function deleteFastingSession(id: string): void {
+  if (typeof window === "undefined") return;
+  const sessions = getFastingSessions().filter(s => s.id !== id);
+  localStorage.setItem("glucolens_fasting", JSON.stringify(sessions));
+}
+
 // ── HOMA-IR CALCULATOR ────────────────────────────
 
 export interface HomaIRRecord {
@@ -701,6 +713,12 @@ export function getHomaIRHistory(): HomaIRRecord[] {
     const raw = localStorage.getItem("glucolens_homa");
     return raw ? JSON.parse(raw) : [];
   } catch { return []; }
+}
+
+export function deleteHomaIRRecord(id: string): void {
+  if (typeof window === "undefined") return;
+  const records = getHomaIRHistory().filter(r => r.id !== id);
+  localStorage.setItem("glucolens_homa", JSON.stringify(records));
 }
 
 // ── MONTHLY STATS ─────────────────────────────────

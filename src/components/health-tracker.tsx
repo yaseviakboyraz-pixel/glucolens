@@ -1,12 +1,13 @@
 "use client";
 import { useState, useEffect, useCallback } from "react";
 import {
-  logSleep, getTodaySleep, getAvgSleepHours, getSleepLogs,
+  logSleep, getTodaySleep, getAvgSleepHours, getSleepLogs, deleteSleepLog,
   startFasting, stopFasting, getActiveFasting, getFastingElapsedHours,
-  getFastingSessions, calculateHomaIR, getHomaIRHistory,
+  getFastingSessions, deleteFastingSession, calculateHomaIR, getHomaIRHistory, deleteHomaIRRecord,
   getLast7DaysStats, getLast30DaysStats,
   type SleepLog, type FastingSession, type HomaIRRecord,
 } from "@/lib/storage";
+import { Trash2 } from "lucide-react";
 type Tab = "sleep" | "fasting" | "homa" | "trends";
 
 // Compute sleep duration (hours, 0.5 precision) from bed/wake "HH:MM", handling
@@ -219,9 +220,15 @@ export function HealthTracker() {
                       {s.quality === "poor" ? "Kötü" : s.quality === "fair" ? "Orta" : s.quality === "good" ? "İyi" : "Harika"}
                     </span>
                   </div>
-                  <span className="text-gray-600 text-xs">
-                    {new Date(s.timestamp).toLocaleDateString("tr-TR", { month: "short", day: "numeric" })}
-                  </span>
+                  <div className="flex items-center gap-2.5">
+                    <span className="text-gray-600 text-xs">
+                      {new Date(s.timestamp).toLocaleDateString("tr-TR", { month: "short", day: "numeric" })}
+                    </span>
+                    <button onClick={() => { deleteSleepLog(s.id); refresh(); }} aria-label="Sil"
+                      className="text-gray-600 hover:text-red-400 transition-colors p-1 -mr-1">
+                      <Trash2 size={14} strokeWidth={1.75} />
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>
@@ -291,9 +298,15 @@ export function HealthTracker() {
                         {completed ? "✓ Tamamlandı" : "Erken bitirdi"} · {f.protocol}
                       </span>
                     </div>
-                    <span className="text-gray-600 text-xs">
-                      {new Date(f.startTime).toLocaleDateString("tr-TR", { month: "short", day: "numeric" })}
-                    </span>
+                    <div className="flex items-center gap-2.5">
+                      <span className="text-gray-600 text-xs">
+                        {new Date(f.startTime).toLocaleDateString("tr-TR", { month: "short", day: "numeric" })}
+                      </span>
+                      <button onClick={() => { deleteFastingSession(f.id); refresh(); }} aria-label="Sil"
+                        className="text-gray-600 hover:text-red-400 transition-colors p-1 -mr-1">
+                        <Trash2 size={14} strokeWidth={1.75} />
+                      </button>
+                    </div>
                   </div>
                 );
               })}
@@ -361,18 +374,24 @@ export function HealthTracker() {
           </div>
 
           {/* History */}
-          {homaHistory.length > 1 && (
+          {homaHistory.length > 0 && (
             <div className="space-y-1.5">
               <div className="text-xs text-gray-500 px-1">Geçmiş Ölçümler</div>
-              {homaHistory.slice(1, 6).map(h => (
+              {homaHistory.slice(0, 6).map(h => (
                 <div key={h.id} className="bg-gray-900 rounded-xl px-4 py-2.5 flex justify-between items-center border border-gray-800">
                   <div>
                     <span className="text-white text-sm font-bold">{h.homaIR}</span>
                     <span className={`text-xs ml-2 ${homaColor(h.interpretation)}`}>{homaLabel(h.interpretation)}</span>
                   </div>
-                  <span className="text-gray-600 text-xs">
-                    {new Date(h.timestamp).toLocaleDateString("tr-TR", { month: "short", day: "numeric" })}
-                  </span>
+                  <div className="flex items-center gap-2.5">
+                    <span className="text-gray-600 text-xs">
+                      {new Date(h.timestamp).toLocaleDateString("tr-TR", { month: "short", day: "numeric" })}
+                    </span>
+                    <button onClick={() => { deleteHomaIRRecord(h.id); refresh(); }} aria-label="Sil"
+                      className="text-gray-600 hover:text-red-400 transition-colors p-1 -mr-1">
+                      <Trash2 size={14} strokeWidth={1.75} />
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>
