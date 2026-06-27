@@ -85,6 +85,23 @@ export function HealthTracker() {
   const [homaResult, setHomaResult] = useState<HomaIRRecord | null>(null);
   const homaHistory = getHomaIRHistory();
 
+  // Live HOMA-IR preview — computed as the user types, without persisting. The
+  // result card reflects this instantly; the button saves it to history. Mirrors
+  // calculateHomaIR's formula and thresholds (kept in sync intentionally).
+  const homaPreview: HomaIRRecord | null = (() => {
+    const g = parseFloat(glucose);
+    const i = parseFloat(insulin);
+    if (!(g > 0) || !(i > 0)) return null;
+    const v = parseFloat(((g * i) / 405).toFixed(2));
+    return {
+      id: "preview", fastingGlucose_mgdl: g, fastingInsulin_uIUml: i,
+      homaIR: v,
+      interpretation: v < 1.9 ? "normal" : v < 2.9 ? "borderline" : "insulin_resistant",
+      timestamp: 0,
+    };
+  })();
+  const homaDisplay = homaPreview ?? homaResult;
+
   function handleCalculateHoma() {
     const g = parseFloat(glucose);
     const i = parseFloat(insulin);
@@ -310,21 +327,23 @@ export function HealthTracker() {
             <button onClick={handleCalculateHoma}
               disabled={!glucose || !insulin}
               className="w-full py-3 bg-teal-600 hover:bg-teal-500 disabled:opacity-40 text-white rounded-xl text-sm font-semibold transition-all">
-              🧬 Hesapla
+              📌 Geçmişe Kaydet
             </button>
           </div>
 
-          {homaResult && (
-            <div className={`rounded-xl border p-4 ${homaResult.interpretation === "normal" ? "bg-green-950/40 border-green-500/30" : homaResult.interpretation === "borderline" ? "bg-amber-950/40 border-amber-500/30" : "bg-red-950/40 border-red-500/30"}`}>
+          {homaDisplay && (
+            <div className={`rounded-xl border p-4 ${homaDisplay.interpretation === "normal" ? "bg-green-950/40 border-green-500/30" : homaDisplay.interpretation === "borderline" ? "bg-amber-950/40 border-amber-500/30" : "bg-red-950/40 border-red-500/30"}`}>
               <div className="flex justify-between items-center">
                 <div>
-                  <div className="text-white text-2xl font-bold">{homaResult.homaIR}</div>
-                  <div className={`text-sm font-medium ${homaColor(homaResult.interpretation)}`}>
-                    {homaLabel(homaResult.interpretation)}
+                  <div className="text-white text-2xl font-bold">{homaDisplay.homaIR}
+                    {homaPreview && <span className="text-gray-600 text-xs font-normal ml-1.5">anlık</span>}
+                  </div>
+                  <div className={`text-sm font-medium ${homaColor(homaDisplay.interpretation)}`}>
+                    {homaLabel(homaDisplay.interpretation)}
                   </div>
                 </div>
                 <div className="text-4xl">
-                  {homaResult.interpretation === "normal" ? "✅" : homaResult.interpretation === "borderline" ? "⚠️" : "🔴"}
+                  {homaDisplay.interpretation === "normal" ? "✅" : homaDisplay.interpretation === "borderline" ? "⚠️" : "🔴"}
                 </div>
               </div>
               <div className="mt-2 text-xs text-gray-500">
