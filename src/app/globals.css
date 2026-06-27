@@ -378,7 +378,7 @@ body {
   align-items: center;
   gap: 3px;
   font-size: 8px;
-  color: var(--nova-text-4);
+  color: var(--nova-text-2);
   letter-spacing: 0.5px;
   min-width: 44px;
   cursor: pointer;
@@ -388,10 +388,12 @@ body {
   background: none;
   border: none;
 }
-.nova-nav-item i { font-size: 21px; color: var(--nova-text-4); transition: color 0.2s; }
-.nova-nav-item.active { color: rgba(139,92,246,0.9); }
-.nova-nav-item.active i { color: rgba(139,92,246,0.9); }
-.nova-nav-dot { width: 3px; height: 3px; background: rgba(139,92,246,0.9); border-radius: 50%; }
+.nova-nav-item i { font-size: 21px; color: var(--nova-text-2); transition: color 0.2s; }
+.nova-nav-item svg { transition: color 0.2s, filter 0.2s, transform 0.2s; }
+.nova-nav-item.active { color: rgba(139,92,246,0.95); }
+.nova-nav-item.active i { color: rgba(139,92,246,0.95); }
+.nova-nav-item.active svg { filter: drop-shadow(0 0 5px rgba(139,92,246,0.45)); transform: translateY(-1px); }
+.nova-nav-dot { width: 3px; height: 3px; background: rgba(139,92,246,0.9); border-radius: 50%; box-shadow: 0 0 4px rgba(139,92,246,0.6); }
 
 /* FAB */
 .nova-fab {
