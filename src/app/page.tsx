@@ -19,8 +19,9 @@ import { initPushNotifications } from "@/lib/push-notifications";
 import { initNetworkMonitor, onNetworkChange, isOnline, type NetworkStatus } from "@/lib/network";
 import { getCurrentPlan, type PlanId } from "@/lib/subscriptions";
 import { AccountSettings } from "@/components/account-settings";
+import { ClipboardList, HeartPulse, Camera, LayoutGrid, GlassWater, Search, CalendarDays, ChevronRight } from "lucide-react";
 
-type View = "setup" | "analyze" | "history" | "ingredient" | "menu" | "drink" | "plan" | "health";
+type View = "setup" | "analyze" | "history" | "ingredient" | "menu" | "drink" | "plan" | "health" | "tools";
 
 export default function Home() {
   const [lang, setLang] = useState<Lang>("en");
@@ -226,6 +227,35 @@ export default function Home() {
             </div>
           </div>
         )}
+        {view === "tools" && (
+          <div style={{ padding: "16px 16px 8px" }}>
+            <div style={{ fontSize: 19, fontWeight: 600, color: "var(--nova-text-1)", marginBottom: 2 }}>
+              {lang === "tr" ? "Araçlar" : "Tools"}
+            </div>
+            <div style={{ fontSize: 12, color: "var(--nova-text-3)", marginBottom: 16 }}>
+              {lang === "tr" ? "Ek analiz araçların" : "Your extra analysis tools"}
+            </div>
+            <div style={{ display: "grid", gap: 10 }}>
+              {([
+                { v: "drink", Icon: GlassWater, color: "rgba(6,182,212,0.9)", title: lang === "tr" ? "İçecek Analizi" : "Drink Analysis", desc: lang === "tr" ? "İçeceklerin gizli şekerini ve glukoz etkisini ölç" : "Measure drinks' hidden sugar & glucose impact" },
+                { v: "ingredient", Icon: Search, color: "rgba(139,92,246,0.9)", title: lang === "tr" ? "Malzeme Arama" : "Ingredient Search", desc: lang === "tr" ? "5000+ yiyecekte tek bir malzemenin GI'sini bul" : "Look up any single food's GI across 5000+ items" },
+                { v: "plan", Icon: CalendarDays, color: "rgba(16,185,129,0.9)", title: lang === "tr" ? "Öğün Planı" : "Meal Plan", desc: lang === "tr" ? "Sana özel, düşük-glisemik günlük öğün planı" : "Your personalized low-glycemic daily plan" },
+              ] as { v: View; Icon: typeof GlassWater; color: string; title: string; desc: string }[]).map(({ v, Icon, color, title, desc }) => (
+                <button key={v} onClick={() => setView(v)}
+                  style={{ display: "flex", alignItems: "center", gap: 12, textAlign: "left", padding: 14, borderRadius: 16, background: "var(--nova-surface)", border: "0.5px solid var(--nova-border)", cursor: "pointer", width: "100%" }}>
+                  <div style={{ width: 42, height: 42, borderRadius: 12, background: "var(--nova-purple-dim)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                    <Icon size={20} strokeWidth={1.75} color={color} />
+                  </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 14, fontWeight: 600, color: "var(--nova-text-1)" }}>{title}</div>
+                    <div style={{ fontSize: 11, color: "var(--nova-text-3)", marginTop: 2, lineHeight: 1.4 }}>{desc}</div>
+                  </div>
+                  <ChevronRight size={16} strokeWidth={1.75} color="var(--nova-text-3)" />
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
         {view === "history" && profile && (
           <HistoryDashboard
             profile={profile}
@@ -241,42 +271,28 @@ export default function Home() {
       <nav className="nova-bnav" aria-label="Main navigation">
         <button className={`nova-nav-item ${view === "history" ? "active" : ""}`}
           onClick={() => setView("history")}>
-          <i className="ti ti-chart-bar" />
-          <span>Log</span>
+          <ClipboardList size={22} strokeWidth={1.75} />
+          <span>{lang === "tr" ? "Günlük" : "Log"}</span>
           {view === "history" && <div className="nova-nav-dot" />}
-        </button>
-
-        <button className={`nova-nav-item ${view === "drink" ? "active" : ""}`}
-          onClick={() => setView("drink")}>
-          <i className="ti ti-bottle" />
-          <span>Drink</span>
-          {view === "drink" && <div className="nova-nav-dot" />}
-        </button>
-
-        {/* FAB — Camera */}
-        <button className="nova-fab" onClick={() => setView("analyze")} aria-label="Analyze meal">
-          <i className="ti ti-camera" />
-        </button>
-
-        <button className={`nova-nav-item ${view === "ingredient" ? "active" : ""}`}
-          onClick={() => setView("ingredient")}>
-          <i className="ti ti-search" />
-          <span>Search</span>
-          {view === "ingredient" && <div className="nova-nav-dot" />}
-        </button>
-
-        <button className={`nova-nav-item ${view === "plan" ? "active" : ""}`}
-          onClick={() => setView("plan")}>
-          <i className="ti ti-heart-rate-monitor" />
-          <span>Plan</span>
-          {view === "plan" && <div className="nova-nav-dot" />}
         </button>
 
         <button className={`nova-nav-item ${view === "health" ? "active" : ""}`}
           onClick={() => setView("health")}>
-          <i className="ti ti-activity" />
-          <span>Health</span>
+          <HeartPulse size={22} strokeWidth={1.75} />
+          <span>{lang === "tr" ? "Sağlık" : "Health"}</span>
           {view === "health" && <div className="nova-nav-dot" />}
+        </button>
+
+        {/* FAB — Analyze (core action) */}
+        <button className="nova-fab" onClick={() => setView("analyze")} aria-label={lang === "tr" ? "Yemek analiz et" : "Analyze meal"}>
+          <Camera size={22} strokeWidth={1.75} color="rgba(139,92,246,0.85)" />
+        </button>
+
+        <button className={`nova-nav-item ${["tools","drink","ingredient","plan","menu"].includes(view) ? "active" : ""}`}
+          onClick={() => setView("tools")}>
+          <LayoutGrid size={22} strokeWidth={1.75} />
+          <span>{lang === "tr" ? "Araçlar" : "Tools"}</span>
+          {["tools","drink","ingredient","plan","menu"].includes(view) && <div className="nova-nav-dot" />}
         </button>
       </nav>
 
