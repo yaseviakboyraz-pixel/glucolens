@@ -19,7 +19,7 @@ import { initPushNotifications } from "@/lib/push-notifications";
 import { initNetworkMonitor, onNetworkChange, isOnline, type NetworkStatus } from "@/lib/network";
 import { getCurrentPlan, type PlanId } from "@/lib/subscriptions";
 import { AccountSettings } from "@/components/account-settings";
-import { ClipboardList, HeartPulse, Camera, LayoutGrid, GlassWater, Search, CalendarDays, ChevronRight } from "lucide-react";
+import { ClipboardList, HeartPulse, Camera, LayoutGrid, GlassWater, Search, CalendarDays, ChevronRight, Settings, User as UserIcon, Sun, Moon, Cloud, LineChart, Check } from "lucide-react";
 
 type View = "setup" | "analyze" | "history" | "ingredient" | "menu" | "drink" | "plan" | "health" | "tools";
 
@@ -146,18 +146,18 @@ export default function Home() {
 
           {/* Account / settings */}
           <button onClick={() => setShowAccount(true)} className="nova-hbtn" title="Account & data">
-            <i className="ti ti-settings" />
+            <Settings size={17} strokeWidth={1.75} color="var(--nova-text-2)" />
           </button>
           {/* Sign in (only when signed out) */}
           {!user && (
             <button onClick={() => setShowAuth(true)} className="nova-hbtn" title="Sign in">
-              <i className="ti ti-user" />
+              <UserIcon size={17} strokeWidth={1.75} color="var(--nova-text-2)" />
             </button>
           )}
 
           {/* Theme toggle */}
           <button onClick={toggleTheme} className="nova-hbtn" title="Toggle theme">
-            <i className={`ti ti-${theme === "dark" ? "sun" : "moon"}`} />
+            {theme === "dark" ? <Sun size={17} strokeWidth={1.75} color="var(--nova-text-2)" /> : <Moon size={17} strokeWidth={1.75} color="var(--nova-text-2)" />}
           </button>
 
           {/* Language */}
@@ -168,7 +168,7 @@ export default function Home() {
       {/* ── CLOUD SYNC INDICATOR ── */}
       {user && (
         <div style={{ padding: "4px 18px", display: "flex", alignItems: "center", gap: 6, borderBottom: "0.5px solid var(--nova-border)" }}>
-          <i className="ti ti-cloud-check" style={{ fontSize: 12, color: "rgba(16,185,129,0.6)" }} />
+          <Cloud size={13} strokeWidth={1.75} color="rgba(16,185,129,0.6)" />
           <span style={{ fontSize: 9, color: "var(--nova-text-4)", letterSpacing: 1 }}>{user.email}</span>
         </div>
       )}
@@ -185,12 +185,12 @@ export default function Home() {
                 </div>
                 <div style={{ display: "flex", gap: 6 }}>
                   {[
-                    { i: "ti-camera", t: lang === "tr" ? "Fotoğraf çek" : "Snap a photo" },
-                    { i: "ti-chart-line", t: lang === "tr" ? "Glukoz etkisini gör" : "See glucose impact" },
-                    { i: "ti-check", t: lang === "tr" ? "Daha iyi seç" : "Choose better" },
+                    { Icon: Camera, t: lang === "tr" ? "Fotoğraf çek" : "Snap a photo" },
+                    { Icon: LineChart, t: lang === "tr" ? "Glukoz etkisini gör" : "See glucose impact" },
+                    { Icon: Check, t: lang === "tr" ? "Daha iyi seç" : "Choose better" },
                   ].map((s, idx) => (
                     <div key={idx} style={{ flex: 1, textAlign: "center", padding: "8px 4px", background: "var(--nova-bg)", borderRadius: 10, border: "0.5px solid var(--nova-border)" }}>
-                      <i className={`ti ${s.i}`} style={{ fontSize: 16, color: "var(--nova-purple)", display: "block", marginBottom: 4 }} aria-hidden="true" />
+                      <s.Icon size={16} strokeWidth={1.75} color="var(--nova-purple)" style={{ display: "block", margin: "0 auto 4px" }} aria-hidden="true" />
                       <span style={{ fontSize: 8, color: "var(--nova-text-3)", lineHeight: 1.3 }}>{s.t}</span>
                     </div>
                   ))}
