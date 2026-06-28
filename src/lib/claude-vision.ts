@@ -291,7 +291,7 @@ export async function analyzeMealImage(
         const dbFiber = parseFloat(((db.fiber_per_100g * item.portion_g) / 100).toFixed(1));
         if (Math.abs(dbFiber - item.fiber_g) > 2) {
           item.fiber_g = dbFiber;
-          item.net_carb_g = parseFloat((item.carbohydrate_g - item.fiber_g).toFixed(1));
+          item.net_carb_g = Math.max(0, parseFloat((item.carbohydrate_g - item.fiber_g).toFixed(1)));
         }
       }
       item.glycemic_load = parseFloat(((db.gi * item.net_carb_g) / 100).toFixed(1));

@@ -79,8 +79,14 @@ Return ONLY this JSON (all values for the ${portion_g}g portion):
 
     const data = JSON.parse(jsonMatch[0]);
 
-    // Recalculate GL to ensure accuracy
-    data.gl = parseFloat(((data.gi * data.net_carb_g) / 100).toFixed(1));
+    // Recalculate GL defensively. The model can omit gi/net_carb_g; the old
+    // code then produced NaN here, and since (NaN < 10) and (NaN <= 20) are
+    // both false it mislabelled the food "high" risk and rendered "NaN" as GL.
+    const giNum = Math.max(0, Number(data.gi) || 0);
+    const netCarb = Math.max(0, Number(data.net_carb_g) || 0);
+    data.gi = giNum;
+    data.net_carb_g = netCarb;
+    data.gl = parseFloat(((giNum * netCarb) / 100).toFixed(1));
     data.glucose_risk = data.gl < 10 ? "low" : data.gl <= 20 ? "medium" : "high";
 
     return NextResponse.json({ success: true, estimate: data, ai_generated: true });

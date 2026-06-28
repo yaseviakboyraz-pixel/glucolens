@@ -61,12 +61,26 @@ export function lookupGI(name: string): GIEntry | null {
 
   // 2. Exact on core TR database (already covered above, skip)
 
-  // 3. Starts-with match (query is prefix of key)
+  // 3a. A database key is the leading whole word(s) of the query → most
+  //     specific (longest) key wins. The word-boundary check stops a short key
+  //     like "su" (water) from matching "sucuklu yumurta".
+  let leadKey = "";
   for (const key of Object.keys(GLOBAL_GI_DATABASE)) {
-    if (key.startsWith(q) || q.startsWith(key)) {
-      return GLOBAL_GI_DATABASE[key];
+    if (q.startsWith(key) && (q.length === key.length || q[key.length] === " ")) {
+      if (key.length > leadKey.length) leadKey = key;
     }
   }
+  if (leadKey) return GLOBAL_GI_DATABASE[leadKey];
+
+  // 3b. The query is the leading whole word(s) of a key → closest (shortest)
+  //     key wins, e.g. "elma" → "elma suyu" only when no exact "elma" exists.
+  let extKey = "";
+  for (const key of Object.keys(GLOBAL_GI_DATABASE)) {
+    if (key.startsWith(q) && key.length > q.length && key[q.length] === " ") {
+      if (!extKey || key.length < extKey.length) extKey = key;
+    }
+  }
+  if (extKey) return GLOBAL_GI_DATABASE[extKey];
 
   // 4. Best token-overlap match (must be > 0.5)
   let bestKey = "";
@@ -77,12 +91,20 @@ export function lookupGI(name: string): GIEntry | null {
   }
   if (bestScore >= 0.5 && bestKey) return GLOBAL_GI_DATABASE[bestKey];
 
-  // 5. Substring containment
+  // 5. Whole-word containment — every word of the key appears as a complete
+  //    token in the query (or vice-versa); longest match wins. Whole-word only,
+  //    so "bal" (honey) never matches "balık" and "su" never matches "sucuk".
+  const qWords = q.split(" ");
+  const qTokens = new Set(qWords);
+  let containKey = "";
   for (const key of Object.keys(GLOBAL_GI_DATABASE)) {
-    if (key.includes(q) || q.includes(key)) {
-      if (key.length > 2) return GLOBAL_GI_DATABASE[key];
-    }
+    if (key.length < 3) continue;
+    const kWords = key.split(" ");
+    const keyInQ = kWords.every(t => qTokens.has(t));
+    const qInKey = qWords.every(t => kWords.includes(t));
+    if ((keyInQ || qInKey) && key.length > containKey.length) containKey = key;
   }
+  if (containKey) return GLOBAL_GI_DATABASE[containKey];
 
   return null;
 }
