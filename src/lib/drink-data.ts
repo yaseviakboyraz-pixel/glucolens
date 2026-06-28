@@ -981,18 +981,25 @@ export const DRINK_DATABASE: Record<string, DrinkEntry> = {
 
 export function lookupDrink(name: string): DrinkEntry | null {
   const lower = name.toLowerCase().trim();
+  if (!lower) return null;
   if (DRINK_DATABASE[lower]) return DRINK_DATABASE[lower];
-  for (const [key, val] of Object.entries(DRINK_DATABASE)) {
-    if (lower.includes(key) || key.includes(lower)) return val;
+
+  // Whole-word matching only. The old raw substring test (`lower.includes(key)
+  // || key.includes(lower)`) let a short key like "su" (water, GI 0) match
+  // "meyve suyu" / "vişne suyu", silently labelling a sugary juice as water.
+  // Here every word of the key must appear as a COMPLETE token in the query
+  // (or vice-versa), so "su" never matches "suyu". Longest (most specific)
+  // key wins.
+  const qWords = lower.split(/\s+/);
+  const qSet = new Set(qWords);
+  let best = "";
+  for (const key of Object.keys(DRINK_DATABASE)) {
+    const kWords = key.split(/\s+/);
+    const keyInQuery = kWords.every(w => qSet.has(w));
+    const queryInKey = qWords.every(w => kWords.includes(w));
+    if ((keyInQuery || queryInKey) && key.length > best.length) best = key;
   }
-  // Word-level
-  const words = lower.split(/\s+/).filter(w => w.length > 3);
-  for (const word of words) {
-    for (const [key, val] of Object.entries(DRINK_DATABASE)) {
-      if (key.includes(word)) return val;
-    }
-  }
-  return null;
+  return best ? DRINK_DATABASE[best] : null;
 }
 
 export function calculateDrinkGL(drink: DrinkEntry, servingMl?: number): number {

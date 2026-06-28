@@ -88,7 +88,13 @@ export async function rateLimit(key: string, limit: number, windowSec: number): 
 
 /** Build a per-client key from the request IP, scoped to an endpoint. */
 export function clientKey(req: Request, scope: string): string {
+  // Prefer x-real-ip: on Vercel this is set by the platform to the true client
+  // IP and cannot be overwritten by the caller. x-forwarded-for's left-most
+  // entry is client-supplied (Vercel appends the real IP to the right), so a
+  // caller could spoof it to rotate keys and evade the limiter. Fall back to
+  // x-forwarded-for only when x-real-ip is absent (e.g. local/non-Vercel).
+  const realIp = (req.headers.get("x-real-ip") || "").trim();
   const fwd = req.headers.get("x-forwarded-for") || "";
-  const ip = fwd.split(",")[0].trim() || req.headers.get("x-real-ip") || "unknown";
+  const ip = realIp || fwd.split(",")[0].trim() || "unknown";
   return `rl:${scope}:${ip}`;
 }

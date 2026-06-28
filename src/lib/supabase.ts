@@ -40,8 +40,11 @@ export async function getOwnerId(): Promise<{ userId: string | null; deviceId: s
   };
 }
 
-// Upload meal photo to Supabase Storage
-// Uses signed URLs — photos are private, not public
+// Upload meal photo to Supabase Storage.
+// Stores the file under `${userId}/${mealId}.jpg` (matches the per-user-folder
+// RLS policy) and returns the STABLE storage PATH — NOT a signed URL. Signed
+// URLs expire (1h), so persisting one would make the photo unviewable later;
+// callers mint a fresh signed URL at display time via signMealPhotoPaths().
 export async function uploadMealPhoto(base64: string, mealId: string): Promise<string | null> {
   try {
     const userId = await getUserId();
@@ -59,16 +62,29 @@ export async function uploadMealPhoto(base64: string, mealId: string): Promise<s
       return null;
     }
 
-    // Return signed URL (1 hour) instead of public URL
-    const { data: signedData, error: signErr } = await supabase.storage
-      .from("meal-photos")
-      .createSignedUrl(filename, 3600);
-
-    if (signErr || !signedData) return null;
-    return signedData.signedUrl;
+    return filename; // stable path, signed on demand at display time
   } catch (err) {
     if (process.env.NODE_ENV === "development") console.error("uploadMealPhoto error:", err);
     return null;
+  }
+}
+
+// Mint fresh signed URLs (1h) for a batch of stored photo paths. Returns a
+// map of path -> signedUrl; paths that fail are simply omitted.
+export async function signMealPhotoPaths(paths: string[]): Promise<Record<string, string>> {
+  if (!paths.length) return {};
+  try {
+    const { data, error } = await supabase.storage
+      .from("meal-photos")
+      .createSignedUrls(paths, 3600);
+    if (error || !data) return {};
+    const out: Record<string, string> = {};
+    for (const d of data) {
+      if (d.signedUrl && d.path) out[d.path] = d.signedUrl;
+    }
+    return out;
+  } catch {
+    return {};
   }
 }
 

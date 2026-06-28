@@ -2,7 +2,7 @@
 // Hybrid: localStorage (instant) + Supabase (cloud sync)
 // Security: no console.error in production, localStorage quota monitoring
 
-import { supabase, getDeviceId, getOwnerId, uploadMealPhoto } from "./supabase";
+import { supabase, getDeviceId, getOwnerId, uploadMealPhoto, signMealPhotoPaths } from "./supabase";
 import type { MealAnalysis } from "./claude-vision";
 
 // Dev-only logger
@@ -265,6 +265,19 @@ export async function syncFromCloud(): Promise<{
           glucose_curve_description: "",
         },
       }));
+
+      // Cloud photo_url holds a stable storage PATH (new scheme) — mint fresh
+      // signed URLs for display, since a persisted signed URL would have
+      // expired. Legacy rows may hold a full http URL; those are left as-is.
+      const photoPaths = cloudMeals
+        .map(c => c.photo_url)
+        .filter((p): p is string => !!p && !p.startsWith("http"));
+      if (photoPaths.length) {
+        const signed = await signMealPhotoPaths(photoPaths);
+        for (const c of cloudMeals) {
+          if (c.photo_url && signed[c.photo_url]) c.photo_url = signed[c.photo_url];
+        }
+      }
 
       // Merge: keep local meals not yet in the cloud (e.g. logged offline) so a
       // cloud pull never erases them. A synced meal shares an exact ms timestamp
