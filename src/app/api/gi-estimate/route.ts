@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
 import { rateLimit, clientKey } from "@/lib/rate-limit";
-import { AI_MODEL } from "@/lib/ai-model";
+import { withModelFallback } from "@/lib/ai-client";
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
@@ -66,12 +66,14 @@ Return ONLY this JSON (all values for the ${portion_g}g portion):
   "source": "GI Database|Claude AI Estimate|Lab Verified"
 }`;
 
-    const response = await client.messages.create({
-      model: AI_MODEL,
-      max_tokens: 800,
-      system: GI_SYSTEM,
-      messages: [{ role: "user", content: prompt }],
-    });
+    const { response } = await withModelFallback((model) =>
+      client.messages.create({
+        model,
+        max_tokens: 800,
+        system: GI_SYSTEM,
+        messages: [{ role: "user", content: prompt }],
+      })
+    );
 
     const text = response.content[0].type === "text" ? response.content[0].text : "";
     const jsonMatch = text.match(/\{[\s\S]*\}/);

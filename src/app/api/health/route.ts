@@ -38,6 +38,13 @@ export async function GET(req: NextRequest) {
     response_ms: 0,
   };
 
+  // A deploy missing a critical env is unhealthy even on the shallow check, so
+  // uptime monitoring catches a broken configuration without needing the paid
+  // deep canary. (The deep canary additionally proves the models are reachable.)
+  if (!result.checks.anthropic_key || !result.checks.supabase_url || !result.checks.supabase_key) {
+    result.status = "degraded";
+  }
+
   // Active model canary — only when explicitly requested AND authorized.
   if (deep) {
     const configured = process.env.HEALTH_CHECK_TOKEN;

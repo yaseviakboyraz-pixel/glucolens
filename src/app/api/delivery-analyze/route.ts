@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
 import { rateLimit, clientKey } from "@/lib/rate-limit";
-import { AI_MODEL } from "@/lib/ai-model";
+import { withModelFallback } from "@/lib/ai-client";
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
@@ -147,12 +147,14 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    const response = await client.messages.create({
-      model: AI_MODEL,
-      max_tokens: 4000,
-      system: DELIVERY_SYSTEM_PROMPT + profileNote + platformHint,
-      messages,
-    });
+    const { response } = await withModelFallback((model) =>
+      client.messages.create({
+        model,
+        max_tokens: 4000,
+        system: DELIVERY_SYSTEM_PROMPT + profileNote + platformHint,
+        messages,
+      })
+    );
 
     let raw = (response.content[0] as { type: string; text: string }).text.trim();
     if (raw.startsWith("```")) {

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
 import { rateLimit, clientKey } from "@/lib/rate-limit";
-import { AI_MODEL } from "@/lib/ai-model";
+import { withModelFallback } from "@/lib/ai-client";
 
 export const maxDuration = 60;
 
@@ -74,12 +74,14 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "No content provided" }, { status: 400 });
     }
 
-    const response = await client.messages.create({
-      model: AI_MODEL,
-      max_tokens: 3000,
-      system: MENU_SYSTEM + profileNote,
-      messages: [{ role: "user", content: messageContent }],
-    });
+    const { response } = await withModelFallback((model) =>
+      client.messages.create({
+        model,
+        max_tokens: 3000,
+        system: MENU_SYSTEM + profileNote,
+        messages: [{ role: "user", content: messageContent }],
+      })
+    );
 
     let raw = (response.content[0] as { type: string; text: string }).text.trim();
     if (raw.startsWith("```")) {

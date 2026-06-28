@@ -56,7 +56,7 @@ export const GI_DATABASE: Record<string, GIEntry> = {
   "whole wheat flour": { gi: 60, confidence: 0.88, source: "Sydney GI DB", category: "flour" },
   "nohut unu": { gi: 35, confidence: 0.85, source: "Sydney GI DB", carb_per_100g: 58, fiber_per_100g: 10.8, protein_per_100g: 22, cal_per_100g: 387, category: "flour" },
   "chickpea flour": { gi: 35, confidence: 0.85, source: "Sydney GI DB", category: "flour" },
-  "badem unu": { gi: 1, confidence: 0.90, source: "Sydney GI DB", carb_per_100g: 10, fiber_per_100g: 12.5, protein_per_100g: 21, fat_per_100g: 50, cal_per_100g: 579, category: "flour" },
+  "badem unu": { gi: 1, confidence: 0.90, source: "Sydney GI DB", carb_per_100g: 21.6, fiber_per_100g: 10.4, protein_per_100g: 21, fat_per_100g: 50, cal_per_100g: 579, category: "flour" },
   "almond flour": { gi: 1, confidence: 0.90, source: "Sydney GI DB", category: "flour" },
   "hindistan cevizi unu": { gi: 51, confidence: 0.82, source: "Sydney GI DB", carb_per_100g: 60, fiber_per_100g: 39, cal_per_100g: 466, category: "flour" },
   "coconut flour": { gi: 51, confidence: 0.82, source: "Sydney GI DB", category: "flour" },

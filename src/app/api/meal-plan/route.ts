@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
 import { rateLimit, clientKey } from "@/lib/rate-limit";
-import { AI_MODEL } from "@/lib/ai-model";
+import { withModelFallback } from "@/lib/ai-client";
 
 export const maxDuration = 60;
 
@@ -86,12 +86,14 @@ ${langNote}
 ${prefNote}
 Make it realistic and culturally relevant. Include a shopping list.`;
 
-    const response = await client.messages.create({
-      model: AI_MODEL,
-      max_tokens: 3000,
-      system: SYSTEM,
-      messages: [{ role: "user", content: prompt }],
-    });
+    const { response } = await withModelFallback((model) =>
+      client.messages.create({
+        model,
+        max_tokens: 3000,
+        system: SYSTEM,
+        messages: [{ role: "user", content: prompt }],
+      })
+    );
 
     let raw = (response.content[0] as { type: string; text: string }).text.trim();
     if (raw.startsWith("```")) {
