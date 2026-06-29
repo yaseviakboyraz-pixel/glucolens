@@ -110,7 +110,7 @@ export default function Home() {
   }
 
   if (showAuth) {
-    return <AuthScreen onSuccess={() => { setShowAuth(false); refreshProfile(); }} />;
+    return <AuthScreen lang={lang} onSuccess={() => { setShowAuth(false); refreshProfile(); }} />;
   }
 
   if (view === "setup") {
