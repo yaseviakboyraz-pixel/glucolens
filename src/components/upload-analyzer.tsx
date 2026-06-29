@@ -355,6 +355,7 @@ export function UploadAnalyzer({ userType = "healthy", lang, onAnalysisComplete 
       {/* Paywall */}
       {showPaywall && (
         <Paywall
+          lang={lang}
           onClose={() => setShowPaywall(false)}
           onUpgrade={(plan) => { setCurrentPlan(plan); setShowPaywall(false); }}
         />

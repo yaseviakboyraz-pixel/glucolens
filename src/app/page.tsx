@@ -299,6 +299,7 @@ export default function Home() {
       {/* Paywall */}
       {showPaywall && (
         <Paywall
+          lang={lang}
           onClose={() => setShowPaywall(false)}
           onUpgrade={(plan) => { setCurrentPlan(plan); setShowPaywall(false); }}
         />
