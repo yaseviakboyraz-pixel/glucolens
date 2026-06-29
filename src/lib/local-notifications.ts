@@ -3,16 +3,19 @@
 // Uses @capacitor/local-notifications. NATIVE ONLY — every function no-ops on
 // web (Capacitor.isNativePlatform() === false), so it is safe to call anywhere.
 //
-// Scope: the TIME-BASED reminders the user configures in NotificationSettings.
-//   - meal reminders : daily, repeating, at each configured HH:MM
-//   - water reminders: daily, repeating, every N hours across waking hours
+// Two kinds of notification live here:
 //
-// Event-driven alerts (high-GL spike, fasting complete, weekly report) are NOT
-// scheduled here — those fire from their own app events and are a separate hook.
+//   TIME-BASED (managed by syncReminders, driven by saved NotificationSettings)
+//     - meal reminders : daily, at each configured HH:MM
+//     - water reminders: daily, every N hours across waking hours
+//     - weekly report  : weekly, Monday morning
 //
-// Why this exists: previously push-notifications.ts#scheduleMealReminder was an
-// empty stub, so the reminder times the user set in Settings did nothing. This
-// module makes those settings actually schedule device notifications.
+//   EVENT-BASED (fired by app logic via storage.ts hooks)
+//     - fasting complete: one-shot, scheduled when a fast starts (start+target),
+//                         cancelled when the fast is stopped early
+//     - GL spike        : immediate, when a logged meal exceeds the GL target
+//
+// All display requires the OS notification permission (requestLocalNotifPermission).
 
 import { Capacitor } from "@capacitor/core";
 
@@ -21,18 +24,29 @@ export interface ReminderSettings {
   mealReminderTimes: string[]; // ["08:00", "13:00", ...]
   waterReminder: boolean;
   waterReminderInterval: number; // hours
+  weeklyReport: boolean;
 }
 
-// Stable, partitioned ID ranges so each category can be cancelled/replaced
-// without disturbing the others (or any unrelated notifications).
-const MEAL_ID_BASE = 1000; // 1000..1099
-const WATER_ID_BASE = 2000; // 2000..2099
+// Partitioned ID ranges so each category can be cancelled/replaced independently
+// without disturbing the others (or any unrelated notification).
+const MEAL_ID_BASE = 1000; // 1000..1099 (one per configured time)
+const WATER_ID_BASE = 2000; // 2000..2099 (one per interval slot)
+const WEEKLY_ID = 3000; // single weekly report
+const FASTING_ID = 4000; // single one-shot fast-complete
+const GLSPIKE_ID_BASE = 5000; // 5000..5009, rotated so rapid spikes don't overwrite
+
 const WATER_START_HOUR = 9; // first water ping of the day
 const WATER_END_HOUR = 22; // last water ping of the day
+const WEEKLY_HOUR = 9; // Monday 09:00
+const WEEKLY_MONDAY = 2; // Capacitor weekday: 1=Sun, 2=Mon … 7=Sat
 
-function isOurId(id: number): boolean {
+// syncReminders owns meal + water + weekly. Fasting and GL-spike are managed by
+// their own event hooks, so they are deliberately NOT matched here (a settings
+// re-sync must never cancel an in-flight fast notification).
+function isManagedBySync(id: number): boolean {
   return (id >= MEAL_ID_BASE && id < MEAL_ID_BASE + 100) ||
-         (id >= WATER_ID_BASE && id < WATER_ID_BASE + 100);
+         (id >= WATER_ID_BASE && id < WATER_ID_BASE + 100) ||
+         id === WEEKLY_ID;
 }
 
 export function isLocalNotifAvailable(): boolean {
@@ -64,7 +78,13 @@ export async function localNotifGranted(): Promise<boolean> {
   }
 }
 
-// Cancel every reminder THIS module manages, then re-schedule from the current
+type ScheduleOn = { weekday?: number; hour: number; minute: number };
+type Notif = {
+  id: number; title: string; body: string;
+  schedule: { on: ScheduleOn; allowWhileIdle: boolean };
+};
+
+// Cancel every reminder syncReminders manages, then re-schedule from the current
 // settings. Idempotent: call it whenever settings change (or on app start) and
 // the device's pending notifications will always match the UI exactly — no
 // duplicates, no stale times.
@@ -75,17 +95,14 @@ export async function syncReminders(s: ReminderSettings): Promise<void> {
 
     // 1. Clear our previously-scheduled reminders (leave others untouched).
     const pending = await LocalNotifications.getPending();
-    const ours = pending.notifications.filter(n => isOurId(n.id));
+    const ours = pending.notifications.filter(n => isManagedBySync(n.id));
     if (ours.length) {
       await LocalNotifications.cancel({ notifications: ours.map(n => ({ id: n.id })) });
     }
 
-    const toSchedule: Array<{
-      id: number; title: string; body: string;
-      schedule: { on: { hour: number; minute: number }; allowWhileIdle: boolean };
-    }> = [];
+    const toSchedule: Notif[] = [];
 
-    // 2. Meal reminders — daily repeating at each configured time. Using an
+    // 2. Meal reminders — daily repeating at each configured time. An
     //    `on: { hour, minute }` schedule (no date) repeats every day.
     if (s.mealReminder) {
       s.mealReminderTimes.slice(0, 100).forEach((t, i) => {
@@ -113,11 +130,75 @@ export async function syncReminders(s: ReminderSettings): Promise<void> {
       }
     }
 
+    // 4. Weekly report — Monday morning, repeating weekly.
+    if (s.weeklyReport) {
+      toSchedule.push({
+        id: WEEKLY_ID,
+        title: "📊 Haftalık raporun hazır",
+        body: "Geçen haftanın glisemik yük özetine göz at.",
+        schedule: { on: { weekday: WEEKLY_MONDAY, hour: WEEKLY_HOUR, minute: 0 }, allowWhileIdle: true },
+      });
+    }
+
     if (toSchedule.length) {
       await LocalNotifications.schedule({ notifications: toSchedule });
     }
   } catch (e) {
     if (process.env.NODE_ENV === "development") console.error("syncReminders error:", e);
+  }
+}
+
+// One-shot "fast complete" notification, scheduled when a fast starts. Always
+// clears any previous one first; a disabled setting or past time just clears.
+export async function scheduleFastingComplete(endMs: number, enabled: boolean): Promise<void> {
+  if (!Capacitor.isNativePlatform()) return;
+  try {
+    const { LocalNotifications } = await import("@capacitor/local-notifications");
+    await LocalNotifications.cancel({ notifications: [{ id: FASTING_ID }] });
+    if (!enabled || endMs <= Date.now()) return;
+    await LocalNotifications.schedule({
+      notifications: [{
+        id: FASTING_ID,
+        title: "⏱ Oruç tamamlandı",
+        body: "Hedefine ulaştın — orucunu bitirebilirsin. 🎉",
+        schedule: { at: new Date(endMs), allowWhileIdle: true },
+      }],
+    });
+  } catch (e) {
+    if (process.env.NODE_ENV === "development") console.error("scheduleFastingComplete error:", e);
+  }
+}
+
+export async function cancelFastingComplete(): Promise<void> {
+  if (!Capacitor.isNativePlatform()) return;
+  try {
+    const { LocalNotifications } = await import("@capacitor/local-notifications");
+    await LocalNotifications.cancel({ notifications: [{ id: FASTING_ID }] });
+  } catch (e) {
+    if (process.env.NODE_ENV === "development") console.error("cancelFastingComplete error:", e);
+  }
+}
+
+// Rotated across a small id pool so several spikes in a row each show instead of
+// overwriting one another.
+let glSpikeSlot = 0;
+
+// Immediate alert when a logged meal's GL exceeds the user's target. `enabled`
+// is the user's glSpikeAlert setting; the caller also decides the threshold.
+export async function notifyGLSpike(gl: number, target: number, enabled: boolean): Promise<void> {
+  if (!Capacitor.isNativePlatform() || !enabled) return;
+  try {
+    const { LocalNotifications } = await import("@capacitor/local-notifications");
+    await LocalNotifications.schedule({
+      notifications: [{
+        id: GLSPIKE_ID_BASE + (glSpikeSlot++ % 10),
+        title: "🔴 Yüksek glisemik yük",
+        body: `Bu öğünün GL'si ${gl} — hedefin (${target}) üzerinde. Kısa bir yürüyüş veya su yardımcı olabilir.`,
+        schedule: { at: new Date(Date.now() + 1000), allowWhileIdle: true },
+      }],
+    });
+  } catch (e) {
+    if (process.env.NODE_ENV === "development") console.error("notifyGLSpike error:", e);
   }
 }
 
@@ -127,10 +208,11 @@ export async function cancelAllReminders(): Promise<void> {
   try {
     const { LocalNotifications } = await import("@capacitor/local-notifications");
     const pending = await LocalNotifications.getPending();
-    const ours = pending.notifications.filter(n => isOurId(n.id));
-    if (ours.length) {
-      await LocalNotifications.cancel({ notifications: ours.map(n => ({ id: n.id })) });
-    }
+    const ids = pending.notifications
+      .filter(n => isManagedBySync(n.id) || n.id === FASTING_ID ||
+                   (n.id >= GLSPIKE_ID_BASE && n.id < GLSPIKE_ID_BASE + 10))
+      .map(n => ({ id: n.id }));
+    if (ids.length) await LocalNotifications.cancel({ notifications: ids });
   } catch (e) {
     if (process.env.NODE_ENV === "development") console.error("cancelAllReminders error:", e);
   }

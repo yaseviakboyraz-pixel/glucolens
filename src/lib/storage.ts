@@ -10,6 +10,18 @@ const devLog = process.env.NODE_ENV === "development"
   ? (msg: string, ...args: unknown[]) => console.error(msg, ...args)
   : () => {};
 
+// Read the user's saved notification settings (same store the settings UI uses).
+// Missing keys fall back to the UI defaults (alerts on); actual display is still
+// gated by the OS permission, so defaults-on never surprises the user.
+function getNotifSettings(): { glSpikeAlert: boolean; fastingAlert: boolean } {
+  const defaults = { glSpikeAlert: true, fastingAlert: true };
+  if (typeof window === "undefined") return defaults;
+  try {
+    const raw = localStorage.getItem("glucolens_notif_settings");
+    return raw ? { ...defaults, ...JSON.parse(raw) } : defaults;
+  } catch { return defaults; }
+}
+
 // Stable unique id — uses crypto.randomUUID in secure contexts, falling back to
 // a timestamp+random scheme so it never throws in older runtimes.
 function newId(): string {
@@ -150,6 +162,21 @@ export function saveMeal(analysis: MealAnalysis, mealType = "other", photo_base6
   // Store without photo in localStorage to save space
   safeLocalStorageSet("glucolens_meals", JSON.stringify(meals.map(m => ({ ...m, photo_base64: undefined }))));
   syncMealToCloud(record, photo_base64).catch(err => devLog("[storage] syncMeal failed", err));
+
+  // GL spike alert — fire an immediate notification when a logged (non-pre-meal)
+  // meal's GL exceeds the user's per-meal target. Wrapped so a notification
+  // failure can never break the save. Native-only; no-op on web.
+  try {
+    if (!record.isPreMeal && getNotifSettings().glSpikeAlert) {
+      const mealTarget = getGLTargets(getProfile()?.userType ?? "healthy").meal;
+      if (record.analysis.total_glycemic_load > mealTarget) {
+        import("./local-notifications")
+          .then(m => m.notifyGLSpike(record.analysis.total_glycemic_load, mealTarget, true))
+          .catch(() => {});
+      }
+    }
+  } catch { /* notifications must never break a meal save */ }
+
   return record;
 }
 
@@ -664,6 +691,16 @@ export function startFasting(targetHours: number, protocol: FastingSession["prot
   sessions.unshift(session);
   if (sessions.length > 90) sessions.splice(90);
   localStorage.setItem("glucolens_fasting", JSON.stringify(sessions));
+
+  // Schedule the one-shot "fast complete" notification at start + target.
+  // Respects the user's fastingAlert setting; native-only, no-op on web.
+  import("./local-notifications")
+    .then(m => m.scheduleFastingComplete(
+      session.startTime + targetHours * 3_600_000,
+      getNotifSettings().fastingAlert,
+    ))
+    .catch(() => {});
+
   return session;
 }
 
@@ -674,6 +711,8 @@ export function stopFasting(): void {
     active.endTime = Date.now();
     localStorage.setItem("glucolens_fasting", JSON.stringify(sessions));
   }
+  // Cancel any pending "fast complete" notification (fast ended, early or not).
+  import("./local-notifications").then(m => m.cancelFastingComplete()).catch(() => {});
 }
 
 export function getActiveFasting(): FastingSession | null {
