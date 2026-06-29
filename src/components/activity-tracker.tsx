@@ -12,6 +12,11 @@ const ACTIVITY_ICONS: Record<ActivityRecord["type"], string> = {
   swimming: "🏊", gym: "🏋️", other: "⚡",
 };
 
+const ACTIVITY_LABELS: Record<ActivityRecord["type"], string> = {
+  walking: "Yürüyüş", running: "Koşu", cycling: "Bisiklet",
+  swimming: "Yüzme", gym: "Spor Salonu", other: "Diğer",
+};
+
 const DURATION_OPTIONS = [15, 20, 30, 45, 60, 90];
 
 export function ActivityTracker() {
@@ -60,13 +65,13 @@ export function ActivityTracker() {
     <div className="bg-gray-900 rounded-xl p-4 border border-gray-800">
       <div className="flex justify-between items-center mb-3">
         <h3 className="text-sm font-medium text-gray-400 flex items-center gap-2">
-          🏃 Activity Today
+          🏃 Bugünkü Aktivite
         </h3>
         <div className="flex items-center gap-2">
           {totalGLReduction > 0 && (
             <span className="text-xs text-green-400">-{totalGLReduction} GL</span>
           )}
-          <span className="text-xs text-gray-500">{todayMin} min</span>
+          <span className="text-xs text-gray-500">{todayMin} dk</span>
         </div>
       </div>
 
@@ -77,26 +82,26 @@ export function ActivityTracker() {
             <span className="text-xs text-gray-400 flex items-center gap-1">
               ❤️ Apple Health
             </span>
-            {healthLoading && <span className="text-xs text-gray-600 animate-pulse">Loading...</span>}
+            {healthLoading && <span className="text-xs text-gray-600 animate-pulse">Yükleniyor...</span>}
           </div>
           {healthData ? (
             <div className="grid grid-cols-3 gap-2">
               <div className="text-center">
                 <div className="text-white font-bold">{healthData.steps.toLocaleString()}</div>
-                <div className="text-xs text-gray-600">Steps</div>
+                <div className="text-xs text-gray-600">Adım</div>
               </div>
               <div className="text-center">
                 <div className="text-white font-bold">{healthData.calories}</div>
-                <div className="text-xs text-gray-600">Calories</div>
+                <div className="text-xs text-gray-600">Kalori</div>
               </div>
               <div className="text-center">
                 <div className="text-green-400 font-bold">-{healthGLReduction}</div>
-                <div className="text-xs text-gray-600">GL saved</div>
+                <div className="text-xs text-gray-600">GL kazancı</div>
               </div>
             </div>
           ) : (
             !healthLoading && (
-              <p className="text-xs text-gray-600">No health data available today</p>
+              <p className="text-xs text-gray-600">Bugün sağlık verisi yok</p>
             )
           )}
         </div>
@@ -108,7 +113,7 @@ export function ActivityTracker() {
           {activities.map((act) => (
             <div key={act.id} className="flex items-center justify-between bg-gray-800 rounded-lg px-3 py-2">
               <span className="text-sm">
-                {ACTIVITY_ICONS[act.type]} {act.type} · {act.durationMin} min
+                {ACTIVITY_ICONS[act.type]} {ACTIVITY_LABELS[act.type]} · {act.durationMin} dk
               </span>
               <div className="flex items-center gap-2">
                 <span className="text-xs text-green-400">-{act.glReduction} GL</span>
@@ -128,7 +133,7 @@ export function ActivityTracker() {
           onClick={() => setAdding(true)}
           className="w-full py-2.5 rounded-xl text-sm text-gray-400 bg-gray-800 hover:bg-gray-700 transition-all border border-gray-700 border-dashed"
         >
-          + Log Activity
+          + Aktivite Ekle
         </button>
       ) : (
         <div className="space-y-3 pt-2 border-t border-gray-800">
@@ -144,7 +149,7 @@ export function ActivityTracker() {
                     : "bg-gray-800 text-gray-400 hover:bg-gray-700"
                 }`}
               >
-                {icon} {type}
+                {icon} {ACTIVITY_LABELS[type]}
               </button>
             ))}
           </div>
@@ -161,24 +166,24 @@ export function ActivityTracker() {
                     : "bg-gray-800 text-gray-400 hover:bg-gray-700"
                 }`}
               >
-                {d}m
+                {d}dk
               </button>
             ))}
           </div>
 
           <div className="text-xs text-gray-500 text-center">
-            Estimated GL reduction: ~{((ACTIVITY_GL_REDUCTION[selectedType] * selectedDuration) / 30).toFixed(1)}
+            Tahmini GL azalması: ~{((ACTIVITY_GL_REDUCTION[selectedType] * selectedDuration) / 30).toFixed(1)}
           </div>
 
           <div className="flex gap-2">
             <button
               onClick={() => setAdding(false)}
               className="flex-1 py-2 rounded-xl text-sm text-gray-400 bg-gray-800"
-            >Cancel</button>
+            >İptal</button>
             <button
               onClick={handleLog}
               className="flex-1 py-2 rounded-xl text-sm font-semibold text-white bg-teal-600 hover:bg-teal-500"
-            >Log</button>
+            >Kaydet</button>
           </div>
         </div>
       )}

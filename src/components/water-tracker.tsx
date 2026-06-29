@@ -40,7 +40,7 @@ export function WaterTracker({ dailyTarget }: Props) {
     <div className="bg-gray-900 rounded-xl p-4 border border-gray-800">
       <div className="flex justify-between items-center mb-3">
         <h3 className="text-sm font-medium text-gray-400 flex items-center gap-2">
-          💧 Water Today
+          💧 Bugünkü Su
         </h3>
         <span className={`text-sm font-bold ${pct >= 100 ? "text-teal-400" : "text-blue-400"}`}>
           {totalMl} / {dailyTarget} ml
@@ -57,10 +57,10 @@ export function WaterTracker({ dailyTarget }: Props) {
 
       <div className="flex items-center justify-between mb-3">
         <span className="text-xs text-gray-500">
-          {glasses} glass{glasses !== 1 ? "es" : ""} · {pct}%
+          {glasses} bardak · {pct}%
         </span>
         {pct >= 100 && (
-          <span className="text-xs text-teal-400">✓ Daily goal reached!</span>
+          <span className="text-xs text-teal-400">✓ Günlük hedef tamam!</span>
         )}
       </div>
 
@@ -80,7 +80,7 @@ export function WaterTracker({ dailyTarget }: Props) {
           disabled={totalMl === 0}
           className="px-3 py-2 rounded-lg bg-gray-800 hover:bg-red-900/50 text-gray-500 hover:text-red-400 text-xs transition-all border border-gray-700 disabled:opacity-30"
         >
-          undo
+          geri al
         </button>
       </div>
     </div>

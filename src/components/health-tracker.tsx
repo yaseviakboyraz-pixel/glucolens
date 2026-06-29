@@ -18,7 +18,18 @@ function computeSleepHours(bed: string, wake: string): number {
   if ([bh, bm, wh, wm].some((n) => Number.isNaN(n))) return 0;
   let mins = wh * 60 + wm - (bh * 60 + bm);
   if (mins <= 0) mins += 24 * 60; // crossed midnight
-  return Math.round((mins / 60) * 2) / 2;
+  return Math.round(mins / 5) * 5 / 60; // round to nearest 5 minutes
+}
+
+// Format a decimal-hour duration as a human-readable "Xsa Ydk" string:
+// 7.5 -> "7sa 30dk", 7.0833 -> "7sa 5dk", 0.5 -> "30dk", 16 -> "16sa".
+function formatDuration(hours: number): string {
+  const totalMin = Math.round(hours * 60);
+  const h = Math.floor(totalMin / 60);
+  const m = totalMin % 60;
+  if (h === 0) return `${m}dk`;
+  if (m === 0) return `${h}sa`;
+  return `${h}sa ${m}dk`;
 }
 
 export function HealthTracker() {
@@ -154,7 +165,7 @@ export function HealthTracker() {
             <div className="bg-indigo-950/50 border border-indigo-500/30 rounded-xl p-4">
               <div className="flex justify-between items-center">
                 <div>
-                  <div className="text-white font-semibold">{todaySleep.hours} saat</div>
+                  <div className="text-white font-semibold">{formatDuration(todaySleep.hours)}</div>
                   <div className={`text-xs ${qualityColor(todaySleep.quality)} mt-0.5`}>
                     {todaySleep.quality === "excellent" ? "Mükemmel" : todaySleep.quality === "good" ? "İyi" : todaySleep.quality === "fair" ? "Orta" : "Kötü"}
                     {todaySleep.bedtime && ` · ${todaySleep.bedtime} → ${todaySleep.wakeTime}`}
@@ -164,7 +175,7 @@ export function HealthTracker() {
                   {todaySleep.quality === "excellent" ? "🌟" : todaySleep.quality === "good" ? "😴" : todaySleep.quality === "fair" ? "😐" : "😞"}
                 </div>
               </div>
-              <div className="text-xs text-gray-600 mt-2">7 günlük ortalama: {avgSleep7} saat</div>
+              <div className="text-xs text-gray-600 mt-2">7 günlük ortalama: {formatDuration(avgSleep7)}</div>
             </div>
           ) : (
             <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 text-center text-gray-500 text-sm">
@@ -176,20 +187,20 @@ export function HealthTracker() {
           <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 space-y-3">
             <div className="flex justify-between items-center">
               <span className="text-white text-sm font-medium">Uyku Kaydet</span>
-              <span className="text-teal-400 font-bold">{sleepHours}s <span className="text-gray-600 text-xs font-normal">otomatik</span></span>
+              <span className="text-teal-400 font-bold">{formatDuration(sleepHours)} <span className="text-gray-600 text-xs font-normal">otomatik</span></span>
             </div>
-            <input type="range" min="3" max="12" step="0.5"
-              value={sleepHours} onChange={e => setSleepHours(parseFloat(e.target.value))}
+            <input type="range" min={180} max={720} step={5}
+              value={Math.round(sleepHours * 60)} onChange={e => setSleepHours(parseInt(e.target.value, 10) / 60)}
               className="w-full accent-teal-500" />
             <div className="grid grid-cols-2 gap-2">
               <div>
                 <label className="text-xs text-gray-500">Yatış</label>
-                <input type="time" value={sleepBed} onChange={e => setSleepBed(e.target.value)}
+                <input type="time" step={300} value={sleepBed} onChange={e => setSleepBed(e.target.value)}
                   className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-200 focus:outline-none focus:border-teal-500 mt-1" />
               </div>
               <div>
                 <label className="text-xs text-gray-500">Uyanış</label>
-                <input type="time" value={sleepWake} onChange={e => setSleepWake(e.target.value)}
+                <input type="time" step={300} value={sleepWake} onChange={e => setSleepWake(e.target.value)}
                   className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-200 focus:outline-none focus:border-teal-500 mt-1" />
               </div>
             </div>
@@ -215,7 +226,7 @@ export function HealthTracker() {
               {recentSleep.map(s => (
                 <div key={s.id} className="bg-gray-900 rounded-xl px-4 py-2.5 flex justify-between items-center border border-gray-800">
                   <div>
-                    <span className="text-white text-sm">{s.hours} saat</span>
+                    <span className="text-white text-sm">{formatDuration(s.hours)}</span>
                     <span className={`text-xs ml-2 ${qualityColor(s.quality)}`}>
                       {s.quality === "poor" ? "Kötü" : s.quality === "fair" ? "Orta" : s.quality === "good" ? "İyi" : "Harika"}
                     </span>
@@ -243,7 +254,7 @@ export function HealthTracker() {
           {activeFast ? (
             <div className="bg-amber-950/50 border border-amber-500/30 rounded-xl p-5 text-center">
               <div className="text-amber-400 text-xs font-semibold mb-2 tracking-widest">ORUÇ AKTİF</div>
-              <div className="text-white text-4xl font-bold mb-1">{elapsed}s</div>
+              <div className="text-white text-4xl font-bold mb-1">{formatDuration(elapsed)}</div>
               <div className="text-gray-500 text-sm">Hedef: {activeFast.targetHours} saat · {activeFast.protocol}</div>
               {/* Progress bar */}
               <div className="mt-3 bg-gray-800 rounded-full h-2 overflow-hidden">
@@ -251,7 +262,7 @@ export function HealthTracker() {
                   style={{ width: `${Math.min(100, (elapsed / activeFast.targetHours) * 100)}%` }} />
               </div>
               <div className="text-xs text-gray-600 mt-1">
-                {Math.max(0, activeFast.targetHours - elapsed).toFixed(1)} saat kaldı
+                {formatDuration(Math.max(0, activeFast.targetHours - elapsed))} kaldı
               </div>
               <button onClick={() => { handleStopFast(); }}
                 className="mt-4 w-full py-3 bg-red-900/50 hover:bg-red-800/50 border border-red-500/30 text-red-300 rounded-xl text-sm font-semibold transition-all">
@@ -293,7 +304,7 @@ export function HealthTracker() {
                 return (
                   <div key={f.id} className="bg-gray-900 rounded-xl px-4 py-2.5 flex justify-between items-center border border-gray-800">
                     <div>
-                      <span className="text-white text-sm">{dur}s</span>
+                      <span className="text-white text-sm">{formatDuration(dur)}</span>
                       <span className={`text-xs ml-2 ${completed ? "text-green-400" : "text-amber-400"}`}>
                         {completed ? "✓ Tamamlandı" : "Erken bitirdi"} · {f.protocol}
                       </span>
@@ -454,8 +465,8 @@ export function HealthTracker() {
             <div className="bg-gray-900 border border-gray-800 rounded-xl p-4">
               <div className="text-sm text-white font-medium mb-2">Uyku Trendi</div>
               <div className="flex gap-2 items-center">
-                <div className="text-2xl font-bold text-indigo-400">{getAvgSleepHours(trendsRange === "7" ? 7 : 30)}</div>
-                <div className="text-sm text-gray-500">saat ort. ({trendsRange} gün)</div>
+                <div className="text-2xl font-bold text-indigo-400">{formatDuration(getAvgSleepHours(trendsRange === "7" ? 7 : 30))}</div>
+                <div className="text-sm text-gray-500">ort. ({trendsRange} gün)</div>
               </div>
               <div className="flex items-end gap-1 h-12 mt-2">
                 {getSleepLogs().slice(0, trendsRange === "7" ? 7 : 14).reverse().map((s, i) => (
@@ -479,9 +490,9 @@ export function HealthTracker() {
                 </div>
                 <div className="text-center">
                   <div className="text-amber-400 font-bold text-xl">
-                    {(getFastingSessions().filter(f => f.endTime)
+                    {formatDuration(getFastingSessions().filter(f => f.endTime)
                       .reduce((s, f) => s + (f.endTime! - f.startTime) / 3_600_000, 0) /
-                      Math.max(1, getFastingSessions().filter(f => f.endTime).length)).toFixed(1)}s
+                      Math.max(1, getFastingSessions().filter(f => f.endTime).length))}
                   </div>
                   <div className="text-xs text-gray-500">Ort. Süre</div>
                 </div>
