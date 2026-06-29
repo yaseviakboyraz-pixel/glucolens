@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import { Capacitor } from "@capacitor/core";
+import { syncReminders, requestLocalNotifPermission } from "@/lib/local-notifications";
 
 interface NotificationSettings {
   mealReminder: boolean;
@@ -41,8 +42,12 @@ export function NotificationSettings() {
   const [saved, setSaved] = useState(false);
 
   useEffect(() => {
-    setSettings(loadSettings());
+    const loaded = loadSettings();
+    setSettings(loaded);
     checkPermission();
+    // Reminder schedules don't persist across app launches the way the saved
+    // times do, so re-sync the device's pending notifications on every start.
+    void syncReminders(loaded);
   }, []);
 
   async function checkPermission() {
@@ -73,6 +78,10 @@ export function NotificationSettings() {
         setPermissionStatus(result.receive as typeof permissionStatus);
         if (result.receive === "granted") {
           await PushNotifications.register();
+          // Scheduled (local) reminders need their own permission; request it
+          // and immediately schedule the user's configured reminders.
+          await requestLocalNotifPermission();
+          void syncReminders(settings);
         }
       }
     } catch (e) {
@@ -86,6 +95,8 @@ export function NotificationSettings() {
     const next = { ...settings, ...partial };
     setSettings(next);
     saveSettings(next);
+    // Push the new schedule to the device so reminders match the UI instantly.
+    void syncReminders(next);
     setSaved(true);
     setTimeout(() => setSaved(false), 1500);
   }
@@ -152,7 +163,7 @@ export function NotificationSettings() {
             <div className="text-xs text-gray-500">Hatırlatma saatleri</div>
             {settings.mealReminderTimes.map((time, i) => (
               <div key={i} className="flex items-center gap-2">
-                <input type="time" value={time} onChange={e => updateTime(i, e.target.value)}
+                <input type="time" step={300} value={time} onChange={e => updateTime(i, e.target.value)}
                   className="flex-1 bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-200 focus:outline-none focus:border-teal-500" />
                 {settings.mealReminderTimes.length > 1 && (
                   <button onClick={() => removeTime(i)}

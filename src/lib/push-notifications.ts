@@ -29,9 +29,22 @@ export async function initPushNotifications(): Promise<void> {
   }
 }
 
+/**
+ * @deprecated Meal & water reminders are now scheduled by
+ * src/lib/local-notifications.ts (syncReminders), driven by the user's saved
+ * NotificationSettings. Kept as a thin bridge for any legacy caller: it reads
+ * the saved settings and syncs the device's scheduled notifications.
+ */
 export async function scheduleMealReminder(): Promise<void> {
   if (!Capacitor.isNativePlatform()) return;
-  // Local notification via push — remind user to log meals
+  try {
+    const raw = localStorage.getItem("glucolens_notif_settings");
+    if (!raw) return;
+    const { syncReminders } = await import("./local-notifications");
+    await syncReminders(JSON.parse(raw));
+  } catch (err) {
+    if (process.env.NODE_ENV === "development") console.error("scheduleMealReminder bridge error:", err);
+  }
 }
 
 export const isPushAvailable = () => Capacitor.isNativePlatform();
