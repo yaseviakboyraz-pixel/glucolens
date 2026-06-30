@@ -889,13 +889,13 @@ export function UploadAnalyzer({ userType = "healthy", lang, onAnalysisComplete 
           )}
 
           {mode === "compare" && !image2 && (
-            <p className="text-center text-gray-500 text-sm">Select Meal B from gallery to compare</p>
+            <p className="text-center text-gray-500 text-sm">{tx.ua_compare_select_b}</p>
           )}
 
           <button onClick={analyze}
             disabled={mode === "compare" ? (!image || !image2) : !image}
             className="w-full py-4 rounded-xl font-semibold text-white bg-teal-600 hover:bg-teal-500 disabled:opacity-40 transition-all">
-            {mode === "pre_meal" ? "🤔 Predict Before Eating" : mode === "compare" ? "⚖️ Compare Both" : tx.analyze_btn}
+            {mode === "pre_meal" ? tx.ua_predict_btn : mode === "compare" ? tx.ua_compare_btn : tx.analyze_btn}
           </button>
         </div>
       )}
@@ -903,22 +903,22 @@ export function UploadAnalyzer({ userType = "healthy", lang, onAnalysisComplete 
       {/* Errors */}
       {error && (
         <div className="bg-red-950 border border-red-500/40 rounded-xl p-4 text-red-300 text-sm">
-          {error} <button onClick={reset} className="ml-2 underline">Try again</button>
+          {error} <button onClick={reset} className="ml-2 underline">{tx.ua_try_again}</button>
         </div>
       )}
 
       {saved && !loading && (
         <div className="bg-green-950 border border-green-500/30 rounded-xl p-3 text-green-400 text-sm text-center">
-          {mode === "pre_meal" ? "📝 Pre-meal prediction saved" : "✓ Saved to history"}
+          {mode === "pre_meal" ? tx.ua_premeal_saved : tx.ua_saved_history}
         </div>
       )}
 
       {/* Compare results */}
       {result && result2 && mode === "compare" && !loading && (
         <div className="space-y-4">
-          <h3 className="text-center text-white font-semibold">⚖️ Comparison</h3>
+          <h3 className="text-center text-white font-semibold">{tx.ua_comparison}</h3>
           <div className="grid grid-cols-2 gap-3">
-            {[{ label: "Meal A", res: result, pv: preview }, { label: "Meal B", res: result2, pv: preview2 }].map(({ label, res, pv }) => (
+            {[{ label: tx.ua_meal_a, res: result, pv: preview }, { label: tx.ua_meal_b, res: result2, pv: preview2 }].map(({ label, res, pv }) => (
               <div key={label} className="bg-gray-900 rounded-xl p-3 border border-gray-800">
                 {pv && <img src={pv} alt={label} className="w-full h-24 rounded-lg object-cover mb-2" />}
                 <div className="text-xs font-medium text-gray-400 mb-1">{label}</div>
@@ -926,7 +926,7 @@ export function UploadAnalyzer({ userType = "healthy", lang, onAnalysisComplete 
                   GL {res.total_glycemic_load}
                 </div>
                 <div className="text-xs text-gray-500 mt-1">
-                  Sugar: {res.total_sugar_g}g · Fiber: {res.total_fiber_g}g<br/>Risk: {res.glucose_risk}
+                  {tx.ua_sugar_label} {res.total_sugar_g}g · {tx.ua_fiber_label} {res.total_fiber_g}g<br/>{tx.ua_risk_label} {res.glucose_risk === "low" ? tx.ua_risk_low : res.glucose_risk === "medium" ? tx.ua_risk_med : tx.ua_risk_high}
                 </div>
               </div>
             ))}
@@ -937,13 +937,13 @@ export function UploadAnalyzer({ userType = "healthy", lang, onAnalysisComplete 
             : "bg-gray-800 text-gray-300"
           }`}>
             {result.total_glycemic_load < result2.total_glycemic_load
-              ? `✅ Meal A is better — ${(result2.total_glycemic_load - result.total_glycemic_load).toFixed(1)} GL lower`
+              ? `${tx.ua_meal_a_better} — ${(result2.total_glycemic_load - result.total_glycemic_load).toFixed(1)} ${tx.ua_gl_lower}`
               : result2.total_glycemic_load < result.total_glycemic_load
-              ? `✅ Meal B is better — ${(result.total_glycemic_load - result2.total_glycemic_load).toFixed(1)} GL lower`
-              : "Both meals have similar glycemic impact"}
+              ? `${tx.ua_meal_b_better} — ${(result.total_glycemic_load - result2.total_glycemic_load).toFixed(1)} ${tx.ua_gl_lower}`
+              : tx.ua_similar_impact}
           </div>
           <button onClick={reset} className="w-full py-3 rounded-xl text-gray-400 bg-gray-900 hover:bg-gray-800 text-sm border border-gray-800">
-            Compare other meals
+            {tx.ua_compare_other}
           </button>
         </div>
       )}
@@ -953,7 +953,7 @@ export function UploadAnalyzer({ userType = "healthy", lang, onAnalysisComplete 
         <div className="space-y-4">
           {mode === "pre_meal" && (
             <div className="bg-blue-950 border border-blue-500/30 rounded-xl p-3 text-xs text-blue-300 text-center">
-              📊 Pre-meal prediction
+              {tx.ua_premeal_badge}
             </div>
           )}
 
@@ -962,10 +962,10 @@ export function UploadAnalyzer({ userType = "healthy", lang, onAnalysisComplete 
               <img src={barcodeProduct?.image_url || preview || ""} alt="meal"
                 className="w-16 h-16 rounded-lg object-cover shrink-0" />
               <div className="min-w-0">
-                <div className="text-xs text-gray-500">{mode === "pre_meal" ? "Pre-meal prediction" : "Analyzed meal"}</div>
+                <div className="text-xs text-gray-500">{mode === "pre_meal" ? tx.ua_premeal_label : tx.ua_analyzed_meal}</div>
                 <div className="text-sm text-gray-300 mt-0.5 truncate">
                   {result.food_items.slice(0, 2).map(f => foodName(f)).join(", ")}
-                  {result.food_items.length > 2 && ` +${result.food_items.length - 2} more`}
+                  {result.food_items.length > 2 && ` +${result.food_items.length - 2} ${tx.ua_more}`}
                 </div>
               </div>
             </div>
@@ -977,19 +977,17 @@ export function UploadAnalyzer({ userType = "healthy", lang, onAnalysisComplete 
           {(() => {
             const c = result.confidence_score ?? 0.7;
             const band = c >= 0.8
-              ? { label: lang === "tr" ? "Yüksek güven" : "High confidence", color: "rgba(16,185,129,0.9)" }
+              ? { label: tx.ua_conf_high, color: "rgba(16,185,129,0.9)" }
               : c >= 0.6
-              ? { label: lang === "tr" ? "Orta güven" : "Moderate confidence", color: "rgba(245,158,11,0.9)" }
-              : { label: lang === "tr" ? "Düşük güven — kontrol edin" : "Low confidence — double-check", color: "rgba(239,68,68,0.9)" };
+              ? { label: tx.ua_conf_moderate, color: "rgba(245,158,11,0.9)" }
+              : { label: tx.ua_conf_low, color: "rgba(239,68,68,0.9)" };
             return (
               <div className="bg-gray-900 rounded-xl p-3 border border-gray-800 flex items-center gap-3">
                 <div style={{ width: 8, height: 8, borderRadius: "50%", background: band.color, flexShrink: 0 }} />
                 <div className="min-w-0">
                   <div className="text-sm" style={{ color: band.color }}>{band.label}</div>
                   <div className="text-xs text-gray-500 mt-0.5">
-                    {lang === "tr"
-                      ? "Bu bir AI tahminidir — porsiyon, pişirme ve markaya göre gerçek değerler ±%20-40 değişebilir."
-                      : "This is an AI estimate — actual values can vary ±20-40% with portion, cooking and brand."}
+                    {tx.ua_ai_estimate_note}
                   </div>
                 </div>
               </div>
@@ -1001,8 +999,8 @@ export function UploadAnalyzer({ userType = "healthy", lang, onAnalysisComplete 
             {[
               { label: tx.total_sugar, value: `${result.total_sugar_g}g`,      color: "rgba(239,68,68,0.85)",   accent: "rgba(239,68,68,0.55)",   Icon: Candy,   iconBg: "rgba(239,68,68,0.07)" },
               { label: tx.net_carbs,   value: `${result.total_net_carb_g}g`,    color: "rgba(59,130,246,0.85)",  accent: "rgba(59,130,246,0.55)",  Icon: Wheat,   iconBg: "rgba(59,130,246,0.07)" },
-              { label: "Protein",      value: `${result.total_protein_g ?? 0}g`, color: "rgba(139,92,246,0.85)", accent: "rgba(139,92,246,0.55)", Icon: Egg,     iconBg: "rgba(139,92,246,0.07)" },
-              { label: "Yağ",         value: `${result.total_fat_g ?? 0}g`,     color: "rgba(245,158,11,0.85)", accent: "rgba(245,158,11,0.55)", Icon: Droplet, iconBg: "rgba(245,158,11,0.07)" },
+              { label: tx.ua_protein,  value: `${result.total_protein_g ?? 0}g`, color: "rgba(139,92,246,0.85)", accent: "rgba(139,92,246,0.55)", Icon: Egg,     iconBg: "rgba(139,92,246,0.07)" },
+              { label: tx.ua_fat,      value: `${result.total_fat_g ?? 0}g`,     color: "rgba(245,158,11,0.85)", accent: "rgba(245,158,11,0.55)", Icon: Droplet, iconBg: "rgba(245,158,11,0.07)" },
               { label: tx.fiber,       value: `${result.total_fiber_g}g`,        color: "rgba(16,185,129,0.85)", accent: "rgba(16,185,129,0.55)", Icon: Leaf,    iconBg: "rgba(16,185,129,0.07)" },
               { label: "kcal",         value: `${result.total_calories ?? 0}`,   color: "rgba(255,255,255,0.4)", accent: "rgba(255,255,255,0.12)", Icon: Flame,   iconBg: "rgba(255,255,255,0.04)" },
               ].map((s) => (
@@ -1032,7 +1030,7 @@ export function UploadAnalyzer({ userType = "healthy", lang, onAnalysisComplete 
 
           {result.warnings.length > 0 && (
             <div className="bg-red-950 border border-red-500/30 rounded-xl p-4">
-              <h3 className="text-sm font-medium text-red-400 mb-2">⚠️ Warnings</h3>
+              <h3 className="text-sm font-medium text-red-400 mb-2">{tx.ua_warnings}</h3>
               {result.warnings.map((w, i) => <p key={i} className="text-red-300 text-sm">· {w}</p>)}
             </div>
           )}
@@ -1090,24 +1088,24 @@ export function UploadAnalyzer({ userType = "healthy", lang, onAnalysisComplete 
             {feedback === null ? (
               <div className="flex items-center justify-between gap-3">
                 <span className="text-sm text-gray-400">
-                  {lang === "tr" ? "Bu analiz doğru muydu?" : "Was this analysis accurate?"}
+                  {tx.ua_feedback_q}
                 </span>
                 <div className="flex gap-2">
                   <button onClick={() => submitFeedback("up")}
                     className="px-3 py-1.5 rounded-lg text-sm bg-gray-800 hover:bg-green-900/40 text-gray-300 border border-gray-700 transition-all">
-                    👍 {lang === "tr" ? "Doğru" : "Yes"}
+                    👍 {tx.ua_feedback_yes}
                   </button>
                   <button onClick={() => submitFeedback("down")}
                     className="px-3 py-1.5 rounded-lg text-sm bg-gray-800 hover:bg-red-900/40 text-gray-300 border border-gray-700 transition-all">
-                    👎 {lang === "tr" ? "Tam değil" : "Not quite"}
+                    👎 {tx.ua_feedback_no}
                   </button>
                 </div>
               </div>
             ) : (
               <div className="text-sm text-gray-400 text-center">
                 {feedback === "up"
-                  ? (lang === "tr" ? "Teşekkürler!" : "Thanks!")
-                  : (lang === "tr" ? "Teşekkürler — geri bildiriminiz kaydedildi." : "Thanks — your feedback was saved.")}
+                  ? tx.ua_feedback_thanks
+                  : tx.ua_feedback_thanks_saved}
               </div>
             )}
           </div>
@@ -1115,7 +1113,7 @@ export function UploadAnalyzer({ userType = "healthy", lang, onAnalysisComplete 
           <p className="text-xs text-gray-600 text-center">{tx.disclaimer}</p>
 
           <button onClick={reset} className="nova-btn-primary">
-            <Camera size={16} strokeWidth={1.75} aria-hidden="true" style={{ display: "inline", verticalAlign: "-2px", marginRight: 4 }} /> Yeni Analiz
+            <Camera size={16} strokeWidth={1.75} aria-hidden="true" style={{ display: "inline", verticalAlign: "-2px", marginRight: 4 }} /> {tx.ua_new_analysis}
           </button>
         </div>
       )}
