@@ -6,7 +6,7 @@ import { canAnalyze, recordAnalysis } from "@/lib/subscriptions";
 import { Paywall } from "./paywall";
 import { TimingNudges } from "./timing-nudges";
 import { ShareCard } from "./share-card";
-import { t, type Lang } from "@/lib/i18n";
+import { getT, type Lang } from "@/lib/i18n";
 import { saveMeal } from "@/lib/storage";
 import { fileToJpegBase64 } from "@/lib/image-prep";
 import type { MealAnalysis } from "@/lib/claude-vision";
@@ -92,7 +92,7 @@ export function UploadAnalyzer({ userType = "healthy", lang, onAnalysisComplete 
   const galleryRef = useRef<HTMLInputElement>(null);
   const gallery2Ref = useRef<HTMLInputElement>(null);
 
-  const tx = t[lang];
+  const tx = getT(lang);
 
   // Elapsed-time tracker driving staged loading progress (perceived latency).
   // The analysis is output-bound (~17s), so we can't make it truly fast — but a
@@ -364,20 +364,20 @@ export function UploadAnalyzer({ userType = "healthy", lang, onAnalysisComplete 
       {/* Free plan indicator */}
       {currentPlan === "free" && (
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", background: "var(--nova-surface)", border: "0.5px solid var(--nova-border)", borderRadius: 14, padding: "8px 14px" }}>
-          <span style={{ fontSize: 11, color: "var(--nova-text-3)" }}>Free plan · 5 analyses/day</span>
+          <span style={{ fontSize: 11, color: "var(--nova-text-3)" }}>{tx.ua_free_plan}</span>
           <button onClick={() => setShowPaywall(true)}
             style={{ fontSize: 11, color: "var(--nova-purple)", fontWeight: 500, background: "none", border: "none", cursor: "pointer" }}>
-            Upgrade ↗
+            {tx.ua_upgrade}
           </button>
         </div>
       )}
       {/* Mode pills — Nova Aurora */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(5,1fr)", gap: 5 }}>
         {([
-          { key: "normal",   Icon: Camera,   sub: "Analiz" },
-          { key: "url",      Icon: LinkIcon, sub: "URL/QR" },
-          { key: "pre_meal", Icon: Clock,    sub: "Önce" },
-          { key: "compare",  Icon: Scale,    sub: "Karş." },
+          { key: "normal",   Icon: Camera,   sub: tx.ua_mode_analyze },
+          { key: "url",      Icon: LinkIcon, sub: tx.ua_mode_url },
+          { key: "pre_meal", Icon: Clock,    sub: tx.ua_mode_pre },
+          { key: "compare",  Icon: Scale,    sub: tx.ua_mode_compare },
         ] as { key: Mode; Icon: typeof Camera; sub: string }[]).map((m) => (
           <button key={m.key} onClick={() => { setMode(m.key); reset(); }}
             style={{
@@ -400,7 +400,7 @@ export function UploadAnalyzer({ userType = "healthy", lang, onAnalysisComplete 
             color: "var(--nova-text-3)", transition: "all 0.2s",
           }}>
           <Barcode size={16} strokeWidth={1.75} style={{ display: "block", margin: "0 auto 3px" }} color="var(--nova-text-3)" aria-hidden="true" />
-          Barkod
+          {tx.ua_mode_barcode}
         </button>
       </div>
 
@@ -429,11 +429,11 @@ export function UploadAnalyzer({ userType = "healthy", lang, onAnalysisComplete 
               {barcodeProduct.brand && <div className="text-xs text-gray-500 mt-0.5">{barcodeProduct.brand}</div>}
               <div className="flex gap-3 mt-2 text-xs text-gray-400">
                 {barcodeProduct.calories_100g !== undefined && <span>🔥 {barcodeProduct.calories_100g} kcal</span>}
-                {barcodeProduct.carbs_100g !== undefined && <span>🍞 {barcodeProduct.carbs_100g}g carbs</span>}
-                {barcodeProduct.sugars_100g !== undefined && <span>🍬 {barcodeProduct.sugars_100g}g sugar</span>}
+                {barcodeProduct.carbs_100g !== undefined && <span>🍞 {barcodeProduct.carbs_100g}g {tx.ua_carbs_short}</span>}
+                {barcodeProduct.sugars_100g !== undefined && <span>🍬 {barcodeProduct.sugars_100g}g {tx.ua_sugar_short}</span>}
               </div>
               <div className="mt-1 text-xs text-teal-400">
-                Est. GI: {barcodeProduct.gi_estimate} · GL/100g: {barcodeProduct.gl_estimate}
+                {tx.ua_est_gi} {barcodeProduct.gi_estimate} · GL/100g: {barcodeProduct.gl_estimate}
               </div>
             </div>
           </div>
@@ -441,7 +441,7 @@ export function UploadAnalyzer({ userType = "healthy", lang, onAnalysisComplete 
           {/* Portion selector */}
           <div className="px-4 pb-4 space-y-3 border-t border-gray-800 pt-3">
             <div className="flex items-center justify-between">
-              <label className="text-sm text-gray-400">Portion size</label>
+              <label className="text-sm text-gray-400">{tx.ua_portion_size}</label>
               <div className="flex items-center gap-2">
                 <button onClick={() => setPortionG(Math.max(10, portionG - 10))}
                   className="w-8 h-8 bg-gray-800 rounded-lg text-white">−</button>
@@ -464,11 +464,11 @@ export function UploadAnalyzer({ userType = "healthy", lang, onAnalysisComplete 
             <div className="grid grid-cols-3 gap-2 text-center text-xs">
               <div className="bg-gray-800 rounded-lg py-2">
                 <div className="text-amber-400 font-bold">{((barcodeProduct.sugars_100g || 0) * portionG / 100).toFixed(1)}g</div>
-                <div className="text-gray-500">Sugar</div>
+                <div className="text-gray-500">{tx.ua_sugar}</div>
               </div>
               <div className="bg-gray-800 rounded-lg py-2">
                 <div className="text-blue-400 font-bold">{Math.max(0, ((barcodeProduct.carbs_100g || 0) - (barcodeProduct.fiber_100g || 0)) * portionG / 100).toFixed(1)}g</div>
-                <div className="text-gray-500">Net Carb</div>
+                <div className="text-gray-500">{tx.ua_net_carb}</div>
               </div>
               <div className="bg-gray-800 rounded-lg py-2">
                 <div className={`font-bold ${((barcodeProduct.gi_estimate || 55) * Math.max(0, ((barcodeProduct.carbs_100g || 0) - (barcodeProduct.fiber_100g || 0)) * portionG / 100) / 100) > 20 ? "text-red-400" : "text-teal-400"}`}>
@@ -479,10 +479,10 @@ export function UploadAnalyzer({ userType = "healthy", lang, onAnalysisComplete 
             </div>
 
             <div className="flex gap-2">
-              <button onClick={reset} className="flex-1 py-3 rounded-xl text-gray-400 bg-gray-800 text-sm">Cancel</button>
+              <button onClick={reset} className="flex-1 py-3 rounded-xl text-gray-400 bg-gray-800 text-sm">{tx.ua_cancel}</button>
               <button onClick={analyzeBarcodeProduct}
                 className="flex-1 py-3 rounded-xl text-white bg-teal-600 hover:bg-teal-500 font-semibold text-sm">
-                Log this meal
+                {tx.ua_log_meal}
               </button>
             </div>
           </div>
@@ -491,7 +491,7 @@ export function UploadAnalyzer({ userType = "healthy", lang, onAnalysisComplete 
 
       {mode === "compare" && !barcodeProduct && (
         <div className="bg-purple-950 border border-purple-500/30 rounded-xl p-3 text-xs text-purple-300">
-          ⚖️ <strong>Compare:</strong> Upload two meals to compare GL side by side.
+          ⚖️ <strong>{tx.ua_compare_label}</strong> {tx.ua_compare_hint}
         </div>
       )}
 
@@ -669,22 +669,22 @@ export function UploadAnalyzer({ userType = "healthy", lang, onAnalysisComplete 
               <Camera size={22} strokeWidth={1.75} color="var(--nova-purple)" aria-hidden="true" />
             </div>
             <div style={{ fontSize: 12, color: "var(--nova-text-1)", fontWeight: 400, textAlign: "center" }}>
-              {mode === "compare" ? "Meal A" : "Yemek Fotoğrafı Çek"}
+              {mode === "compare" ? tx.ua_meal_a : tx.ua_take_photo}
             </div>
             <div style={{ fontSize: 9, color: "var(--nova-text-3)", textAlign: "center", lineHeight: 1.6 }}>
-              {mode === "compare" ? "Kamera veya galeriden seç" : "Veya galeriden seç · sürükle bırak"}
+              {mode === "compare" ? tx.ua_pick_camera_gallery : tx.ua_or_gallery_drag}
             </div>
             {/* Buttons */}
             <div style={{ display: "flex", gap: 8, width: "100%" }}>
               <button onClick={() => cameraRef.current?.click()}
                 style={{ flex: 1, padding: 9, borderRadius: 12, border: "0.5px solid var(--nova-purple-border)", background: "rgba(139,92,246,0.10)", color: "rgba(139,92,246,0.85)", fontSize: 9, cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", gap: 3 }}>
                 <Camera size={15} strokeWidth={1.75} aria-hidden="true" />
-                Kamera
+                {tx.ua_camera}
               </button>
               <button onClick={() => galleryRef.current?.click()}
                 style={{ flex: 1, padding: 9, borderRadius: 12, border: "0.5px solid var(--nova-border)", background: "var(--nova-surface)", color: "var(--nova-text-2)", fontSize: 9, cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", gap: 3 }}>
                 <ImageIcon size={15} strokeWidth={1.75} aria-hidden="true" />
-                Galeri
+                {tx.ua_gallery}
               </button>
             </div>
           </div>
@@ -704,10 +704,10 @@ export function UploadAnalyzer({ userType = "healthy", lang, onAnalysisComplete 
                     <div style={{ width: 48, height: 48, borderRadius: "50%", background: "rgba(139,92,246,0.10)", border: "1px solid var(--nova-purple-border)", display: "flex", alignItems: "center", justifyContent: "center" }}>
                       <ImageIcon size={22} strokeWidth={1.75} color="var(--nova-purple)" aria-hidden="true" />
                     </div>
-                    <div style={{ fontSize: 12, color: "var(--nova-text-1)" }}>Meal B</div>
+                    <div style={{ fontSize: 12, color: "var(--nova-text-1)" }}>{tx.ua_meal_b}</div>
                     <button onClick={() => gallery2Ref.current?.click()}
                       style={{ padding: "8px 16px", borderRadius: 12, border: "0.5px solid var(--nova-purple-border)", background: "rgba(139,92,246,0.10)", color: "rgba(139,92,246,0.85)", fontSize: 9, cursor: "pointer" }}>
-                      Galeri
+                      {tx.ua_gallery}
                     </button>
                   </>
                 )}

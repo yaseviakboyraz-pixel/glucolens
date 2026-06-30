@@ -124,6 +124,32 @@ const ADDITIONS: Record<string, Record<Lang, string>> = {
   ub_force_btn: { en:"Update in App Store", tr:"App Store'da Güncelle", zh:"在 App Store 更新", hi:"App Store में अपडेट करें", es:"Actualizar en App Store", fr:"Mettre à jour dans l'App Store", ar:"التحديث في App Store", pt:"Atualizar na App Store", ru:"Обновить в App Store", de:"Im App Store aktualisieren" },
   ub_new: { en:"🆕 New version available", tr:"🆕 Yeni sürüm mevcut", zh:"🆕 有新版本", hi:"🆕 नया संस्करण उपलब्ध", es:"🆕 Nueva versión disponible", fr:"🆕 Nouvelle version disponible", ar:"🆕 إصدار جديد متاح", pt:"🆕 Nova versão disponível", ru:"🆕 Доступна новая версия", de:"🆕 Neue Version verfügbar" },
   ub_update: { en:"Update", tr:"Güncelle", zh:"更新", hi:"अपडेट", es:"Actualizar", fr:"Mettre à jour", ar:"تحديث", pt:"Atualizar", ru:"Обновить", de:"Aktualisieren" },
+
+  // Upload analyzer — part 1a (plan indicator, mode pills, upload zone, barcode)
+  ua_free_plan: { en:"Free plan · 5 analyses/day", tr:"Ücretsiz plan · günde 5 analiz", zh:"免费版 · 每天5次分析", hi:"मुफ़्त प्लान · प्रतिदिन 5 विश्लेषण", es:"Plan gratis · 5 análisis/día", fr:"Forfait gratuit · 5 analyses/jour", ar:"الخطة المجانية · 5 تحليلات/يوم", pt:"Plano grátis · 5 análises/dia", ru:"Бесплатный план · 5 анализов/день", de:"Kostenloser Plan · 5 Analysen/Tag" },
+  ua_upgrade: { en:"Upgrade ↗", tr:"Yükselt ↗", zh:"升级 ↗", hi:"अपग्रेड ↗", es:"Mejorar ↗", fr:"Améliorer ↗", ar:"ترقية ↗", pt:"Atualizar ↗", ru:"Улучшить ↗", de:"Upgrade ↗" },
+  ua_mode_analyze: { en:"Analyze", tr:"Analiz", zh:"分析", hi:"विश्लेषण", es:"Analizar", fr:"Analyser", ar:"تحليل", pt:"Analisar", ru:"Анализ", de:"Analyse" },
+  ua_mode_url: { en:"URL/QR", tr:"URL/QR", zh:"URL/QR", hi:"URL/QR", es:"URL/QR", fr:"URL/QR", ar:"URL/QR", pt:"URL/QR", ru:"URL/QR", de:"URL/QR" },
+  ua_mode_pre: { en:"Before", tr:"Önce", zh:"餐前", hi:"पहले", es:"Antes", fr:"Avant", ar:"قبل", pt:"Antes", ru:"До", de:"Vorher" },
+  ua_mode_compare: { en:"Compare", tr:"Karş.", zh:"对比", hi:"तुलना", es:"Comparar", fr:"Comparer", ar:"مقارنة", pt:"Comparar", ru:"Сравн.", de:"Vergl." },
+  ua_mode_barcode: { en:"Barcode", tr:"Barkod", zh:"条形码", hi:"बारकोड", es:"Código", fr:"Code-barres", ar:"باركود", pt:"Código", ru:"Штрихкод", de:"Barcode" },
+  ua_compare_label: { en:"Compare:", tr:"Karşılaştır:", zh:"对比：", hi:"तुलना:", es:"Comparar:", fr:"Comparer :", ar:"قارن:", pt:"Comparar:", ru:"Сравнить:", de:"Vergleichen:" },
+  ua_compare_hint: { en:"Upload two meals to compare GL side by side.", tr:"İki öğünü yan yana karşılaştırmak için ikisini de yükle.", zh:"上传两份餐食以并排对比 GL。", hi:"GL की साथ-साथ तुलना के लिए दो भोजन अपलोड करें।", es:"Sube dos comidas para comparar el GL lado a lado.", fr:"Téléchargez deux repas pour comparer le GL côte à côte.", ar:"حمّل وجبتين لمقارنة الحمل الجلوكوزي جنبًا إلى جنب.", pt:"Envie duas refeições para comparar o GL lado a lado.", ru:"Загрузите два блюда, чтобы сравнить GL рядом.", de:"Lade zwei Mahlzeiten hoch, um den GL zu vergleichen." },
+  ua_meal_a: { en:"Meal A", tr:"Öğün A", zh:"餐食 A", hi:"भोजन A", es:"Comida A", fr:"Repas A", ar:"الوجبة أ", pt:"Refeição A", ru:"Блюдо A", de:"Mahlzeit A" },
+  ua_meal_b: { en:"Meal B", tr:"Öğün B", zh:"餐食 B", hi:"भोजन B", es:"Comida B", fr:"Repas B", ar:"الوجبة ب", pt:"Refeição B", ru:"Блюдо B", de:"Mahlzeit B" },
+  ua_take_photo: { en:"Take a food photo", tr:"Yemek Fotoğrafı Çek", zh:"拍摄食物照片", hi:"भोजन की फ़ोटो लें", es:"Toma una foto de comida", fr:"Prenez une photo du repas", ar:"التقط صورة للطعام", pt:"Tire uma foto da comida", ru:"Сфотографируйте еду", de:"Mach ein Foto vom Essen" },
+  ua_pick_camera_gallery: { en:"Pick from camera or gallery", tr:"Kamera veya galeriden seç", zh:"从相机或相册选择", hi:"कैमरा या गैलरी से चुनें", es:"Elige de cámara o galería", fr:"Choisissez depuis l'appareil ou la galerie", ar:"اختر من الكاميرا أو المعرض", pt:"Escolha da câmera ou galeria", ru:"Выберите с камеры или из галереи", de:"Aus Kamera oder Galerie wählen" },
+  ua_or_gallery_drag: { en:"Or pick from gallery · drag & drop", tr:"Veya galeriden seç · sürükle bırak", zh:"或从相册选择 · 拖放", hi:"या गैलरी से चुनें · ड्रैग और ड्रॉप", es:"O elige de la galería · arrastra y suelta", fr:"Ou depuis la galerie · glisser-déposer", ar:"أو من المعرض · اسحب وأفلت", pt:"Ou da galeria · arraste e solte", ru:"Или из галереи · перетащите", de:"Oder aus Galerie · Drag & Drop" },
+  ua_camera: { en:"Camera", tr:"Kamera", zh:"相机", hi:"कैमरा", es:"Cámara", fr:"Appareil", ar:"الكاميرا", pt:"Câmera", ru:"Камера", de:"Kamera" },
+  ua_gallery: { en:"Gallery", tr:"Galeri", zh:"相册", hi:"गैलरी", es:"Galería", fr:"Galerie", ar:"المعرض", pt:"Galeria", ru:"Галерея", de:"Galerie" },
+  ua_est_gi: { en:"Est. GI:", tr:"Tahmini GI:", zh:"预估 GI：", hi:"अनुमानित GI:", es:"GI est.:", fr:"IG est. :", ar:"مؤشر تقديري:", pt:"GI est.:", ru:"Прибл. ГИ:", de:"Gesch. GI:" },
+  ua_carbs_short: { en:"carbs", tr:"karb", zh:"碳水", hi:"कार्ब्स", es:"carbs", fr:"glucides", ar:"كربوهيدرات", pt:"carbs", ru:"углев.", de:"KH" },
+  ua_sugar_short: { en:"sugar", tr:"şeker", zh:"糖", hi:"शुगर", es:"azúcar", fr:"sucre", ar:"سكر", pt:"açúcar", ru:"сахар", de:"Zucker" },
+  ua_portion_size: { en:"Portion size", tr:"Porsiyon boyutu", zh:"份量", hi:"भाग का आकार", es:"Tamaño de porción", fr:"Taille de portion", ar:"حجم الحصة", pt:"Tamanho da porção", ru:"Размер порции", de:"Portionsgröße" },
+  ua_sugar: { en:"Sugar", tr:"Şeker", zh:"糖", hi:"शुगर", es:"Azúcar", fr:"Sucre", ar:"السكر", pt:"Açúcar", ru:"Сахар", de:"Zucker" },
+  ua_net_carb: { en:"Net Carb", tr:"Net Karb", zh:"净碳水", hi:"नेट कार्ब", es:"Carb. neto", fr:"Glucides nets", ar:"صافي الكربوهيدرات", pt:"Carb. líquido", ru:"Чистые углев.", de:"Netto-KH" },
+  ua_cancel: { en:"Cancel", tr:"İptal", zh:"取消", hi:"रद्द करें", es:"Cancelar", fr:"Annuler", ar:"إلغاء", pt:"Cancelar", ru:"Отмена", de:"Abbrechen" },
+  ua_log_meal: { en:"Log this meal", tr:"Bu öğünü kaydet", zh:"记录这餐", hi:"यह भोजन लॉग करें", es:"Registrar comida", fr:"Enregistrer ce repas", ar:"سجّل هذه الوجبة", pt:"Registrar refeição", ru:"Записать блюдо", de:"Mahlzeit speichern" },
 };
 for (const key of Object.keys(ADDITIONS)) {
   for (const lang of Object.keys(LANGUAGES) as Lang[]) {
