@@ -220,6 +220,31 @@ const ADDITIONS: Record<string, Record<Lang, string>> = {
   ua_risk_low: { en:"Low", tr:"Düşük", zh:"低", hi:"कम", es:"Bajo", fr:"Faible", ar:"منخفض", pt:"Baixo", ru:"Низкий", de:"Niedrig" },
   ua_risk_med: { en:"Medium", tr:"Orta", zh:"中", hi:"मध्यम", es:"Medio", fr:"Moyen", ar:"متوسط", pt:"Médio", ru:"Средний", de:"Mittel" },
   ua_risk_high: { en:"High", tr:"Yüksek", zh:"高", hi:"उच्च", es:"Alto", fr:"Élevé", ar:"مرتفع", pt:"Alto", ru:"Высокий", de:"Hoch" },
+
+  // GL chart (7-day overview)
+  glc_no_data: { en:"No data yet — analyze meals to see your trend", tr:"Henüz veri yok — trendini görmek için öğün analiz et", zh:"暂无数据——分析餐食以查看趋势", hi:"अभी कोई डेटा नहीं — अपना रुझान देखने के लिए भोजन विश्लेषण करें", es:"Aún no hay datos — analiza comidas para ver tu tendencia", fr:"Pas encore de données — analysez des repas pour voir votre tendance", ar:"لا توجد بيانات بعد — حلّل وجبات لرؤية اتجاهك", pt:"Ainda sem dados — analise refeições para ver sua tendência", ru:"Пока нет данных — анализируйте блюда, чтобы увидеть тренд", de:"Noch keine Daten — analysiere Mahlzeiten, um deinen Trend zu sehen" },
+  glc_title: { en:"7-Day GL Overview", tr:"7 Günlük GL Özeti", zh:"7天 GL 概览", hi:"7-दिन GL अवलोकन", es:"Resumen GL de 7 días", fr:"Aperçu GL sur 7 jours", ar:"نظرة عامة على GL لـ 7 أيام", pt:"Visão geral de GL de 7 dias", ru:"Обзор GL за 7 дней", de:"7-Tage-GL-Überblick" },
+  glc_target: { en:"Target: GL", tr:"Hedef: GL", zh:"目标：GL", hi:"लक्ष्य: GL", es:"Objetivo: GL", fr:"Objectif : GL", ar:"الهدف: GL", pt:"Meta: GL", ru:"Цель: GL", de:"Ziel: GL" },
+  glc_meals_label: { en:"meals", tr:"öğün", zh:"餐", hi:"भोजन", es:"comidas", fr:"repas", ar:"وجبات", pt:"refeições", ru:"блюд", de:"Mahlzeiten" },
+  glc_on_target: { en:"On target", tr:"Hedefte", zh:"达标", hi:"लक्ष्य पर", es:"En objetivo", fr:"Dans l'objectif", ar:"ضمن الهدف", pt:"Na meta", ru:"В цели", de:"Im Ziel" },
+  glc_near_limit: { en:"Near limit", tr:"Sınıra yakın", zh:"接近上限", hi:"सीमा के निकट", es:"Cerca del límite", fr:"Proche de la limite", ar:"قرب الحد", pt:"Perto do limite", ru:"Близко к лимиту", de:"Nahe Grenze" },
+  glc_over_limit: { en:"Over limit", tr:"Sınır aşıldı", zh:"超出上限", hi:"सीमा से अधिक", es:"Sobre el límite", fr:"Au-dessus de la limite", ar:"تجاوز الحد", pt:"Acima do limite", ru:"Превышен лимит", de:"Über Grenze" },
+
+  // Weekly challenge
+  wc_title: { en:"🏅 Weekly Challenge", tr:"🏅 Haftalık Meydan Okuma", zh:"🏅 每周挑战", hi:"🏅 साप्ताहिक चुनौती", es:"🏅 Desafío semanal", fr:"🏅 Défi hebdomadaire", ar:"🏅 تحدي الأسبوع", pt:"🏅 Desafio semanal", ru:"🏅 Недельный челлендж", de:"🏅 Wochen-Challenge" },
+  wc_perfect: { en:"🏆 Perfect Week", tr:"🏆 Mükemmel Hafta", zh:"🏆 完美一周", hi:"🏆 परफ़ेक्ट सप्ताह", es:"🏆 Semana perfecta", fr:"🏆 Semaine parfaite", ar:"🏆 أسبوع مثالي", pt:"🏆 Semana perfeita", ru:"🏆 Идеальная неделя", de:"🏆 Perfekte Woche" },
+  wc_great: { en:"⭐ Great Week", tr:"⭐ Harika Hafta", zh:"⭐ 很棒的一周", hi:"⭐ शानदार सप्ताह", es:"⭐ Gran semana", fr:"⭐ Excellente semaine", ar:"⭐ أسبوع رائع", pt:"⭐ Ótima semana", ru:"⭐ Отличная неделя", de:"⭐ Großartige Woche" },
+  wc_good: { en:"👍 Good Week", tr:"👍 İyi Hafta", zh:"👍 不错的一周", hi:"👍 अच्छा सप्ताह", es:"👍 Buena semana", fr:"👍 Bonne semaine", ar:"👍 أسبوع جيد", pt:"👍 Boa semana", ru:"👍 Хорошая неделя", de:"👍 Gute Woche" },
+  wc_keep_going: { en:"💪 Keep Going", tr:"💪 Devam Et", zh:"💪 继续加油", hi:"💪 जारी रखें", es:"💪 Sigue así", fr:"💪 Continuez", ar:"💪 واصل", pt:"💪 Continue", ru:"💪 Продолжай", de:"💪 Weiter so" },
+  wc_avg_gl: { en:"Avg GL", tr:"Ort. GL", zh:"平均 GL", hi:"औसत GL", es:"GL prom.", fr:"GL moy.", ar:"متوسط GL", pt:"GL méd.", ru:"Сред. GL", de:"Ø GL" },
+  wc_day_streak: { en:"Day Streak", tr:"Günlük Seri", zh:"连续天数", hi:"दिन स्ट्रीक", es:"Racha de días", fr:"Série de jours", ar:"تتابع الأيام", pt:"Sequência de dias", ru:"Серия дней", de:"Tage-Serie" },
+  wc_copied: { en:"✓ Copied!", tr:"✓ Kopyalandı!", zh:"✓ 已复制！", hi:"✓ कॉपी किया गया!", es:"✓ ¡Copiado!", fr:"✓ Copié !", ar:"✓ تم النسخ!", pt:"✓ Copiado!", ru:"✓ Скопировано!", de:"✓ Kopiert!" },
+  wc_share: { en:"📤 Share My Week", tr:"📤 Haftamı Paylaş", zh:"📤 分享我的一周", hi:"📤 मेरा सप्ताह शेयर करें", es:"📤 Compartir mi semana", fr:"📤 Partager ma semaine", ar:"📤 شارك أسبوعي", pt:"📤 Compartilhar minha semana", ru:"📤 Поделиться неделей", de:"📤 Meine Woche teilen" },
+  wc_share_title: { en:"My GlucoLens Week", tr:"GlucoLens Haftam", zh:"我的 GlucoLens 一周", hi:"मेरा GlucoLens सप्ताह", es:"Mi semana en GlucoLens", fr:"Ma semaine GlucoLens", ar:"أسبوعي مع GlucoLens", pt:"Minha semana no GlucoLens", ru:"Моя неделя в GlucoLens", de:"Meine GlucoLens-Woche" },
+  wc_share_days: { en:"days on target", tr:"gün hedefte", zh:"天达标", hi:"दिन लक्ष्य पर", es:"días en objetivo", fr:"jours dans l'objectif", ar:"أيام ضمن الهدف", pt:"dias na meta", ru:"дней в цели", de:"Tage im Ziel" },
+  wc_share_avg: { en:"Avg GL:", tr:"Ort. GL:", zh:"平均 GL：", hi:"औसत GL:", es:"GL prom.:", fr:"GL moy. :", ar:"متوسط GL:", pt:"GL méd.:", ru:"Сред. GL:", de:"Ø GL:" },
+  wc_share_streak: { en:"day streak", tr:"günlük seri", zh:"天连续", hi:"दिन स्ट्रीक", es:"días de racha", fr:"jours de série", ar:"أيام متتالية", pt:"dias de sequência", ru:"дней подряд", de:"Tage-Serie" },
+  wc_share_cta: { en:"Track your glucose:", tr:"Glukozunu takip et:", zh:"追踪你的血糖：", hi:"अपना ग्लूकोज ट्रैक करें:", es:"Controla tu glucosa:", fr:"Suivez votre glycémie :", ar:"تتبّع جلوكوزك:", pt:"Monitore sua glicose:", ru:"Следите за глюкозой:", de:"Verfolge deinen Glukose:" },
 };
 for (const key of Object.keys(ADDITIONS)) {
   for (const lang of Object.keys(LANGUAGES) as Lang[]) {

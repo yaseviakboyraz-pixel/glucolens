@@ -1,8 +1,10 @@
 "use client";
 import { useState } from "react";
 import { getLast7DaysStats, getProfile } from "@/lib/storage";
+import { getT, type Lang } from "@/lib/i18n";
 
-export function WeeklyChallenge() {
+export function WeeklyChallenge({ lang }: { lang: Lang }) {
+  const tx = getT(lang);
   const [copied, setCopied] = useState(false);
   const profile = getProfile();
   const weekStats = getLast7DaysStats();
@@ -22,13 +24,13 @@ export function WeeklyChallenge() {
   })();
 
   const score = Math.round((daysOnTarget / Math.max(daysTracked, 1)) * 100);
-  const badge = score >= 90 ? "🏆 Perfect Week" : score >= 70 ? "⭐ Great Week" : score >= 50 ? "👍 Good Week" : "💪 Keep Going";
+  const badge = score >= 90 ? tx.wc_perfect : score >= 70 ? tx.wc_great : score >= 50 ? tx.wc_good : tx.wc_keep_going;
 
   async function handleShare() {
-    const text = `${badge}\n📊 My GlucoLens Week:\n• ${daysOnTarget}/${daysTracked} days on target\n• Avg GL: ${avgGL}\n• 🔥 ${streak}-day streak\nTrack your glucose: glucolens-nine.vercel.app`;
+    const text = `${badge}\n\ud83d\udcca ${tx.wc_share_title}:\n\u2022 ${daysOnTarget}/${daysTracked} ${tx.wc_share_days}\n\u2022 ${tx.wc_share_avg} ${avgGL}\n\u2022 \ud83d\udd25 ${streak}-${tx.wc_share_streak}\n${tx.wc_share_cta} glucolens-nine.vercel.app`;
     try {
       if (navigator.share) {
-        await navigator.share({ title: "My GlucoLens Week", text });
+        await navigator.share({ title: tx.wc_share_title, text });
       } else {
         await navigator.clipboard.writeText(text);
         setCopied(true);
@@ -45,7 +47,7 @@ export function WeeklyChallenge() {
     <div className="bg-gray-900 rounded-xl border border-gray-800 p-4 space-y-4">
       <div className="flex items-center justify-between">
         <div>
-          <h3 className="text-sm font-semibold text-white">🏅 Weekly Challenge</h3>
+          <h3 className="text-sm font-semibold text-white">{tx.wc_title}</h3>
           <p className="text-xs text-gray-500 mt-0.5">{badge}</p>
         </div>
         <div className={`text-2xl font-bold ${scoreColor}`}>{score}%</div>
@@ -54,21 +56,21 @@ export function WeeklyChallenge() {
       <div className="grid grid-cols-3 gap-2">
         <div className="bg-gray-800 rounded-xl p-3 text-center">
           <div className="text-white font-bold text-lg">{daysOnTarget}/{daysTracked}</div>
-          <div className="text-gray-500 text-xs">On Target</div>
+          <div className="text-gray-500 text-xs">{tx.glc_on_target}</div>
         </div>
         <div className="bg-gray-800 rounded-xl p-3 text-center">
           <div className="text-teal-400 font-bold text-lg">{avgGL}</div>
-          <div className="text-gray-500 text-xs">Avg GL</div>
+          <div className="text-gray-500 text-xs">{tx.wc_avg_gl}</div>
         </div>
         <div className="bg-gray-800 rounded-xl p-3 text-center">
           <div className="text-amber-400 font-bold text-lg">🔥{streak}</div>
-          <div className="text-gray-500 text-xs">Day Streak</div>
+          <div className="text-gray-500 text-xs">{tx.wc_day_streak}</div>
         </div>
       </div>
 
       <button onClick={handleShare}
         className="w-full py-2.5 rounded-xl bg-teal-600 hover:bg-teal-500 text-white font-medium text-sm transition-all">
-        {copied ? "✓ Copied!" : "📤 Share My Week"}
+        {copied ? tx.wc_copied : tx.wc_share}
       </button>
     </div>
   );

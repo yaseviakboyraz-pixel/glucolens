@@ -191,7 +191,7 @@ export function HistoryDashboard({ profile, lang, onNewMeal, onEditProfile }: Pr
       </div>
 
       {/* GL Chart — only once there's data to show */}
-      {meals.length > 0 && <GLChart dailyTarget={profile.dailyGLTarget} />}
+      {meals.length > 0 && <GLChart dailyTarget={profile.dailyGLTarget} lang={lang} />}
 
       {/* AI Coach — only meaningful once meals exist */}
       {meals.length > 0 && <AICoach />}
@@ -275,7 +275,7 @@ export function HistoryDashboard({ profile, lang, onNewMeal, onEditProfile }: Pr
       {activeTab === "wellness" && (
         <div className="space-y-4">
           <GoalTracker />
-          <WeeklyChallenge />
+          <WeeklyChallenge lang={lang} />
           <WaterTracker dailyTarget={2000} />
           <ActivityTracker />
           <WeeklyReportCard />
