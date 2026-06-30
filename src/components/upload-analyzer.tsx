@@ -109,14 +109,14 @@ export function UploadAnalyzer({ userType = "healthy", lang, onAnalysisComplete 
     // Accept anything that looks like an image — iOS HEIC often has an empty MIME type
     const looksImage = file.type.startsWith("image/") || /\.(heic|heif|jpe?g|png|webp|gif|avif|bmp)$/i.test(file.name);
     if (!looksImage) { setError(tx.error_image); return; }
-    if (file.size > 25 * 1024 * 1024) { setError("Image must be under 25MB"); return; }
+    if (file.size > 25 * 1024 * 1024) { setError(tx.ua_img_too_big); return; }
     setError(null);
     try {
       const { base64, dataUrl } = await fileToJpegBase64(file); // HEIC→JPEG + downscale
       if (slot === 1) { setPreview(dataUrl); setImage(base64); }
       else { setPreview2(dataUrl); setImage2(base64); }
     } catch {
-      setError("Could not read this image. Please try a JPEG or PNG photo.");
+      setError(tx.ua_img_unreadable);
     }
   }, [tx]);
 
@@ -130,7 +130,7 @@ export function UploadAnalyzer({ userType = "healthy", lang, onAnalysisComplete 
       setImage(base64);
       await runAnalysis(base64, null, mode);
     } catch {
-      setError("Could not read this photo. Please try again or pick a JPEG.");
+      setError(tx.ua_photo_unreadable);
     }
   }, [tx, mode]); // eslint-disable-line
 
@@ -176,7 +176,7 @@ export function UploadAnalyzer({ userType = "healthy", lang, onAnalysisComplete 
         setSaved(true);
       }
     } catch (e) {
-      if (e instanceof TimeoutError) setError("Analysis timed out — the server took too long. Check your connection and try again.");
+      if (e instanceof TimeoutError) setError(tx.ua_timeout_analysis);
       else setError(e instanceof Error ? e.message : tx.error_failed);
     } finally {
       setLoading(false);
@@ -267,7 +267,7 @@ export function UploadAnalyzer({ userType = "healthy", lang, onAnalysisComplete 
           body: JSON.stringify({ url }),
         });
         const fetchData = await fetchRes.json();
-        if (!fetchRes.ok || fetchData.type !== "image") throw new Error("Could not load image from URL");
+        if (!fetchRes.ok || fetchData.type !== "image") throw new Error(tx.ua_url_img_fail);
         setUrlLoading(false);
         await runAnalysis(fetchData.base64, null, "normal");
         return;
@@ -278,7 +278,7 @@ export function UploadAnalyzer({ userType = "healthy", lang, onAnalysisComplete 
         body: JSON.stringify({ url }),
       });
       const fetchData = await fetchRes.json();
-      if (!fetchRes.ok) throw new Error(fetchData.error || "Could not load page");
+      if (!fetchRes.ok) throw new Error(fetchData.error || tx.ua_url_page_fail);
 
       if (urlType === "delivery") {
         const analyzeRes = await fetchWithTimeout("/api/delivery-analyze", {
@@ -287,7 +287,7 @@ export function UploadAnalyzer({ userType = "healthy", lang, onAnalysisComplete 
           body: JSON.stringify({ text: fetchData.text, url, userType, platform: fetchData.platform }),
         });
         const analyzeData = await analyzeRes.json();
-        if (!analyzeRes.ok) throw new Error(analyzeData.error || "Delivery analysis failed");
+        if (!analyzeRes.ok) throw new Error(analyzeData.error || tx.ua_delivery_fail);
         setResult(analyzeData.analysis);
         setSaved(true);
       } else {
@@ -297,12 +297,12 @@ export function UploadAnalyzer({ userType = "healthy", lang, onAnalysisComplete 
           body: JSON.stringify({ ...fetchData, userType }),
         });
         const analyzeData = await analyzeRes.json();
-        if (!analyzeRes.ok) throw new Error(analyzeData.error || "Menu analysis failed");
+        if (!analyzeRes.ok) throw new Error(analyzeData.error || tx.ua_menu_fail);
         setMenuResult(analyzeData.menu);
       }
     } catch (e) {
-      if (e instanceof TimeoutError) setError("Request timed out — the server took too long. Check your connection and try again.");
-      else setError(e instanceof Error ? e.message : "URL analysis failed");
+      if (e instanceof TimeoutError) setError(tx.ua_timeout_request);
+      else setError(e instanceof Error ? e.message : tx.ua_url_fail);
     } finally {
       setUrlLoading(false);
     }
@@ -499,7 +499,7 @@ export function UploadAnalyzer({ userType = "healthy", lang, onAnalysisComplete 
       {mode === "url" && !menuResult && !result && (
         <div className="space-y-3">
           <div className="bg-blue-950 border border-blue-500/30 rounded-xl p-3 text-xs text-blue-300">
-            🔗 <strong>URL / QR Analiz:</strong> Restoran menü URL’si yapıştır veya QR kodu tara.
+            🔗 <strong>{tx.ua_url_label}</strong> {tx.ua_url_hint}
           </div>
 
           {/* QR scan button */}
@@ -510,7 +510,7 @@ export function UploadAnalyzer({ userType = "healthy", lang, onAnalysisComplete 
               el?.click();
             }}
             className="w-full py-3 rounded-xl font-semibold text-white bg-gray-800 hover:bg-gray-700 border border-gray-700 transition-all flex items-center justify-center gap-2 text-sm">
-            📷 QR Kod Tara
+            {tx.ua_qr_scan}
           </button>
           <input
             id="qr-scan-input"
@@ -535,24 +535,24 @@ export function UploadAnalyzer({ userType = "healthy", lang, onAnalysisComplete 
                       setUrlInput(codes[0].rawValue);
                       await runUrlAnalysis(codes[0].rawValue);
                     } else {
-                      setError("QR kodundan URL okunamadı. URL’yi manuel girin.");
+                      setError(tx.ua_qr_no_url);
                     }
                   } catch {
                     URL.revokeObjectURL(objectUrl);
-                    setError("QR tarama başarısız. URL’yi manuel girin.");
+                    setError(tx.ua_qr_scan_fail);
                   }
                 };
                 img.onerror = () => URL.revokeObjectURL(objectUrl);
                 img.src = objectUrl;
               } else {
-                setError("Bu tarayıcı QR okumayı desteklemiyor. URL’yi manuel girin.");
+                setError(tx.ua_qr_unsupported);
               }
             }}
           />
 
           <div className="flex items-center gap-2 text-xs text-gray-600">
             <div className="flex-1 h-px bg-gray-800" />
-            ya da
+            {tx.au_or}
             <div className="flex-1 h-px bg-gray-800" />
           </div>
 
@@ -561,14 +561,14 @@ export function UploadAnalyzer({ userType = "healthy", lang, onAnalysisComplete 
             value={urlInput}
             onChange={(e) => setUrlInput(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && runUrlAnalysis(urlInput)}
-            placeholder="https://yemeksepeti.com/... veya https://restaurant.com/menu"
+            placeholder={tx.ua_url_placeholder}
             className="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-gray-200 placeholder-gray-600 text-sm focus:outline-none focus:border-teal-500"
           />
           {urlInput && (
             <div className="text-xs text-gray-500 text-center">
-              Tespit: <span className="text-teal-400 font-medium">
-                {detectUrlType(urlInput) === "delivery" ? "🛵 Delivery siparişi" :
-                 detectUrlType(urlInput) === "image" ? "🖼️ Görsel" : "🍽️ Restoran menüsü"}
+              {tx.ua_detect} <span className="text-teal-400 font-medium">
+                {detectUrlType(urlInput) === "delivery" ? tx.ua_detect_delivery :
+                 detectUrlType(urlInput) === "image" ? tx.ua_detect_image : tx.ua_detect_menu}
               </span>
             </div>
           )}
@@ -576,7 +576,7 @@ export function UploadAnalyzer({ userType = "healthy", lang, onAnalysisComplete 
             onClick={() => runUrlAnalysis(urlInput)}
             disabled={!urlInput.trim() || urlLoading}
             className="w-full py-4 rounded-xl font-semibold text-white bg-teal-600 hover:bg-teal-500 disabled:opacity-40 transition-all flex items-center justify-center gap-2">
-            {urlLoading ? "Analiz ediliyor..." : "🔗 Analiz Et"}
+            {urlLoading ? tx.ua_analyzing : tx.ua_analyze_url_btn}
           </button>
         </div>
       )}
@@ -587,7 +587,7 @@ export function UploadAnalyzer({ userType = "healthy", lang, onAnalysisComplete 
           <div className="bg-gray-900 rounded-2xl p-4 border border-gray-800">
             <div className="flex justify-between items-start">
               <div>
-                <h2 className="text-white font-bold">{menuResult.restaurant_name || "Menü Analizi"}</h2>
+                <h2 className="text-white font-bold">{menuResult.restaurant_name || tx.ua_menu_analysis}</h2>
                 {menuResult.cuisine_type && <p className="text-gray-500 text-xs mt-0.5">{menuResult.cuisine_type}</p>}
               </div>
               <button onClick={reset} className="text-gray-600 text-sm">✕</button>
@@ -595,21 +595,21 @@ export function UploadAnalyzer({ userType = "healthy", lang, onAnalysisComplete 
             <div className="grid grid-cols-3 gap-2 mt-3">
               <div className="bg-gray-800 rounded-xl p-2 text-center">
                 <div className="text-white font-bold">{menuResult.dishes.length}</div>
-                <div className="text-xs text-gray-500">Toplam</div>
+                <div className="text-xs text-gray-500">{tx.ua_total}</div>
               </div>
               <div className="bg-green-950/60 rounded-xl p-2 text-center border border-green-500/20">
                 <div className="text-green-400 font-bold">{menuResult.dishes.filter(d => d.glucose_risk === "low").length}</div>
-                <div className="text-xs text-gray-500">Güvenli</div>
+                <div className="text-xs text-gray-500">{tx.ua_safe}</div>
               </div>
               <div className="bg-red-950/60 rounded-xl p-2 text-center border border-red-500/20">
                 <div className="text-red-400 font-bold">{menuResult.dishes.filter(d => d.glucose_risk === "high").length}</div>
-                <div className="text-xs text-gray-500">Yüksek risk</div>
+                <div className="text-xs text-gray-500">{tx.ua_high_risk_short}</div>
               </div>
             </div>
           </div>
           {menuResult.top_safe.length > 0 && (
             <div className="bg-green-950/40 border border-green-500/30 rounded-xl p-3">
-              <p className="text-green-400 text-xs font-semibold mb-2">✅ En iyi seçenekler</p>
+              <p className="text-green-400 text-xs font-semibold mb-2">{tx.ua_best_options}</p>
               <div className="flex flex-wrap gap-1.5">
                 {menuResult.top_safe.map(d => <span key={d} className="text-xs bg-green-900/50 text-green-300 px-2 py-1 rounded-full">{d}</span>)}
               </div>
@@ -617,7 +617,7 @@ export function UploadAnalyzer({ userType = "healthy", lang, onAnalysisComplete 
           )}
           {menuResult.top_risky.length > 0 && (
             <div className="bg-red-950/40 border border-red-500/30 rounded-xl p-3">
-              <p className="text-red-400 text-xs font-semibold mb-2">🔴 Kaçın</p>
+              <p className="text-red-400 text-xs font-semibold mb-2">{tx.ua_avoid}</p>
               <div className="flex flex-wrap gap-1.5">
                 {menuResult.top_risky.map(d => <span key={d} className="text-xs bg-red-900/50 text-red-300 px-2 py-1 rounded-full">{d}</span>)}
               </div>
@@ -640,7 +640,7 @@ export function UploadAnalyzer({ userType = "healthy", lang, onAnalysisComplete 
             })}
           </div>
           <button onClick={reset} className="w-full py-3 rounded-xl text-white bg-teal-600 hover:bg-teal-500 font-semibold text-sm">
-            🔗 Yeni URL Analiz Et
+            {tx.ua_new_url}
           </button>
         </div>
       )}
@@ -853,7 +853,7 @@ export function UploadAnalyzer({ userType = "healthy", lang, onAnalysisComplete 
           {/* Bottom progress */}
           <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, padding: "0 16px 14px", zIndex: 6 }}>
             <div style={{ fontSize: 9, color: "var(--ring-scan-txt)", letterSpacing: 1, fontFamily: "monospace", textAlign: "center", marginBottom: 8, transition: "opacity 0.3s" }}>
-              {(mode === "url" && elapsed < 2.5) ? (lang === "tr" ? "Sayfa okunuyor" : "Reading page") : stage.label}
+              {(mode === "url" && elapsed < 2.5) ? tx.ua_reading_page : stage.label}
               <span style={{ opacity: 0.5 }}>{".".repeat(1 + (Math.floor(elapsed * 2) % 3))}</span>
             </div>
             <div style={{ height: 2, borderRadius: 1, overflow: "hidden", background: "var(--ring-prog-track)", marginBottom: 6, position: "relative" }}>
