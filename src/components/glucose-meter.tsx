@@ -1,5 +1,5 @@
 "use client";
-import { t, type Lang } from "@/lib/i18n";
+import { getT, type Lang } from "@/lib/i18n";
 
 interface Props { risk: "low" | "medium" | "high"; gl: number; lang: Lang; }
 
@@ -11,7 +11,7 @@ const style = {
 
 export function GlucoseMeter({ risk, gl, lang }: Props) {
   const c = style[risk];
-  const tx = t[lang];
+  const tx = getT(lang);
   const pct = Math.min((gl / 40) * 100, 100);
   const label = risk === "low" ? tx.low_risk : risk === "medium" ? tx.medium_risk : tx.high_risk;
   const desc  = risk === "low" ? tx.gl_low   : risk === "medium" ? tx.gl_medium   : tx.gl_high;
