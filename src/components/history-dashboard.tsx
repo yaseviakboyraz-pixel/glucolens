@@ -13,6 +13,7 @@ import { AICoach } from "./ai-coach";
 import { GoalTracker } from "./goal-tracker";
 import { WeeklyChallenge } from "./weekly-challenge";
 import type { Lang } from "@/lib/i18n";
+import { getT } from "@/lib/i18n";
 import { UtensilsCrossed } from "lucide-react";
 
 interface Props {
@@ -23,6 +24,7 @@ interface Props {
 }
 
 export function HistoryDashboard({ profile, lang, onNewMeal, onEditProfile }: Props) {
+  const tx = getT(lang);
   const [meals, setMeals] = useState<MealRecord[]>([]);
   const [activeTab, setActiveTab] = useState<"today" | "history" | "wellness">("today");
   const [todayStats, setTodayStats] = useState(getTodayStats());
@@ -150,21 +152,21 @@ export function HistoryDashboard({ profile, lang, onNewMeal, onEditProfile }: Pr
           <div className="bg-gray-900 border border-gray-700 rounded-2xl p-6 w-full max-w-sm space-y-4">
             <div className="text-center">
               <div className="text-3xl mb-2">🗑️</div>
-              <h3 className="text-white font-semibold text-lg">Delete this meal?</h3>
+              <h3 className="text-white font-semibold text-lg">{tx.hd_delete_q}</h3>
               <p className="text-gray-500 text-sm mt-1">
-                This will permanently remove the meal from your history.
+                {tx.hd_delete_body}
               </p>
             </div>
             <div className="flex gap-3">
               <button
                 onClick={() => setConfirmDeleteId(null)}
                 className="flex-1 py-3 rounded-xl text-gray-300 bg-gray-800 hover:bg-gray-700 font-medium text-sm transition-all">
-                Cancel
+                {tx.ua_cancel}
               </button>
               <button
                 onClick={confirmDelete}
                 className="flex-1 py-3 rounded-xl text-white bg-red-600 hover:bg-red-500 font-semibold text-sm transition-all">
-                Delete
+                {tx.hd_delete}
               </button>
             </div>
           </div>
@@ -174,19 +176,19 @@ export function HistoryDashboard({ profile, lang, onNewMeal, onEditProfile }: Pr
       <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 8 }}>
         <div style={{ background: "var(--nova-surface)", border: "0.5px solid var(--nova-border)", borderRadius: 14, padding: "10px 12px", textAlign: "center" }}>
           <div style={{ fontSize: 22, fontWeight: 200, letterSpacing: -1, color: netGL > profile.dailyGLTarget ? "rgba(239,68,68,0.85)" : "rgba(20,184,166,0.9)", lineHeight: 1 }}>{netGL || 0}</div>
-          <div style={{ fontSize: 7, color: "var(--nova-text-3)", letterSpacing: 1, marginTop: 3 }}>Net GL</div>
+          <div style={{ fontSize: 7, color: "var(--nova-text-3)", letterSpacing: 1, marginTop: 3 }}>{tx.hd_net_gl}</div>
           <div style={{ fontSize: 6, color: "var(--nova-text-4)", marginTop: 1 }}>/ {profile.dailyGLTarget}</div>
           {activityGLReduction > 0 && (
-            <div style={{ fontSize: 7, color: "rgba(16,185,129,0.7)", marginTop: 3 }}>-{activityGLReduction} aktivite</div>
+            <div style={{ fontSize: 7, color: "rgba(16,185,129,0.7)", marginTop: 3 }}>-{activityGLReduction} {tx.hd_activity}</div>
           )}
         </div>
         <div style={{ background: "var(--nova-surface)", border: "0.5px solid var(--nova-border)", borderRadius: 14, padding: "10px 12px", textAlign: "center" }}>
           <div style={{ fontSize: 22, fontWeight: 200, letterSpacing: -1, color: "rgba(59,130,246,0.85)", lineHeight: 1 }}>{weeklyAvg || "—"}</div>
-          <div style={{ fontSize: 7, color: "var(--nova-text-3)", letterSpacing: 1, marginTop: 3 }}>7 Gün Ort.</div>
+          <div style={{ fontSize: 7, color: "var(--nova-text-3)", letterSpacing: 1, marginTop: 3 }}>{tx.hd_7day_avg}</div>
         </div>
         <div style={{ background: "var(--nova-surface)", border: "0.5px solid var(--nova-border)", borderRadius: 14, padding: "10px 12px", textAlign: "center" }}>
           <div style={{ fontSize: 22, fontWeight: 200, letterSpacing: -1, color: "rgba(245,158,11,0.85)", lineHeight: 1 }}>{streak > 0 ? streak : "0"}{streak > 0 ? "🔥" : ""}</div>
-          <div style={{ fontSize: 7, color: "var(--nova-text-3)", letterSpacing: 1, marginTop: 3 }}>Seri</div>
+          <div style={{ fontSize: 7, color: "var(--nova-text-3)", letterSpacing: 1, marginTop: 3 }}>{tx.hd_streak}</div>
         </div>
       </div>
 
@@ -206,11 +208,11 @@ export function HistoryDashboard({ profile, lang, onNewMeal, onEditProfile }: Pr
       {/* Profile info + edit */}
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", background: "var(--nova-surface)", border: "0.5px solid var(--nova-border)", borderRadius: 14, padding: "8px 14px" }}>
         <div style={{ fontSize: 11, color: "var(--nova-text-3)" }}>
-          <span style={{ color: "var(--nova-text-2)", fontWeight: 400 }}>{profile.name || "User"}</span>
-          <span style={{ color: "var(--nova-text-4)", marginLeft: 6 }}>· {profile.userType.replace("_", "-")} · GL {profile.dailyGLTarget}/gün</span>
+          <span style={{ color: "var(--nova-text-2)", fontWeight: 400 }}>{profile.name || tx.hd_user}</span>
+          <span style={{ color: "var(--nova-text-4)", marginLeft: 6 }}>· {profile.userType.replace("_", "-")} · GL {profile.dailyGLTarget}{tx.hd_per_day}</span>
         </div>
         <button onClick={onEditProfile} style={{ fontSize: 11, color: "var(--nova-purple)", background: "none", border: "none", cursor: "pointer" }}>
-          Düzenle
+          {tx.hd_edit}
         </button>
       </div>
 
@@ -218,8 +220,8 @@ export function HistoryDashboard({ profile, lang, onNewMeal, onEditProfile }: Pr
       <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
         <div style={{ display: "flex", gap: 5, flex: 1 }}>
           {([
-            { key: "today",   label: `Bugün (${meals.filter(m => new Date(m.timestamp).toISOString().slice(0,10) === new Date().toISOString().slice(0,10)).length})` },
-            { key: "history", label: `Tümü (${meals.length})` },
+            { key: "today",   label: `${tx.hd_tab_today} (${meals.filter(m => new Date(m.timestamp).toISOString().slice(0,10) === new Date().toISOString().slice(0,10)).length})` },
+            { key: "history", label: `${tx.hd_tab_all} (${meals.length})` },
             { key: "wellness", label: "💧🏃" },
           ] as { key: "today" | "history" | "wellness"; label: string }[]).map(tab => (
             <button key={tab.key} onClick={() => setActiveTab(tab.key)}
@@ -255,7 +257,7 @@ export function HistoryDashboard({ profile, lang, onNewMeal, onEditProfile }: Pr
             type="text"
             value={searchQuery}
             onChange={e => setSearchQuery(e.target.value)}
-            placeholder="Yemek ara..."
+            placeholder={tx.hd_search_ph}
             className="flex-1 bg-gray-900 border border-gray-800 rounded-xl px-3 py-2 text-xs text-gray-300 placeholder-gray-600 focus:outline-none focus:border-teal-500"
           />
           {(["all", "low", "medium", "high"] as const).map(r => (
@@ -265,7 +267,7 @@ export function HistoryDashboard({ profile, lang, onNewMeal, onEditProfile }: Pr
                   ? r === "all" ? "bg-gray-700 text-white" : r === "low" ? "bg-green-700 text-white" : r === "medium" ? "bg-amber-700 text-white" : "bg-red-700 text-white"
                   : "bg-gray-900 text-gray-600 hover:bg-gray-800"
               }`}>
-              {r === "all" ? "Tümü" : r === "low" ? "✅" : r === "medium" ? "⚠️" : "🔴"}
+              {r === "all" ? tx.hd_tab_all : r === "low" ? "✅" : r === "medium" ? "⚠️" : "🔴"}
             </button>
           ))}
         </div>
@@ -289,31 +291,29 @@ export function HistoryDashboard({ profile, lang, onNewMeal, onEditProfile }: Pr
             (searchQuery || riskFilter !== "all") ? (
               <div className="text-center py-12 text-gray-600">
                 <div className="text-4xl mb-3">🔍</div>
-                <div>{lang === "tr" ? "Filtreyle eşleşen öğün yok." : "No meals match your filter."}</div>
+                <div>{tx.hd_no_filter_match}</div>
               </div>
             ) : meals.length === 0 ? (
               <div style={{ textAlign: "center", padding: "28px 20px", background: "var(--nova-surface)", border: "0.5px solid var(--nova-border)", borderRadius: 18 }}>
                 <div style={{ fontSize: 38, marginBottom: 10 }}>📊</div>
                 <div style={{ color: "var(--nova-text-1)", fontSize: 16, fontWeight: 600, marginBottom: 6 }}>
-                  {lang === "tr" ? "Yolculuğun burada başlıyor" : "Your journey starts here"}
+                  {tx.hd_journey_start}
                 </div>
                 <div style={{ color: "var(--nova-text-3)", fontSize: 12, lineHeight: 1.5, marginBottom: 18, maxWidth: 280, marginInline: "auto" }}>
-                  {lang === "tr"
-                    ? "İlk öğününü analiz et — panel trendler, seriler ve içgörülerle dolmaya başlasın."
-                    : "Analyze your first meal — your dashboard will fill with trends, streaks and insights."}
+                  {tx.hd_journey_sub}
                 </div>
                 <button onClick={onNewMeal}
                   style={{ padding: "12px 28px", borderRadius: 14, fontWeight: 600, fontSize: 14, color: "#fff", background: "var(--nova-purple)", border: "none", cursor: "pointer" }}>
-                  {lang === "tr" ? "📸 İlk öğünü analiz et" : "📸 Analyze your first meal"}
+                  {tx.hd_analyze_first}
                 </button>
               </div>
             ) : (
               <div className="text-center py-12 text-gray-600">
                 <div className="text-4xl mb-3">🍽️</div>
-                <div>{lang === "tr" ? "Bugün hiç öğün girilmedi." : "No meals logged today."}</div>
+                <div>{tx.hd_no_today}</div>
                 <button onClick={onNewMeal}
                   className="mt-4 px-6 py-2 bg-teal-600 hover:bg-teal-500 text-white rounded-xl text-sm transition-all">
-                  {lang === "tr" ? "Analiz et" : "Analyze"}
+                  {tx.hd_analyze}
                 </button>
               </div>
             )
@@ -373,10 +373,10 @@ export function HistoryDashboard({ profile, lang, onNewMeal, onEditProfile }: Pr
             <div style={{ borderTop: "0.5px solid var(--nova-border)", padding: "10px 12px 12px" }}>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 5, marginBottom: 10 }}>
             {[
-              { label: "Protein", value: `${meal.analysis.total_protein_g}g`, color: "rgba(139,92,246,0.85)" },
-            { label: "Yağ", value: `${meal.analysis.total_fat_g}g`, color: "rgba(245,158,11,0.85)" },
-            { label: "Net Karb", value: `${meal.analysis.total_net_carb_g}g`, color: "rgba(59,130,246,0.85)" },
-            { label: "Lif", value: `${meal.analysis.total_fiber_g}g`, color: "rgba(16,185,129,0.85)" },
+              { label: tx.ua_protein, value: `${meal.analysis.total_protein_g}g`, color: "rgba(139,92,246,0.85)" },
+            { label: tx.ua_fat, value: `${meal.analysis.total_fat_g}g`, color: "rgba(245,158,11,0.85)" },
+            { label: tx.ua_net_carb, value: `${meal.analysis.total_net_carb_g}g`, color: "rgba(59,130,246,0.85)" },
+            { label: tx.fiber, value: `${meal.analysis.total_fiber_g}g`, color: "rgba(16,185,129,0.85)" },
             ].map(s => (
               <div key={s.label} style={{ background: "var(--nova-surface-hover)", borderRadius: 10, padding: "6px 8px", textAlign: "center" }}>
                   <div style={{ fontSize: 11, fontWeight: 600, color: s.color }}>{s.value}</div>
@@ -410,7 +410,7 @@ export function HistoryDashboard({ profile, lang, onNewMeal, onEditProfile }: Pr
       {activeTab !== "wellness" && filteredMeals.length > 0 && (
         <button onClick={onNewMeal}
           className="w-full py-3 rounded-xl font-semibold text-white bg-teal-600 hover:bg-teal-500 transition-all text-sm">
-          + Analyze New Meal
+          + {tx.hd_analyze_new.replace(/^\+\s*/, "")}
         </button>
       )}
     </div>
