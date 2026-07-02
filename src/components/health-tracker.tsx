@@ -144,7 +144,7 @@ export function HealthTracker({ lang }: { lang: Lang }) {
     interp === "normal" ? "text-green-400" : interp === "borderline" ? "text-amber-400" : "text-red-400";
 
   const homaLabel = (interp: HomaIRRecord["interpretation"]) =>
-    interp === "normal" ? "Normal" : interp === "borderline" ? "Sınırda" : "İnsülin Direnci";
+    interp === "normal" ? tx.ht_homa_normal : interp === "borderline" ? tx.ht_homa_borderline : tx.ht_homa_resistant;
 
   return (
     <div className="space-y-4 pb-4">
@@ -337,27 +337,27 @@ export function HealthTracker({ lang }: { lang: Lang }) {
         <div className="space-y-3">
           <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 space-y-3">
             <div>
-              <div className="text-white text-sm font-medium">HOMA-IR Hesaplayıcı</div>
-              <div className="text-gray-500 text-xs mt-0.5">İnsülin direncini ölçmek için açlık kan değerlerini gir</div>
+              <div className="text-white text-sm font-medium">{tx.ht_homa_calc}</div>
+              <div className="text-gray-500 text-xs mt-0.5">{tx.ht_homa_sub}</div>
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="text-xs text-gray-500">Açlık Glikozu (mg/dL)</label>
+                <label className="text-xs text-gray-500">{tx.ht_homa_glucose}</label>
                 <input type="number" value={glucose} onChange={e => setGlucose(e.target.value)}
-                  placeholder="örn. 95"
+                  placeholder={tx.ht_homa_glucose_ph}
                   className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2.5 text-sm text-gray-200 focus:outline-none focus:border-teal-500 mt-1" />
               </div>
               <div>
-                <label className="text-xs text-gray-500">Açlık İnsülini (μIU/mL)</label>
+                <label className="text-xs text-gray-500">{tx.ht_homa_insulin}</label>
                 <input type="number" value={insulin} onChange={e => setInsulin(e.target.value)}
-                  placeholder="örn. 8.5"
+                  placeholder={tx.ht_homa_insulin_ph}
                   className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2.5 text-sm text-gray-200 focus:outline-none focus:border-teal-500 mt-1" />
               </div>
             </div>
             <button onClick={handleCalculateHoma}
               disabled={!glucose || !insulin}
               className="w-full py-3 bg-teal-600 hover:bg-teal-500 disabled:opacity-40 text-white rounded-xl text-sm font-semibold transition-all">
-              📌 Geçmişe Kaydet
+              {tx.ht_homa_save}
             </button>
           </div>
 
@@ -366,7 +366,7 @@ export function HealthTracker({ lang }: { lang: Lang }) {
               <div className="flex justify-between items-center">
                 <div>
                   <div className="text-white text-2xl font-bold">{homaDisplay.homaIR}
-                    {homaPreview && <span className="text-gray-600 text-xs font-normal ml-1.5">anlık</span>}
+                    {homaPreview && <span className="text-gray-600 text-xs font-normal ml-1.5">{tx.ht_live}</span>}
                   </div>
                   <div className={`text-sm font-medium ${homaColor(homaDisplay.interpretation)}`}>
                     {homaLabel(homaDisplay.interpretation)}
@@ -377,23 +377,23 @@ export function HealthTracker({ lang }: { lang: Lang }) {
                 </div>
               </div>
               <div className="mt-2 text-xs text-gray-500">
-                Referans: &lt;1.9 Normal · 1.9-2.9 Sınırda · &gt;2.9 İnsülin Direnci
+                Referans: &lt;1.9 {tx.ht_homa_normal} · 1.9-2.9 {tx.ht_homa_borderline} · &gt;2.9 {tx.ht_homa_resistant}
               </div>
             </div>
           )}
 
           {/* Referans bilgi */}
           <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 text-xs text-gray-500 space-y-1">
-            <div className="font-medium text-gray-400 mb-2">HOMA-IR Nedir?</div>
-            <div>🔬 Açlık glikoz ve insülin değerlerinden insülin direncini hesaplar</div>
-            <div>📊 Formül: (Glikoz × İnsülin) / 405</div>
-            <div>⚕️ Sonuçları doktorunla paylaşmanı öneririz</div>
+            <div className="font-medium text-gray-400 mb-2">{tx.ht_homa_what}</div>
+            <div>{tx.ht_homa_what1}</div>
+            <div>{tx.ht_homa_formula}</div>
+            <div>{tx.ht_homa_share_doc}</div>
           </div>
 
           {/* History */}
           {homaHistory.length > 0 && (
             <div className="space-y-1.5">
-              <div className="text-xs text-gray-500 px-1">Geçmiş Ölçümler</div>
+              <div className="text-xs text-gray-500 px-1">{tx.ht_homa_history}</div>
               {homaHistory.slice(0, 6).map(h => (
                 <div key={h.id} className="bg-gray-900 rounded-xl px-4 py-2.5 flex justify-between items-center border border-gray-800">
                   <div>
@@ -402,7 +402,7 @@ export function HealthTracker({ lang }: { lang: Lang }) {
                   </div>
                   <div className="flex items-center gap-2.5">
                     <span className="text-gray-600 text-xs">
-                      {new Date(h.timestamp).toLocaleDateString("tr-TR", { month: "short", day: "numeric" })}
+                      {new Date(h.timestamp).toLocaleDateString(loc, { month: "short", day: "numeric" })}
                     </span>
                     <button onClick={() => { deleteHomaIRRecord(h.id); refresh(); }} aria-label="Sil"
                       className="text-gray-600 hover:text-red-400 transition-colors p-1 -mr-1">
@@ -423,17 +423,17 @@ export function HealthTracker({ lang }: { lang: Lang }) {
           <div className="flex gap-2">
             <button onClick={() => setTrendsRange("7")}
               className={`flex-1 py-2 rounded-xl text-sm font-medium transition-all ${trendsRange === "7" ? "bg-teal-600 text-white" : "bg-gray-900 text-gray-500 border border-gray-800"}`}>
-              7 Gün
+              {tx.ht_range_7}
             </button>
             <button onClick={() => setTrendsRange("30")}
               className={`flex-1 py-2 rounded-xl text-sm font-medium transition-all ${trendsRange === "30" ? "bg-teal-600 text-white" : "bg-gray-900 text-gray-500 border border-gray-800"}`}>
-              30 Gün
+              {tx.ht_range_30}
             </button>
           </div>
 
           {/* GL Chart */}
           <div className="bg-gray-900 border border-gray-800 rounded-xl p-4">
-            <div className="text-sm text-white font-medium mb-3">Günlük GL</div>
+            <div className="text-sm text-white font-medium mb-3">{tx.ht_daily_gl}</div>
             <div className="flex items-end gap-1 h-28">
               {stats.map((day, i) => {
                 const pct = maxGL > 0 ? (day.totalGL / maxGL) * 100 : 0;
@@ -455,9 +455,9 @@ export function HealthTracker({ lang }: { lang: Lang }) {
           {/* Summary stats */}
           <div className="grid grid-cols-3 gap-2">
             {[
-              { label: "Ort. GL", value: (stats.filter(d => d.mealCount > 0).reduce((s, d) => s + d.totalGL, 0) / Math.max(1, stats.filter(d => d.mealCount > 0).length)).toFixed(1) },
-              { label: "Aktif Gün", value: stats.filter(d => d.mealCount > 0).length },
-              { label: "Toplam Öğün", value: stats.reduce((s, d) => s + d.mealCount, 0) },
+              { label: tx.wc_avg_gl, value: (stats.filter(d => d.mealCount > 0).reduce((s, d) => s + d.totalGL, 0) / Math.max(1, stats.filter(d => d.mealCount > 0).length)).toFixed(1) },
+              { label: tx.ht_active_days, value: stats.filter(d => d.mealCount > 0).length },
+              { label: tx.ht_total_meals, value: stats.reduce((s, d) => s + d.mealCount, 0) },
             ].map(s => (
               <div key={s.label} className="bg-gray-900 border border-gray-800 rounded-xl p-3 text-center">
                 <div className="text-white font-bold">{s.value}</div>
@@ -469,10 +469,10 @@ export function HealthTracker({ lang }: { lang: Lang }) {
           {/* Sleep trend mini */}
           {getSleepLogs().length > 2 && (
             <div className="bg-gray-900 border border-gray-800 rounded-xl p-4">
-              <div className="text-sm text-white font-medium mb-2">Uyku Trendi</div>
+              <div className="text-sm text-white font-medium mb-2">{tx.ht_sleep_trend}</div>
               <div className="flex gap-2 items-center">
-                <div className="text-2xl font-bold text-indigo-400">{formatDuration(getAvgSleepHours(trendsRange === "7" ? 7 : 30))}</div>
-                <div className="text-sm text-gray-500">ort. ({trendsRange} gün)</div>
+                <div className="text-2xl font-bold text-indigo-400">{fmt(getAvgSleepHours(trendsRange === "7" ? 7 : 30))}</div>
+                <div className="text-sm text-gray-500">{tx.ht_avg_short} ({trendsRange} {tx.ht_days_word})</div>
               </div>
               <div className="flex items-end gap-1 h-12 mt-2">
                 {getSleepLogs().slice(0, trendsRange === "7" ? 7 : 14).reverse().map((s, i) => (
@@ -486,21 +486,21 @@ export function HealthTracker({ lang }: { lang: Lang }) {
           {/* Fasting stats */}
           {getFastingSessions().filter(f => f.endTime).length > 0 && (
             <div className="bg-gray-900 border border-gray-800 rounded-xl p-4">
-              <div className="text-sm text-white font-medium mb-2">Oruç İstatistikleri</div>
+              <div className="text-sm text-white font-medium mb-2">{tx.ht_fast_stats}</div>
               <div className="grid grid-cols-2 gap-2">
                 <div className="text-center">
                   <div className="text-amber-400 font-bold text-xl">
                     {getFastingSessions().filter(f => f.endTime).length}
                   </div>
-                  <div className="text-xs text-gray-500">Tamamlanan Oruç</div>
+                  <div className="text-xs text-gray-500">{tx.ht_fast_completed_count}</div>
                 </div>
                 <div className="text-center">
                   <div className="text-amber-400 font-bold text-xl">
-                    {formatDuration(getFastingSessions().filter(f => f.endTime)
+                    {fmt(getFastingSessions().filter(f => f.endTime)
                       .reduce((s, f) => s + (f.endTime! - f.startTime) / 3_600_000, 0) /
                       Math.max(1, getFastingSessions().filter(f => f.endTime).length))}
                   </div>
-                  <div className="text-xs text-gray-500">Ort. Süre</div>
+                  <div className="text-xs text-gray-500">{tx.ht_avg_duration}</div>
                 </div>
               </div>
             </div>
