@@ -8,7 +8,10 @@ import {
   type SleepLog, type FastingSession, type HomaIRRecord,
 } from "@/lib/storage";
 import { Trash2 } from "lucide-react";
+import { getT, type Lang } from "@/lib/i18n";
 type Tab = "sleep" | "fasting" | "homa" | "trends";
+
+const LOCALE: Record<Lang, string> = { en:"en-US", tr:"tr-TR", zh:"zh-CN", hi:"hi-IN", es:"es-ES", fr:"fr-FR", ar:"ar", pt:"pt-BR", ru:"ru-RU", de:"de-DE" };
 
 // Compute sleep duration (hours, 0.5 precision) from bed/wake "HH:MM", handling
 // the overnight wrap (wake time falls on the next day when it is ≤ bedtime).
@@ -23,16 +26,19 @@ function computeSleepHours(bed: string, wake: string): number {
 
 // Format a decimal-hour duration as a human-readable "Xsa Ydk" string:
 // 7.5 -> "7sa 30dk", 7.0833 -> "7sa 5dk", 0.5 -> "30dk", 16 -> "16sa".
-function formatDuration(hours: number): string {
+function formatDuration(hours: number, hUnit = "sa", mUnit = "dk"): string {
   const totalMin = Math.round(hours * 60);
   const h = Math.floor(totalMin / 60);
   const m = totalMin % 60;
-  if (h === 0) return `${m}dk`;
-  if (m === 0) return `${h}sa`;
-  return `${h}sa ${m}dk`;
+  if (h === 0) return `${m}${mUnit}`;
+  if (m === 0) return `${h}${hUnit}`;
+  return `${h}${hUnit} ${m}${mUnit}`;
 }
 
-export function HealthTracker() {
+export function HealthTracker({ lang }: { lang: Lang }) {
+  const tx = getT(lang);
+  const fmt = (h: number) => formatDuration(h, tx.ht_unit_h, tx.ht_unit_m);
+  const loc = LOCALE[lang];
   const [tab, setTab] = useState<Tab>("sleep");
   const [, forceUpdate] = useState(0);
   const refresh = useCallback(() => forceUpdate(n => n + 1), []);
@@ -145,10 +151,10 @@ export function HealthTracker() {
       {/* Tab bar */}
       <div className="grid grid-cols-4 gap-1 bg-gray-900 rounded-xl p-1">
         {([
-          { key: "sleep", label: "😴 Uyku" },
-          { key: "fasting", label: "⏱ Oruç" },
-          { key: "homa", label: "🧬 HOMA" },
-          { key: "trends", label: "📈 Trend" },
+          { key: "sleep", label: tx.ht_tab_sleep },
+          { key: "fasting", label: tx.ht_tab_fasting },
+          { key: "homa", label: tx.ht_tab_homa },
+          { key: "trends", label: tx.ht_tab_trends },
         ] as { key: Tab; label: string }[]).map(t => (
           <button key={t.key} onClick={() => setTab(t.key)}
             className={`py-2 rounded-lg text-xs font-medium transition-all ${tab === t.key ? "bg-teal-600 text-white" : "text-gray-500 hover:text-gray-300"}`}>
@@ -165,9 +171,9 @@ export function HealthTracker() {
             <div className="bg-indigo-950/50 border border-indigo-500/30 rounded-xl p-4">
               <div className="flex justify-between items-center">
                 <div>
-                  <div className="text-white font-semibold">{formatDuration(todaySleep.hours)}</div>
+                  <div className="text-white font-semibold">{fmt(todaySleep.hours)}</div>
                   <div className={`text-xs ${qualityColor(todaySleep.quality)} mt-0.5`}>
-                    {todaySleep.quality === "excellent" ? "Mükemmel" : todaySleep.quality === "good" ? "İyi" : todaySleep.quality === "fair" ? "Orta" : "Kötü"}
+                    {todaySleep.quality === "excellent" ? tx.ht_q_excellent : todaySleep.quality === "good" ? tx.ht_q_good : todaySleep.quality === "fair" ? tx.ht_q_fair : tx.ht_q_poor}
                     {todaySleep.bedtime && ` · ${todaySleep.bedtime} → ${todaySleep.wakeTime}`}
                   </div>
                 </div>
@@ -175,31 +181,31 @@ export function HealthTracker() {
                   {todaySleep.quality === "excellent" ? "🌟" : todaySleep.quality === "good" ? "😴" : todaySleep.quality === "fair" ? "😐" : "😞"}
                 </div>
               </div>
-              <div className="text-xs text-gray-600 mt-2">7 günlük ortalama: {formatDuration(avgSleep7)}</div>
+              <div className="text-xs text-gray-600 mt-2">{tx.ht_sleep_7avg} {fmt(avgSleep7)}</div>
             </div>
           ) : (
             <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 text-center text-gray-500 text-sm">
-              Bugünkü uyku henüz girilmedi
+              {tx.ht_sleep_none}
             </div>
           )}
 
           {/* Log form */}
           <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 space-y-3">
             <div className="flex justify-between items-center">
-              <span className="text-white text-sm font-medium">Uyku Kaydet</span>
-              <span className="text-teal-400 font-bold">{formatDuration(sleepHours)} <span className="text-gray-600 text-xs font-normal">otomatik</span></span>
+              <span className="text-white text-sm font-medium">{tx.ht_sleep_log_title}</span>
+              <span className="text-teal-400 font-bold">{fmt(sleepHours)} <span className="text-gray-600 text-xs font-normal">{tx.ht_auto}</span></span>
             </div>
             <input type="range" min={180} max={720} step={5}
               value={Math.round(sleepHours * 60)} onChange={e => setSleepHours(parseInt(e.target.value, 10) / 60)}
               className="w-full accent-teal-500" />
             <div className="grid grid-cols-2 gap-2">
               <div>
-                <label className="text-xs text-gray-500">Yatış</label>
+                <label className="text-xs text-gray-500">{tx.ht_bedtime}</label>
                 <input type="time" step={300} value={sleepBed} onChange={e => setSleepBed(e.target.value)}
                   className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-200 focus:outline-none focus:border-teal-500 mt-1" />
               </div>
               <div>
-                <label className="text-xs text-gray-500">Uyanış</label>
+                <label className="text-xs text-gray-500">{tx.ht_waketime}</label>
                 <input type="time" step={300} value={sleepWake} onChange={e => setSleepWake(e.target.value)}
                   className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-200 focus:outline-none focus:border-teal-500 mt-1" />
               </div>
@@ -210,13 +216,13 @@ export function HealthTracker() {
                   className={`py-2 rounded-lg text-xs transition-all ${sleepQuality === q
                     ? q === "excellent" ? "bg-green-700 text-white" : q === "good" ? "bg-teal-700 text-white" : q === "fair" ? "bg-amber-700 text-white" : "bg-red-900 text-white"
                     : "bg-gray-800 text-gray-500"}`}>
-                  {q === "poor" ? "Kötü" : q === "fair" ? "Orta" : q === "good" ? "İyi" : "Harika"}
+                  {q === "poor" ? tx.ht_q_poor : q === "fair" ? tx.ht_q_fair : q === "good" ? tx.ht_q_good : tx.ht_q_excellent}
                 </button>
               ))}
             </div>
             <button onClick={handleLogSleep}
               className="w-full py-3 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-sm font-semibold transition-all">
-              😴 Uyku Kaydet
+              {tx.ht_sleep_log_btn}
             </button>
           </div>
 
@@ -226,14 +232,14 @@ export function HealthTracker() {
               {recentSleep.map(s => (
                 <div key={s.id} className="bg-gray-900 rounded-xl px-4 py-2.5 flex justify-between items-center border border-gray-800">
                   <div>
-                    <span className="text-white text-sm">{formatDuration(s.hours)}</span>
+                    <span className="text-white text-sm">{fmt(s.hours)}</span>
                     <span className={`text-xs ml-2 ${qualityColor(s.quality)}`}>
-                      {s.quality === "poor" ? "Kötü" : s.quality === "fair" ? "Orta" : s.quality === "good" ? "İyi" : "Harika"}
+                      {s.quality === "poor" ? tx.ht_q_poor : s.quality === "fair" ? tx.ht_q_fair : s.quality === "good" ? tx.ht_q_good : tx.ht_q_excellent}
                     </span>
                   </div>
                   <div className="flex items-center gap-2.5">
                     <span className="text-gray-600 text-xs">
-                      {new Date(s.timestamp).toLocaleDateString("tr-TR", { month: "short", day: "numeric" })}
+                      {new Date(s.timestamp).toLocaleDateString(loc, { month: "short", day: "numeric" })}
                     </span>
                     <button onClick={() => { deleteSleepLog(s.id); refresh(); }} aria-label="Sil"
                       className="text-gray-600 hover:text-red-400 transition-colors p-1 -mr-1">
@@ -253,25 +259,25 @@ export function HealthTracker() {
           {/* Active fast */}
           {activeFast ? (
             <div className="bg-amber-950/50 border border-amber-500/30 rounded-xl p-5 text-center">
-              <div className="text-amber-400 text-xs font-semibold mb-2 tracking-widest">ORUÇ AKTİF</div>
-              <div className="text-white text-4xl font-bold mb-1">{formatDuration(elapsed)}</div>
-              <div className="text-gray-500 text-sm">Hedef: {activeFast.targetHours} saat · {activeFast.protocol}</div>
+              <div className="text-amber-400 text-xs font-semibold mb-2 tracking-widest">{tx.ht_fast_active}</div>
+              <div className="text-white text-4xl font-bold mb-1">{fmt(elapsed)}</div>
+              <div className="text-gray-500 text-sm">{tx.ht_fast_target} {activeFast.targetHours} {tx.ht_hours_word} · {activeFast.protocol}</div>
               {/* Progress bar */}
               <div className="mt-3 bg-gray-800 rounded-full h-2 overflow-hidden">
                 <div className="h-full bg-amber-500 rounded-full transition-all"
                   style={{ width: `${Math.min(100, (elapsed / activeFast.targetHours) * 100)}%` }} />
               </div>
               <div className="text-xs text-gray-600 mt-1">
-                {formatDuration(Math.max(0, activeFast.targetHours - elapsed))} kaldı
+                {fmt(Math.max(0, activeFast.targetHours - elapsed))} {tx.ht_fast_remaining}
               </div>
               <button onClick={() => { handleStopFast(); }}
                 className="mt-4 w-full py-3 bg-red-900/50 hover:bg-red-800/50 border border-red-500/30 text-red-300 rounded-xl text-sm font-semibold transition-all">
-                ⏹ Orucu Bitir
+                {tx.ht_fast_stop}
               </button>
             </div>
           ) : (
             <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 space-y-3">
-              <div className="text-white text-sm font-medium">Protokol Seç</div>
+              <div className="text-white text-sm font-medium">{tx.ht_fast_pick_protocol}</div>
               <div className="grid grid-cols-3 gap-2">
                 {(["16:8", "18:6", "20:4", "5:2", "OMAD", "custom"] as FastingSession["protocol"][]).map(p => (
                   <button key={p} onClick={() => setFastProtocol(p)}
@@ -281,15 +287,15 @@ export function HealthTracker() {
                 ))}
               </div>
               <div className="text-xs text-gray-600 text-center">
-                {fastProtocol === "16:8" ? "16s oruç / 8s yemek penceresi" :
-                 fastProtocol === "18:6" ? "18s oruç / 6s yemek penceresi" :
-                 fastProtocol === "20:4" ? "20s oruç / 4s yemek penceresi" :
-                 fastProtocol === "5:2" ? "Haftada 2 gün kısıtlı kalori" :
-                 fastProtocol === "OMAD" ? "Günde tek öğün" : "Özel süre"}
+                {fastProtocol === "16:8" ? tx.ht_fast_desc_168 :
+                 fastProtocol === "18:6" ? tx.ht_fast_desc_186 :
+                 fastProtocol === "20:4" ? tx.ht_fast_desc_204 :
+                 fastProtocol === "5:2" ? tx.ht_fast_desc_52 :
+                 fastProtocol === "OMAD" ? tx.ht_fast_desc_omad : tx.ht_fast_desc_custom}
               </div>
               <button onClick={handleStartFast}
                 className="w-full py-3 bg-amber-600 hover:bg-amber-500 text-white rounded-xl text-sm font-semibold transition-all">
-                ⏱ Orucu Başlat
+                {tx.ht_fast_start}
               </button>
             </div>
           )}
@@ -297,21 +303,21 @@ export function HealthTracker() {
           {/* Fasting history */}
           {recentFasts.filter(f => f.endTime).length > 0 && (
             <div className="space-y-1.5">
-              <div className="text-xs text-gray-500 px-1">Son Oruçlar</div>
+              <div className="text-xs text-gray-500 px-1">{tx.ht_fast_recent}</div>
               {recentFasts.filter(f => f.endTime).map(f => {
                 const dur = parseFloat(((f.endTime! - f.startTime) / 3_600_000).toFixed(1));
                 const completed = dur >= f.targetHours;
                 return (
                   <div key={f.id} className="bg-gray-900 rounded-xl px-4 py-2.5 flex justify-between items-center border border-gray-800">
                     <div>
-                      <span className="text-white text-sm">{formatDuration(dur)}</span>
+                      <span className="text-white text-sm">{fmt(dur)}</span>
                       <span className={`text-xs ml-2 ${completed ? "text-green-400" : "text-amber-400"}`}>
-                        {completed ? "✓ Tamamlandı" : "Erken bitirdi"} · {f.protocol}
+                        {completed ? tx.ht_fast_completed : tx.ht_fast_early} · {f.protocol}
                       </span>
                     </div>
                     <div className="flex items-center gap-2.5">
                       <span className="text-gray-600 text-xs">
-                        {new Date(f.startTime).toLocaleDateString("tr-TR", { month: "short", day: "numeric" })}
+                        {new Date(f.startTime).toLocaleDateString(loc, { month: "short", day: "numeric" })}
                       </span>
                       <button onClick={() => { deleteFastingSession(f.id); refresh(); }} aria-label="Sil"
                         className="text-gray-600 hover:text-red-400 transition-colors p-1 -mr-1">

@@ -220,7 +220,7 @@ export default function Home() {
           <div className="px-4 py-4">
             <h2 className="text-white font-bold text-lg mb-1">🧘 {lang === "tr" ? "Sağlık Takibi" : "Health Tracking"}</h2>
             <p className="text-gray-500 text-xs mb-4">{lang === "tr" ? "Uyku, oruç, HOMA-IR ve trend analizi" : "Sleep, fasting, HOMA-IR & trends"}</p>
-            <HealthTracker />
+            <HealthTracker lang={lang} />
             <div className="mt-6">
               <h3 className="text-white font-semibold text-sm mb-3">🔔 {lang === "tr" ? "Bildirim Ayarları" : "Notification Settings"}</h3>
               <NotificationSettings />
