@@ -100,12 +100,13 @@ If they have data, comment on ONE specific insight. End with a concrete offer to
 
   function getFallbackGreeting(report: ReturnType<typeof getWeeklyReport>) {
     if (!report || report.totalMeals === 0) {
-      return "Merhaba! Ben GlucoLens AI Coach 👋 İlk öğününü analiz ettiğinde sana kişisel öneriler vereceğim. Ne sormak istersin?";
+      return tx.aic_fb_empty;
     }
     if (report.avgDailyGL > 80) {
-      return `Merhaba! Bu hafta günlük GL ortalamanız ${report.avgDailyGL} — hedefin biraz üzerinde. Hangi öğünlerin en çok etkilediğini birlikte inceleyelim mi?`;
+      return tx.aic_fb_high.replace("{gl}", String(report.avgDailyGL));
     }
-    return `Merhaba! Bu hafta ortalama ${report.avgDailyGL} GL ile harika gidiyorsun! ${report.streak > 1 ? `${report.streak} günlük seri de devam ediyor 🔥` : ""} Bugün nasıl yardımcı olabilirim?`;
+    const streak = report.streak > 1 ? tx.aic_fb_streak.replace("{n}", String(report.streak)) : "";
+    return tx.aic_fb_good.replace("{gl}", String(report.avgDailyGL)).replace("{streak}", streak);
   }
 
   async function sendMessage(text?: string) {
@@ -147,7 +148,7 @@ Respond helpfully. If asked about a food, give GL estimate. If asked for advice,
       const data = await res.json();
       const coachMsg: CoachMessage = {
         role: "coach",
-        content: data.message || "Şu an bağlanamıyorum, biraz sonra tekrar dene!",
+        content: data.message || tx.aic_err_offline,
         timestamp: Date.now(),
       };
       const updatedMessages = [...newMessages, coachMsg];
@@ -156,7 +157,7 @@ Respond helpfully. If asked about a food, give GL estimate. If asked for advice,
     } catch {
       const errMsg: CoachMessage = {
         role: "coach",
-        content: "Bağlantı sorunu var, biraz sonra tekrar dene!",
+        content: tx.aic_err_conn,
         timestamp: Date.now(),
       };
       const updatedMessages = [...newMessages, errMsg];
