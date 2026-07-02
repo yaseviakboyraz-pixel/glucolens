@@ -377,7 +377,7 @@ export function HealthTracker({ lang }: { lang: Lang }) {
                 </div>
               </div>
               <div className="mt-2 text-xs text-gray-500">
-                Referans: &lt;1.9 {tx.ht_homa_normal} · 1.9-2.9 {tx.ht_homa_borderline} · &gt;2.9 {tx.ht_homa_resistant}
+                {tx.ht_homa_ref}
               </div>
             </div>
           )}
