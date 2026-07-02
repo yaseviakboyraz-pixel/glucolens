@@ -357,6 +357,28 @@ const ADDITIONS: Record<string, Record<Lang, string>> = {
   wr_total_activity: { en:"🏃 Total activity", tr:"🏃 Toplam aktivite", zh:"🏃 总运动量", hi:"🏃 कुल गतिविधि", es:"🏃 Actividad total", fr:"🏃 Activité totale", ar:"🏃 إجمالي النشاط", pt:"🏃 Atividade total", ru:"🏃 Всего активности", de:"🏃 Gesamtaktivität" },
   wr_min: { en:"min", tr:"dk", zh:"分钟", hi:"मि", es:"min", fr:"min", ar:"دقيقة", pt:"min", ru:"мин", de:"Min" },
   wr_top_foods: { en:"Most logged foods this week", tr:"Bu hafta en çok girilen yiyecekler", zh:"本周记录最多的食物", hi:"इस सप्ताह सबसे अधिक दर्ज भोजन", es:"Alimentos más registrados esta semana", fr:"Aliments les plus enregistrés cette semaine", ar:"أكثر الأطعمة تسجيلاً هذا الأسبوع", pt:"Alimentos mais registrados esta semana", ru:"Самые записываемые продукты за неделю", de:"Meist erfasste Lebensmittel diese Woche" },
+
+  // Water tracker (wellness)
+  wt_title: { en:"💧 Today's Water", tr:"💧 Bugünkü Su", zh:"💧 今日饮水", hi:"💧 आज का पानी", es:"💧 Agua de hoy", fr:"💧 Eau du jour", ar:"💧 ماء اليوم", pt:"💧 Água de hoje", ru:"💧 Вода сегодня", de:"💧 Heutiges Wasser" },
+  wt_glasses: { en:"glasses", tr:"bardak", zh:"杯", hi:"गिलास", es:"vasos", fr:"verres", ar:"أكواب", pt:"copos", ru:"стаканов", de:"Gläser" },
+  wt_goal_done: { en:"✓ Daily goal reached!", tr:"✓ Günlük hedef tamam!", zh:"✓ 已达每日目标！", hi:"✓ दैनिक लक्ष्य पूरा!", es:"✓ ¡Meta diaria alcanzada!", fr:"✓ Objectif quotidien atteint !", ar:"✓ تم بلوغ الهدف اليومي!", pt:"✓ Meta diária atingida!", ru:"✓ Дневная цель достигнута!", de:"✓ Tagesziel erreicht!" },
+  wt_undo: { en:"undo", tr:"geri al", zh:"撤销", hi:"पूर्ववत करें", es:"deshacer", fr:"annuler", ar:"تراجع", pt:"desfazer", ru:"отменить", de:"rückgängig" },
+
+  // Activity tracker (wellness)
+  at_title: { en:"🏃 Today's Activity", tr:"🏃 Bugünkü Aktivite", zh:"🏃 今日运动", hi:"🏃 आज की गतिविधि", es:"🏃 Actividad de hoy", fr:"🏃 Activité du jour", ar:"🏃 نشاط اليوم", pt:"🏃 Atividade de hoje", ru:"🏃 Активность сегодня", de:"🏃 Heutige Aktivität" },
+  at_walking: { en:"Walking", tr:"Yürüyüş", zh:"步行", hi:"पैदल चलना", es:"Caminar", fr:"Marche", ar:"المشي", pt:"Caminhada", ru:"Ходьба", de:"Gehen" },
+  at_running: { en:"Running", tr:"Koşu", zh:"跑步", hi:"दौड़", es:"Correr", fr:"Course", ar:"الجري", pt:"Corrida", ru:"Бег", de:"Laufen" },
+  at_cycling: { en:"Cycling", tr:"Bisiklet", zh:"骑行", hi:"साइकिलिंग", es:"Ciclismo", fr:"Vélo", ar:"ركوب الدراجة", pt:"Ciclismo", ru:"Велосипед", de:"Radfahren" },
+  at_swimming: { en:"Swimming", tr:"Yüzme", zh:"游泳", hi:"तैराकी", es:"Natación", fr:"Natation", ar:"السباحة", pt:"Natação", ru:"Плавание", de:"Schwimmen" },
+  at_gym: { en:"Gym", tr:"Spor Salonu", zh:"健身房", hi:"जिम", es:"Gimnasio", fr:"Salle de sport", ar:"الصالة الرياضية", pt:"Academia", ru:"Спортзал", de:"Fitnessstudio" },
+  at_other: { en:"Other", tr:"Diğer", zh:"其他", hi:"अन्य", es:"Otro", fr:"Autre", ar:"أخرى", pt:"Outro", ru:"Другое", de:"Sonstiges" },
+  at_loading: { en:"Loading...", tr:"Yükleniyor...", zh:"加载中...", hi:"लोड हो रहा है...", es:"Cargando...", fr:"Chargement...", ar:"جارٍ التحميل...", pt:"Carregando...", ru:"Загрузка...", de:"Wird geladen..." },
+  at_steps: { en:"Steps", tr:"Adım", zh:"步数", hi:"कदम", es:"Pasos", fr:"Pas", ar:"خطوات", pt:"Passos", ru:"Шаги", de:"Schritte" },
+  at_calories: { en:"Calories", tr:"Kalori", zh:"卡路里", hi:"कैलोरी", es:"Calorías", fr:"Calories", ar:"سعرات", pt:"Calorias", ru:"Калории", de:"Kalorien" },
+  at_gl_gain: { en:"GL gain", tr:"GL kazancı", zh:"GL 收益", hi:"GL लाभ", es:"Ganancia GL", fr:"Gain GL", ar:"مكسب GL", pt:"Ganho GL", ru:"Выигрыш GL", de:"GL-Gewinn" },
+  at_no_health: { en:"No health data today", tr:"Bugün sağlık verisi yok", zh:"今天没有健康数据", hi:"आज कोई स्वास्थ्य डेटा नहीं", es:"Sin datos de salud hoy", fr:"Aucune donnée santé aujourd'hui", ar:"لا توجد بيانات صحية اليوم", pt:"Sem dados de saúde hoje", ru:"Нет данных о здоровье сегодня", de:"Heute keine Gesundheitsdaten" },
+  at_add: { en:"+ Add Activity", tr:"+ Aktivite Ekle", zh:"+ 添加运动", hi:"+ गतिविधि जोड़ें", es:"+ Añadir actividad", fr:"+ Ajouter une activité", ar:"+ إضافة نشاط", pt:"+ Adicionar atividade", ru:"+ Добавить активность", de:"+ Aktivität hinzufügen" },
+  at_est_reduction: { en:"Estimated GL reduction:", tr:"Tahmini GL azalması:", zh:"预计 GL 降低：", hi:"अनुमानित GL कमी:", es:"Reducción de GL estimada:", fr:"Réduction GL estimée :", ar:"الانخفاض المقدّر في GL:", pt:"Redução de GL estimada:", ru:"Оценочное снижение GL:", de:"Geschätzte GL-Reduktion:" },
 };
 for (const key of Object.keys(ADDITIONS)) {
   for (const lang of Object.keys(LANGUAGES) as Lang[]) {

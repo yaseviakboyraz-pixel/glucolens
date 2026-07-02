@@ -278,8 +278,8 @@ export function HistoryDashboard({ profile, lang, onNewMeal, onEditProfile }: Pr
         <div className="space-y-4">
           <GoalTracker lang={lang} />
           <WeeklyChallenge lang={lang} />
-          <WaterTracker dailyTarget={2000} />
-          <ActivityTracker />
+          <WaterTracker dailyTarget={2000} lang={lang} />
+          <ActivityTracker lang={lang} />
           <WeeklyReportCard lang={lang} />
         </div>
       )}

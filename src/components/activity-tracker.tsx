@@ -6,20 +6,21 @@ import {
   type ActivityRecord,
 } from "@/lib/storage";
 import { getTodayHealthData, estimateGLReduction, isHealthAvailable, type HealthData } from "@/lib/healthkit";
+import { getT, type Lang } from "@/lib/i18n";
 
 const ACTIVITY_ICONS: Record<ActivityRecord["type"], string> = {
   walking: "🚶", running: "🏃", cycling: "🚴",
   swimming: "🏊", gym: "🏋️", other: "⚡",
 };
 
-const ACTIVITY_LABELS: Record<ActivityRecord["type"], string> = {
-  walking: "Yürüyüş", running: "Koşu", cycling: "Bisiklet",
-  swimming: "Yüzme", gym: "Spor Salonu", other: "Diğer",
-};
-
 const DURATION_OPTIONS = [15, 20, 30, 45, 60, 90];
 
-export function ActivityTracker() {
+export function ActivityTracker({ lang }: { lang: Lang }) {
+  const tx = getT(lang);
+  const activityLabel: Record<ActivityRecord["type"], string> = {
+    walking: tx.at_walking, running: tx.at_running, cycling: tx.at_cycling,
+    swimming: tx.at_swimming, gym: tx.at_gym, other: tx.at_other,
+  };
   const [activities, setActivities] = useState<ActivityRecord[]>([]);
   const [selectedType, setSelectedType] = useState<ActivityRecord["type"]>("walking");
   const [selectedDuration, setSelectedDuration] = useState(30);
@@ -65,13 +66,13 @@ export function ActivityTracker() {
     <div className="bg-gray-900 rounded-xl p-4 border border-gray-800">
       <div className="flex justify-between items-center mb-3">
         <h3 className="text-sm font-medium text-gray-400 flex items-center gap-2">
-          🏃 Bugünkü Aktivite
+          {tx.at_title}
         </h3>
         <div className="flex items-center gap-2">
           {totalGLReduction > 0 && (
             <span className="text-xs text-green-400">-{totalGLReduction} GL</span>
           )}
-          <span className="text-xs text-gray-500">{todayMin} dk</span>
+          <span className="text-xs text-gray-500">{todayMin} {tx.wr_min}</span>
         </div>
       </div>
 
@@ -82,26 +83,26 @@ export function ActivityTracker() {
             <span className="text-xs text-gray-400 flex items-center gap-1">
               ❤️ Apple Health
             </span>
-            {healthLoading && <span className="text-xs text-gray-600 animate-pulse">Yükleniyor...</span>}
+            {healthLoading && <span className="text-xs text-gray-600 animate-pulse">{tx.at_loading}</span>}
           </div>
           {healthData ? (
             <div className="grid grid-cols-3 gap-2">
               <div className="text-center">
                 <div className="text-white font-bold">{healthData.steps.toLocaleString()}</div>
-                <div className="text-xs text-gray-600">Adım</div>
+                <div className="text-xs text-gray-600">{tx.at_steps}</div>
               </div>
               <div className="text-center">
                 <div className="text-white font-bold">{healthData.calories}</div>
-                <div className="text-xs text-gray-600">Kalori</div>
+                <div className="text-xs text-gray-600">{tx.at_calories}</div>
               </div>
               <div className="text-center">
                 <div className="text-green-400 font-bold">-{healthGLReduction}</div>
-                <div className="text-xs text-gray-600">GL kazancı</div>
+                <div className="text-xs text-gray-600">{tx.at_gl_gain}</div>
               </div>
             </div>
           ) : (
             !healthLoading && (
-              <p className="text-xs text-gray-600">Bugün sağlık verisi yok</p>
+              <p className="text-xs text-gray-600">{tx.at_no_health}</p>
             )
           )}
         </div>
@@ -113,7 +114,7 @@ export function ActivityTracker() {
           {activities.map((act) => (
             <div key={act.id} className="flex items-center justify-between bg-gray-800 rounded-lg px-3 py-2">
               <span className="text-sm">
-                {ACTIVITY_ICONS[act.type]} {ACTIVITY_LABELS[act.type]} · {act.durationMin} dk
+                {ACTIVITY_ICONS[act.type]} {activityLabel[act.type]} · {act.durationMin} {tx.wr_min}
               </span>
               <div className="flex items-center gap-2">
                 <span className="text-xs text-green-400">-{act.glReduction} GL</span>
@@ -133,7 +134,7 @@ export function ActivityTracker() {
           onClick={() => setAdding(true)}
           className="w-full py-2.5 rounded-xl text-sm text-gray-400 bg-gray-800 hover:bg-gray-700 transition-all border border-gray-700 border-dashed"
         >
-          + Aktivite Ekle
+          {tx.at_add}
         </button>
       ) : (
         <div className="space-y-3 pt-2 border-t border-gray-800">
@@ -149,7 +150,7 @@ export function ActivityTracker() {
                     : "bg-gray-800 text-gray-400 hover:bg-gray-700"
                 }`}
               >
-                {icon} {ACTIVITY_LABELS[type]}
+                {icon} {activityLabel[type]}
               </button>
             ))}
           </div>
@@ -166,24 +167,24 @@ export function ActivityTracker() {
                     : "bg-gray-800 text-gray-400 hover:bg-gray-700"
                 }`}
               >
-                {d}dk
+                {d} {tx.wr_min}
               </button>
             ))}
           </div>
 
           <div className="text-xs text-gray-500 text-center">
-            Tahmini GL azalması: ~{((ACTIVITY_GL_REDUCTION[selectedType] * selectedDuration) / 30).toFixed(1)}
+            {tx.at_est_reduction} ~{((ACTIVITY_GL_REDUCTION[selectedType] * selectedDuration) / 30).toFixed(1)}
           </div>
 
           <div className="flex gap-2">
             <button
               onClick={() => setAdding(false)}
               className="flex-1 py-2 rounded-xl text-sm text-gray-400 bg-gray-800"
-            >İptal</button>
+            >{tx.ua_cancel}</button>
             <button
               onClick={handleLog}
               className="flex-1 py-2 rounded-xl text-sm font-semibold text-white bg-teal-600 hover:bg-teal-500"
-            >Kaydet</button>
+            >{tx.gt_save}</button>
           </div>
         </div>
       )}
