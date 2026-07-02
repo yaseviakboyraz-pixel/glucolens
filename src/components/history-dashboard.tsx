@@ -276,11 +276,11 @@ export function HistoryDashboard({ profile, lang, onNewMeal, onEditProfile }: Pr
       {/* Wellness Tab */}
       {activeTab === "wellness" && (
         <div className="space-y-4">
-          <GoalTracker />
+          <GoalTracker lang={lang} />
           <WeeklyChallenge lang={lang} />
           <WaterTracker dailyTarget={2000} />
           <ActivityTracker />
-          <WeeklyReportCard />
+          <WeeklyReportCard lang={lang} />
         </div>
       )}
 

@@ -332,6 +332,31 @@ const ADDITIONS: Record<string, Record<Lang, string>> = {
   ht_fast_stats: { en:"Fasting Stats", tr:"Oruç İstatistikleri", zh:"断食统计", hi:"उपवास आंकड़े", es:"Estadísticas de ayuno", fr:"Stats de jeûne", ar:"إحصاءات الصيام", pt:"Estatísticas de jejum", ru:"Статистика поста", de:"Fasten-Statistik" },
   ht_fast_completed_count: { en:"Completed Fasts", tr:"Tamamlanan Oruç", zh:"已完成断食", hi:"पूर्ण उपवास", es:"Ayunos completados", fr:"Jeûnes terminés", ar:"الصيامات المكتملة", pt:"Jejuns concluídos", ru:"Завершённые посты", de:"Abgeschlossene Fasten" },
   ht_avg_duration: { en:"Avg. Duration", tr:"Ort. Süre", zh:"平均时长", hi:"औसत अवधि", es:"Duración prom.", fr:"Durée moy.", ar:"متوسط المدة", pt:"Duração méd.", ru:"Сред. длительность", de:"Ø Dauer" },
+
+  // Goal tracker (wellness)
+  gt_title: { en:"🎯 Daily GL Goal", tr:"🎯 Günlük GL Hedefi", zh:"🎯 每日 GL 目标", hi:"🎯 दैनिक GL लक्ष्य", es:"🎯 Meta diaria de GL", fr:"🎯 Objectif GL quotidien", ar:"🎯 هدف GL اليومي", pt:"🎯 Meta diária de GL", ru:"🎯 Дневная цель GL", de:"🎯 Tägliches GL-Ziel" },
+  gt_recommended: { en:"Recommended:", tr:"Önerilen:", zh:"推荐：", hi:"अनुशंसित:", es:"Recomendado:", fr:"Recommandé :", ar:"موصى به:", pt:"Recomendado:", ru:"Рекомендуется:", de:"Empfohlen:" },
+  gt_save: { en:"Save", tr:"Kaydet", zh:"保存", hi:"सहेजें", es:"Guardar", fr:"Enregistrer", ar:"حفظ", pt:"Salvar", ru:"Сохранить", de:"Speichern" },
+  gt_today: { en:"Today:", tr:"Bugün:", zh:"今天：", hi:"आज:", es:"Hoy:", fr:"Aujourd'hui :", ar:"اليوم:", pt:"Hoje:", ru:"Сегодня:", de:"Heute:" },
+  gt_goal: { en:"Goal:", tr:"Hedef:", zh:"目标：", hi:"लक्ष्य:", es:"Meta:", fr:"Objectif :", ar:"الهدف:", pt:"Meta:", ru:"Цель:", de:"Ziel:" },
+  gt_of_daily_goal: { en:"of daily goal", tr:"günlük hedefin", zh:"的每日目标", hi:"दैनिक लक्ष्य का", es:"de la meta diaria", fr:"de l'objectif quotidien", ar:"من الهدف اليومي", pt:"da meta diária", ru:"от дневной цели", de:"des Tagesziels" },
+  gt_gl_remaining: { en:"GL remaining", tr:"GL kaldı", zh:"GL 剩余", hi:"GL शेष", es:"GL restante", fr:"GL restant", ar:"GL متبقٍ", pt:"GL restante", ru:"GL осталось", de:"GL übrig" },
+  gt_exceeded: { en:"Exceeded by", tr:"Aşıldı:", zh:"超出", hi:"अधिक:", es:"Excedido en", fr:"Dépassé de", ar:"تجاوز بمقدار", pt:"Excedido em", ru:"Превышено на", de:"Überschritten um" },
+  gt_breakfast: { en:"Breakfast", tr:"Kahvaltı", zh:"早餐", hi:"नाश्ता", es:"Desayuno", fr:"Petit-déj", ar:"الفطور", pt:"Café da manhã", ru:"Завтрак", de:"Frühstück" },
+  gt_lunch: { en:"Lunch", tr:"Öğle", zh:"午餐", hi:"दोपहर का भोजन", es:"Almuerzo", fr:"Déjeuner", ar:"الغداء", pt:"Almoço", ru:"Обед", de:"Mittag" },
+  gt_dinner: { en:"Dinner", tr:"Akşam", zh:"晚餐", hi:"रात का खाना", es:"Cena", fr:"Dîner", ar:"العشاء", pt:"Jantar", ru:"Ужин", de:"Abendessen" },
+  gt_week_on_target: { en:"This week on target", tr:"Bu hafta hedefte", zh:"本周达标", hi:"इस सप्ताह लक्ष्य पर", es:"Esta semana en objetivo", fr:"Cette semaine dans l'objectif", ar:"هذا الأسبوع ضمن الهدف", pt:"Esta semana na meta", ru:"На этой неделе в цели", de:"Diese Woche im Ziel" },
+
+  // Weekly report (wellness)
+  wr_title: { en:"Weekly Report", tr:"Haftalık Rapor", zh:"每周报告", hi:"साप्ताहिक रिपोर्ट", es:"Informe semanal", fr:"Rapport hebdomadaire", ar:"التقرير الأسبوعي", pt:"Relatório semanal", ru:"Недельный отчёт", de:"Wochenbericht" },
+  wr_avg_daily_gl: { en:"Avg Daily GL", tr:"Ort. Günlük GL", zh:"日均 GL", hi:"औसत दैनिक GL", es:"GL diario prom.", fr:"GL quotidien moy.", ar:"متوسط GL اليومي", pt:"GL diário méd.", ru:"Сред. дневной GL", de:"Ø täglicher GL" },
+  wr_meals_logged: { en:"Meals Logged", tr:"Girilen Öğün", zh:"已记录餐数", hi:"दर्ज भोजन", es:"Comidas registradas", fr:"Repas enregistrés", ar:"الوجبات المسجلة", pt:"Refeições registradas", ru:"Записано блюд", de:"Erfasste Mahlzeiten" },
+  wr_high_risk_meals: { en:"High-Risk Meals", tr:"Yüksek Riskli Öğün", zh:"高风险餐", hi:"उच्च-जोखिम भोजन", es:"Comidas de alto riesgo", fr:"Repas à risque élevé", ar:"وجبات عالية الخطورة", pt:"Refeições de alto risco", ru:"Блюда высокого риска", de:"Risikoreiche Mahlzeiten" },
+  wr_best_day: { en:"✅ Best day", tr:"✅ En iyi gün", zh:"✅ 最佳一天", hi:"✅ सर्वश्रेष्ठ दिन", es:"✅ Mejor día", fr:"✅ Meilleur jour", ar:"✅ أفضل يوم", pt:"✅ Melhor dia", ru:"✅ Лучший день", de:"✅ Bester Tag" },
+  wr_hardest_day: { en:"⚠️ Hardest day", tr:"⚠️ En zor gün", zh:"⚠️ 最难的一天", hi:"⚠️ सबसे कठिन दिन", es:"⚠️ Día más difícil", fr:"⚠️ Jour le plus difficile", ar:"⚠️ أصعب يوم", pt:"⚠️ Dia mais difícil", ru:"⚠️ Самый трудный день", de:"⚠️ Schwerster Tag" },
+  wr_total_activity: { en:"🏃 Total activity", tr:"🏃 Toplam aktivite", zh:"🏃 总运动量", hi:"🏃 कुल गतिविधि", es:"🏃 Actividad total", fr:"🏃 Activité totale", ar:"🏃 إجمالي النشاط", pt:"🏃 Atividade total", ru:"🏃 Всего активности", de:"🏃 Gesamtaktivität" },
+  wr_min: { en:"min", tr:"dk", zh:"分钟", hi:"मि", es:"min", fr:"min", ar:"دقيقة", pt:"min", ru:"мин", de:"Min" },
+  wr_top_foods: { en:"Most logged foods this week", tr:"Bu hafta en çok girilen yiyecekler", zh:"本周记录最多的食物", hi:"इस सप्ताह सबसे अधिक दर्ज भोजन", es:"Alimentos más registrados esta semana", fr:"Aliments les plus enregistrés cette semaine", ar:"أكثر الأطعمة تسجيلاً هذا الأسبوع", pt:"Alimentos mais registrados esta semana", ru:"Самые записываемые продукты за неделю", de:"Meist erfasste Lebensmittel diese Woche" },
 };
 for (const key of Object.keys(ADDITIONS)) {
   for (const lang of Object.keys(LANGUAGES) as Lang[]) {
