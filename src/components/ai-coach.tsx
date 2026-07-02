@@ -1,6 +1,9 @@
 "use client";
 import { useState, useEffect, useRef } from "react";
 import { getMeals, getWeeklyReport, getProfile } from "@/lib/storage";
+import { getT, type Lang } from "@/lib/i18n";
+
+const LANG_NAMES: Record<Lang, string> = { en:"English", tr:"Turkish", zh:"Chinese", hi:"Hindi", es:"Spanish", fr:"French", ar:"Arabic", pt:"Portuguese", ru:"Russian", de:"German" };
 
 interface CoachMessage {
   role: "user" | "coach";
@@ -24,28 +27,8 @@ function saveMessages(msgs: CoachMessage[]) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(msgs.slice(-MAX_STORED)));
 }
 
-const QUICK_QUESTIONS_BY_TYPE: Record<string, string[]> = {
-  diabetic: [
-    "Bugün için güvenli kahvaltı önerir misin?",
-    "GL'mi nasıl düşürebilirim?",
-    "İnsülin direncini ne etkiler?",
-    "Diyabetik için en iyi atıştırmalık?",
-  ],
-  pre_diabetic: [
-    "Pre-diyabet için ideal öğün planı?",
-    "Hangi karbonhidratlar daha güvenli?",
-    "GL hedefime ulaşmak için ipuçları?",
-    "Kan şekeri dengelemek için ne yemeliyim?",
-  ],
-  healthy: [
-    "Kahvaltı için ne önerirsin?",
-    "GL nedir, nasıl çalışır?",
-    "En iyi düşük GL atıştırmalıklar?",
-    "Spordan önce ne yemeliyim?",
-  ],
-};
-
-export function AICoach() {
+export function AICoach({ lang }: { lang: Lang }) {
+  const tx = getT(lang);
   const [messages, setMessages] = useState<CoachMessage[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
@@ -54,7 +37,11 @@ export function AICoach() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const profile = typeof window !== "undefined" ? getProfile() : null;
 
-  const quickQuestions = QUICK_QUESTIONS_BY_TYPE[profile?.userType || "healthy"];
+  const quickQuestions = ({
+    diabetic: [tx.aic_q_dia_1, tx.aic_q_dia_2, tx.aic_q_dia_3, tx.aic_q_dia_4],
+    pre_diabetic: [tx.aic_q_pre_1, tx.aic_q_pre_2, tx.aic_q_pre_3, tx.aic_q_pre_4],
+    healthy: [tx.aic_q_hea_1, tx.aic_q_hea_2, tx.aic_q_hea_3, tx.aic_q_hea_4],
+  } as Record<string, string[]>)[profile?.userType || "healthy"];
 
   useEffect(() => {
     const stored = loadMessages();
@@ -77,7 +64,7 @@ export function AICoach() {
     const meals = getMeals().slice(0, 5);
     const lastMeal = meals[0];
 
-    const prompt = `You are GlucoLens AI Coach. Generate a brief, warm, personalized greeting in ${profile?.userType === "diabetic" || profile?.userType === "pre_diabetic" ? "Turkish" : "English"} (2-3 sentences max).
+    const prompt = `You are GlucoLens AI Coach. Generate a brief, warm, personalized greeting in ${LANG_NAMES[lang]} (2-3 sentences max).
 
 User: ${profile?.name || "there"}, type: ${profile?.userType || "healthy"}, daily GL target: ${profile?.dailyGLTarget || 60}
 Weekly: avg GL ${report?.avgDailyGL ?? 0}, ${report?.totalMeals ?? 0} meals, streak: ${report?.streak ?? 0} days, ${report?.highRiskMeals ?? 0} high-risk meals
@@ -138,7 +125,7 @@ If they have data, comment on ONE specific insight. End with a concrete offer to
       const lastMeal = meals[0];
 
       const coachPrompt = `You are GlucoLens AI Coach — a warm, knowledgeable nutrition coach specializing in glycemic management.
-Respond in the SAME language as the user's message. Be concise (3-5 sentences), specific, and actionable. No lists unless asked.
+The user's interface language is ${LANG_NAMES[lang]}. Respond in the SAME language as the user's message (default to ${LANG_NAMES[lang]}). Be concise (3-5 sentences), specific, and actionable. No lists unless asked.
 
 User profile: ${profile?.name || "User"}, type: ${profile?.userType || "healthy"}, daily GL target: ${profile?.dailyGLTarget || 60}
 Weekly stats: avg GL ${report?.avgDailyGL ?? 0}, ${report?.totalMeals ?? 0} meals, ${report?.highRiskMeals ?? 0} high-risk meals, streak: ${report?.streak ?? 0} days
@@ -201,7 +188,7 @@ Respond helpfully. If asked about a food, give GL estimate. If asked for advice,
           <div className="text-left">
             <div className="text-sm font-medium text-white">GlucoLens Coach</div>
             <div className="text-xs text-gray-500">
-              {messages.length > 1 ? `${messages.length} mesaj · geçmiş korundu` : "AI beslenme asistanı"}
+              {messages.length > 1 ? `${messages.length} ${tx.aic_msgs_saved}` : tx.aic_subtitle}
             </div>
           </div>
         </div>
@@ -267,7 +254,7 @@ Respond helpfully. If asked about a food, give GL estimate. If asked for advice,
             <input type="text" value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && sendMessage()}
-              placeholder="Sor..."
+              placeholder={tx.aic_placeholder}
               className="flex-1 bg-gray-800 border border-gray-700 rounded-xl px-3 py-2 text-sm text-gray-200 placeholder-gray-600 focus:outline-none focus:border-teal-500"
             />
             <button onClick={() => sendMessage()} disabled={!input.trim() || loading}
@@ -275,7 +262,7 @@ Respond helpfully. If asked about a food, give GL estimate. If asked for advice,
               →
             </button>
             {messages.length > 3 && (
-              <button onClick={clearHistory} title="Sohbeti sıfırla"
+              <button onClick={clearHistory} title={tx.aic_reset}
                 className="px-2 py-2 text-gray-600 hover:text-gray-400 transition-colors text-xs">
                 🔄
               </button>

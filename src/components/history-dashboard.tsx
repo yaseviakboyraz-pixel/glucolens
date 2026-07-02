@@ -196,7 +196,7 @@ export function HistoryDashboard({ profile, lang, onNewMeal, onEditProfile }: Pr
       {meals.length > 0 && <GLChart dailyTarget={profile.dailyGLTarget} lang={lang} />}
 
       {/* AI Coach — only meaningful once meals exist */}
-      {meals.length > 0 && <AICoach />}
+      {meals.length > 0 && <AICoach lang={lang} />}
 
       {/* Insights — need data to be meaningful */}
       {meals.length > 0 && insights.map((insight, i) => (
