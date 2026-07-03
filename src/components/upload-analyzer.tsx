@@ -150,7 +150,7 @@ export function UploadAnalyzer({ userType = "healthy", lang, onAnalysisComplete 
       const res = await fetchWithTimeout("/api/analyze", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ imageBase64: b64, userType, mealContext: contextNote, plan }),
+        body: JSON.stringify({ imageBase64: b64, userType, mealContext: contextNote, plan, lang }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || tx.error_failed);
@@ -161,7 +161,7 @@ export function UploadAnalyzer({ userType = "healthy", lang, onAnalysisComplete 
         const res2 = await fetchWithTimeout("/api/analyze", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ imageBase64: b64_2, userType, mealContext, plan }),
+          body: JSON.stringify({ imageBase64: b64_2, userType, mealContext, plan, lang }),
         });
         const data2 = await res2.json();
         if (res2.ok) setResult2(data2.analysis);
@@ -309,7 +309,7 @@ export function UploadAnalyzer({ userType = "healthy", lang, onAnalysisComplete 
   };
 
   const foodName = (item: MealAnalysis["food_items"][number]) =>
-    lang === "tr" ? (item.name_tr || item.name) : item.name;
+    item.name_local || (lang === "tr" ? item.name_tr : null) || item.name;
 
   // Lightweight local accuracy feedback. Sets honest expectations and collects
   // a calibration signal; syncing/acting on it is a deliberate future step.

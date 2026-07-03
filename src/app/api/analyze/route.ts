@@ -13,6 +13,9 @@ const VALID_USER_TYPES = new Set([
   "healthy", "pre_diabetic", "diabetic", "type1", "type2", "athlete", "elderly", "child",
 ]);
 
+// ── Allowed UI languages (output-language directive; default en) ────────────────
+const VALID_LANGS = new Set(["en", "tr", "zh", "hi", "es", "fr", "ar", "pt", "ru", "de"]);
+
 function sanitizeString(s: unknown, maxLen = 200): string {
   if (typeof s !== "string") return "";
   return s.slice(0, maxLen).replace(/[<>"'&]/g, "");
@@ -43,7 +46,7 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json();
-    const { imageBase64, userType: rawUserType, mealContext: rawContext, plan: rawPlan } = body;
+    const { imageBase64, userType: rawUserType, mealContext: rawContext, plan: rawPlan, lang: rawLang } = body;
 
     // ── Input validation ────────────────────────────────────────────────────
     if (!imageBase64 || typeof imageBase64 !== "string") {
@@ -55,6 +58,9 @@ export async function POST(req: NextRequest) {
 
     // Sanitize mealContext — strip HTML, limit length
     const mealContext = rawContext ? sanitizeString(rawContext, 200) : undefined;
+
+    // UI language for the output-language directive — whitelist, default English
+    const lang = VALID_LANGS.has(rawLang) ? rawLang : "en";
 
     // Tier selection for model: Pro → quality (Sonnet), Free/unknown → cheap+fast
     // (Haiku). Default is the cost-safe "free". The plan claim is client-supplied
@@ -70,7 +76,7 @@ export async function POST(req: NextRequest) {
     }
 
     const start = Date.now();
-    const analysis = await analyzeMealImage(base64Data, userType, mealContext, tier);
+    const analysis = await analyzeMealImage(base64Data, userType, mealContext, tier, lang);
 
     return NextResponse.json(
       { analysis, processingMs: Date.now() - start, disclaimer: "Not medical advice." },
