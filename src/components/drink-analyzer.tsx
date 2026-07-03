@@ -1,14 +1,14 @@
 "use client";
 import { useState, useRef, useCallback } from "react";
 import {
-  lookupDrink, calculateDrinkGL, getDiabetesRiskLabel,
+  lookupDrink, calculateDrinkGL,
   DRINK_DATABASE, SAFE_DRINKS, HIGH_RISK_DRINKS,
   type DrinkEntry,
 } from "@/lib/drink-data";
 import { claudeGIEstimate } from "@/lib/claude-fallback";
 import { saveMeal } from "@/lib/storage";
 import type { MealAnalysis } from "@/lib/claude-vision";
-import type { Lang } from "@/lib/i18n";
+import { getT, type Lang } from "@/lib/i18n";
 
 interface AnalyzedDrink {
   entry: DrinkEntry;
@@ -40,6 +40,17 @@ const CATEGORIES = [
 ];
 
 export function DrinkAnalyzer({ lang, userType = "healthy" }: Props) {
+  const tx = getT(lang);
+  const riskLabel = (risk: string) =>
+    risk === "low" ? tx.dr_risk_safe
+    : risk === "medium" ? tx.dr_risk_moderate
+    : risk === "high" ? tx.dr_risk_high
+    : tx.dr_risk_veryhigh;
+  const catLabel: Record<string, string> = {
+    all: tx.dr_cat_all, beer: tx.dr_cat_beer, wine: tx.dr_cat_wine, spirit: tx.dr_cat_spirit,
+    liqueur: tx.dr_cat_liqueur, cocktail: tx.dr_cat_cocktail, juice: tx.dr_cat_juice,
+    soda: tx.dr_cat_soda, coffee: tx.dr_cat_coffee, tea: tx.dr_cat_tea, traditional: tx.dr_cat_turkish,
+  };
   const [mode, setMode] = useState<"search" | "photo" | "browse">("search");
   const [query, setQuery] = useState("");
   const [suggestions, setSuggestions] = useState<string[]>([]);
@@ -111,7 +122,7 @@ export function DrinkAnalyzer({ lang, userType = "healthy" }: Props) {
         setServingMl(250);
         buildResult(synth, 250);
       } else {
-        setError("Could not find this drink. Try the photo mode.");
+        setError(tx.dr_not_found);
       }
     }
   }
@@ -167,7 +178,7 @@ export function DrinkAnalyzer({ lang, userType = "healthy" }: Props) {
           }),
         });
         const data = await res.json();
-        if (!res.ok) throw new Error(data.error || "Analysis failed");
+        if (!res.ok) throw new Error(data.error || tx.dr_analysis_failed);
 
         // Try to match with our DB
         const analysis = data.analysis;
@@ -201,10 +212,10 @@ export function DrinkAnalyzer({ lang, userType = "healthy" }: Props) {
         }
         setLoading(false);
       };
-      reader.onerror = () => { throw new Error("Could not read image"); };
+      reader.onerror = () => { throw new Error(tx.dr_img_unreadable); };
       reader.readAsDataURL(file);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Analysis failed");
+      setError(e instanceof Error ? e.message : tx.dr_analysis_failed);
       setLoading(false);
     }
   }, [userType]);
@@ -221,9 +232,9 @@ export function DrinkAnalyzer({ lang, userType = "healthy" }: Props) {
       {/* Mode tabs */}
       <div className="grid grid-cols-3 gap-2">
         {([
-          { key: "search", icon: "🔍", label: "Search" },
-          { key: "photo",  icon: "📷", label: "Photo" },
-          { key: "browse", icon: "📋", label: "Browse" },
+          { key: "search", icon: "🔍", label: tx.dr_search },
+          { key: "photo",  icon: "📷", label: tx.dr_photo },
+          { key: "browse", icon: "📋", label: tx.dr_browse },
         ] as { key: typeof mode; icon: string; label: string }[]).map(m => (
           <button key={m.key} onClick={() => { setMode(m.key); setResult(null); setQuery(""); setSuggestions([]); }}
             className={`py-2.5 rounded-xl text-xs font-medium transition-all ${
@@ -241,11 +252,11 @@ export function DrinkAnalyzer({ lang, userType = "healthy" }: Props) {
           <div className="relative flex gap-2">
             <input type="text" value={query} onChange={(e) => handleSearch(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && runDrinkSearch(query)}
-              placeholder="e.g. mojito, bira, bubble tea, taro latte..."
+              placeholder={tx.dr_search_ph}
               className="flex-1 bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-gray-200 placeholder-gray-600 focus:outline-none focus:border-teal-500" />
             <button onClick={() => runDrinkSearch(query)} disabled={aiLoading || query.length < 2}
               className="px-4 py-3 bg-teal-600 hover:bg-teal-500 disabled:opacity-40 text-white rounded-xl font-medium text-sm transition-all">
-              {aiLoading ? "..." : "Go"}
+              {aiLoading ? "..." : tx.dr_go}
             </button>
             {suggestions.length > 0 && (
               <div className="absolute top-full left-0 right-0 bg-gray-900 border border-gray-700 rounded-xl mt-1 z-10 shadow-xl overflow-hidden">
@@ -254,7 +265,7 @@ export function DrinkAnalyzer({ lang, userType = "healthy" }: Props) {
                     className="w-full text-left px-4 py-2.5 text-sm text-gray-300 hover:bg-gray-800 transition-colors border-b border-gray-800 last:border-0 flex items-center gap-2">
                     <span>{DRINK_DATABASE[s].name_tr || DRINK_DATABASE[s].name}</span>
                     <span className={`text-xs ml-auto ${riskColor(DRINK_DATABASE[s].diabetes_risk)}`}>
-                      {getDiabetesRiskLabel(DRINK_DATABASE[s].diabetes_risk)}
+                      {riskLabel(DRINK_DATABASE[s].diabetes_risk)}
                     </span>
                   </button>
                 ))}
@@ -266,7 +277,7 @@ export function DrinkAnalyzer({ lang, userType = "healthy" }: Props) {
           {!result && (
             <div className="space-y-3">
               <div>
-                <p className="text-xs text-green-500 mb-2">✅ Safe choices</p>
+                <p className="text-xs text-green-500 mb-2">{tx.dr_safe_choices}</p>
                 <div className="flex flex-wrap gap-2">
                   {SAFE_DRINKS.slice(0, 6).map(d => DRINK_DATABASE[d] && (
                     <button key={d} onClick={() => selectDrink(d)}
@@ -277,7 +288,7 @@ export function DrinkAnalyzer({ lang, userType = "healthy" }: Props) {
                 </div>
               </div>
               <div>
-                <p className="text-xs text-red-500 mb-2">⛔ Avoid or limit</p>
+                <p className="text-xs text-red-500 mb-2">{tx.dr_avoid_limit}</p>
                 <div className="flex flex-wrap gap-2">
                   {HIGH_RISK_DRINKS.slice(0, 5).map(d => DRINK_DATABASE[d] && (
                     <button key={d} onClick={() => selectDrink(d)}
@@ -298,28 +309,28 @@ export function DrinkAnalyzer({ lang, userType = "healthy" }: Props) {
           <button onClick={() => photoRef.current?.click()}
             className="w-full py-8 rounded-2xl border-2 border-dashed border-gray-700 hover:border-teal-500 transition-colors text-center space-y-2">
             <div className="text-4xl">📷</div>
-            <p className="text-gray-300 font-medium">Take photo of drink</p>
-            <p className="text-gray-600 text-sm">Bottle, glass, can, menu item</p>
+            <p className="text-gray-300 font-medium">{tx.dr_take_photo}</p>
+            <p className="text-gray-600 text-sm">{tx.dr_photo_hint}</p>
           </button>
           <input ref={photoRef} type="file" accept="image/*" capture="environment" className="hidden"
             onChange={(e) => { const f = e.target.files?.[0]; if (f) analyzePhoto(f); e.target.value = ""; }} />
           <p className="text-center text-gray-600 text-xs">
-            Claude reads labels, colors, and glass type to identify the drink
+            {tx.dr_photo_desc}
           </p>
         </div>
       )}
 
       {aiLoading && (
         <div className="bg-purple-950/30 border border-purple-500/30 rounded-xl p-4 text-center">
-          <div className="text-purple-400 text-sm animate-pulse">🤖 AI analyzing "{query}" as a drink...</div>
-          <div className="text-gray-600 text-xs mt-1">Not in database — asking Claude</div>
+          <div className="text-purple-400 text-sm animate-pulse">{tx.dr_ai_analyzing.replace("{q}", query)}</div>
+          <div className="text-gray-600 text-xs mt-1">{tx.dr_not_in_db}</div>
         </div>
       )}
 
       {loading && (
         <div className="text-center py-12 space-y-3">
           <div className="text-4xl animate-bounce">🔍</div>
-          <p className="text-teal-400 font-medium">Identifying drink...</p>
+          <p className="text-teal-400 font-medium">{tx.dr_identifying}</p>
         </div>
       )}
 
@@ -334,7 +345,7 @@ export function DrinkAnalyzer({ lang, userType = "healthy" }: Props) {
                     ? "bg-teal-600 text-white"
                     : "bg-gray-900 text-gray-400 border border-gray-800"
                 }`}>
-                {cat.icon} {cat.label}
+                {cat.icon} {catLabel[cat.key]}
               </button>
             ))}
           </div>
@@ -348,12 +359,12 @@ export function DrinkAnalyzer({ lang, userType = "healthy" }: Props) {
                     <span className="text-white text-sm font-medium">{entry.name_tr || entry.name}</span>
                     <div className="flex gap-3 mt-0.5 text-xs text-gray-500">
                       {entry.alcohol_pct > 0 && <span>🍶 {entry.alcohol_pct}%</span>}
-                      <span>🍬 {entry.sugar_per_100ml}g sugar/100ml</span>
+                      <span>🍬 {entry.sugar_per_100ml}g {tx.dr_sugar_100}</span>
                       <span>🔥 {entry.cal_per_100ml}kcal/100ml</span>
                     </div>
                   </div>
                   <span className={`text-xs font-medium shrink-0 ml-2 ${riskColor(entry.diabetes_risk)}`}>
-                    {getDiabetesRiskLabel(entry.diabetes_risk)}
+                    {riskLabel(entry.diabetes_risk)}
                   </span>
                 </div>
               </button>
@@ -380,12 +391,12 @@ export function DrinkAnalyzer({ lang, userType = "healthy" }: Props) {
                 <p className="text-gray-400 text-sm capitalize">{result.entry.subcategory || result.entry.category}</p>
                 {result.entry.source === "Claude AI" && (
                   <span className="text-xs bg-purple-950/50 border border-purple-500/30 text-purple-400 px-2 py-0.5 rounded-full">
-                    🤖 AI Estimate
+                    {tx.dr_ai_estimate}
                   </span>
                 )}
               </div>
               <div className={`text-right ${riskColor(result.entry.diabetes_risk)}`}>
-                <div className="text-2xl font-bold">{getDiabetesRiskLabel(result.entry.diabetes_risk)}</div>
+                <div className="text-2xl font-bold">{riskLabel(result.entry.diabetes_risk)}</div>
                 {result.entry.alcohol_pct > 0 && (
                   <div className="text-xs text-gray-400 mt-0.5">{result.entry.alcohol_pct}% ABV</div>
                 )}
@@ -396,7 +407,7 @@ export function DrinkAnalyzer({ lang, userType = "healthy" }: Props) {
           {/* Serving size */}
           <div className="bg-gray-900 rounded-xl p-4 border border-gray-800">
             <div className="flex items-center justify-between mb-3">
-              <label className="text-sm text-gray-400">Serving size</label>
+              <label className="text-sm text-gray-400">{tx.dr_serving_size}</label>
               <div className="flex items-center gap-2">
                 <button onClick={() => updateServing(Math.max(30, servingMl - 50))}
                   className="w-8 h-8 bg-gray-800 hover:bg-gray-700 rounded-lg text-white">−</button>
@@ -419,19 +430,19 @@ export function DrinkAnalyzer({ lang, userType = "healthy" }: Props) {
           <div className="grid grid-cols-2 gap-3">
             <div className="bg-gray-900 rounded-xl p-3 border border-gray-800 text-center">
               <div className={`text-3xl font-bold ${riskColor(result.entry.diabetes_risk)}`}>{result.gl}</div>
-              <div className="text-xs text-gray-500 mt-1">Glycemic Load</div>
+              <div className="text-xs text-gray-500 mt-1">{tx.dr_gl_label}</div>
             </div>
             <div className="bg-gray-900 rounded-xl p-3 border border-gray-800 text-center">
               <div className="text-3xl font-bold text-amber-400">{result.sugar_g}g</div>
-              <div className="text-xs text-gray-500 mt-1">Sugar</div>
+              <div className="text-xs text-gray-500 mt-1">{tx.ua_sugar}</div>
             </div>
             <div className="bg-gray-900 rounded-xl p-3 border border-gray-800 text-center">
               <div className="text-3xl font-bold text-orange-400">{result.cal}</div>
-              <div className="text-xs text-gray-500 mt-1">Calories</div>
+              <div className="text-xs text-gray-500 mt-1">{tx.at_calories}</div>
             </div>
             <div className="bg-gray-900 rounded-xl p-3 border border-gray-800 text-center">
               <div className="text-3xl font-bold text-purple-400">{result.alcohol_g}g</div>
-              <div className="text-xs text-gray-500 mt-1">Alcohol</div>
+              <div className="text-xs text-gray-500 mt-1">{tx.dr_alcohol}</div>
             </div>
           </div>
 
@@ -440,9 +451,9 @@ export function DrinkAnalyzer({ lang, userType = "healthy" }: Props) {
             <div className="bg-orange-950/60 border border-orange-500/40 rounded-xl p-3 flex gap-2">
               <span className="text-xl">⚠️</span>
               <div>
-                <p className="text-orange-300 font-medium text-sm">Hypoglycemia Risk</p>
+                <p className="text-orange-300 font-medium text-sm">{tx.dr_hypo_title}</p>
                 <p className="text-orange-400/70 text-xs mt-0.5">
-                  Alcohol suppresses liver glucose production. Risk is highest 8–12 hours after drinking, especially on empty stomach. Eat carbs before/while drinking.
+                  {tx.dr_hypo_body}
                 </p>
               </div>
             </div>
@@ -454,10 +465,10 @@ export function DrinkAnalyzer({ lang, userType = "healthy" }: Props) {
               <span className="text-xl">🩺</span>
               <div>
                 <p className="text-red-300 font-medium text-sm">
-                  {userType === "diabetic" ? "Diabetic" : "Pre-diabetic"} caution
+                  {userType === "diabetic" ? tx.dr_diabetic_caution : tx.dr_prediabetic_caution}
                 </p>
                 <p className="text-red-400/70 text-xs mt-0.5">
-                  Consult your doctor about alcohol consumption. Always eat before drinking. Monitor blood sugar more frequently.
+                  {tx.dr_diabetic_body}
                 </p>
               </div>
             </div>
@@ -473,7 +484,7 @@ export function DrinkAnalyzer({ lang, userType = "healthy" }: Props) {
           <div className="flex gap-2">
             <button onClick={() => { setResult(null); setQuery(""); setSuggestions([]); }}
               className="flex-1 py-3 rounded-xl text-gray-400 bg-gray-900 border border-gray-800 text-sm">
-              Search another
+              {tx.dr_search_another}
             </button>
             <button onClick={() => {
               if (!result) return;
@@ -496,7 +507,7 @@ export function DrinkAnalyzer({ lang, userType = "healthy" }: Props) {
               saveMeal(analysis, "drink");
             }}
               className="flex-1 py-3 rounded-xl text-white bg-teal-600 hover:bg-teal-500 font-semibold text-sm">
-              Log to history
+              {tx.dr_log_history}
             </button>
           </div>
         </div>
