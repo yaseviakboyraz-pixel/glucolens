@@ -90,7 +90,7 @@ export function DrinkAnalyzer({ lang, userType = "healthy" }: Props) {
       setSuggestions([]);
       setAiLoading(true);
       setResult(null);
-      const estimate = await claudeGIEstimate(name, 250, "drink/beverage");
+      const estimate = await claudeGIEstimate(name, 250, "drink/beverage", lang);
       setAiLoading(false);
       if (estimate) {
         const synth: DrinkEntry = {
@@ -162,6 +162,7 @@ export function DrinkAnalyzer({ lang, userType = "healthy" }: Props) {
           body: JSON.stringify({
             imageBase64: base64,
             userType,
+            lang,
             mealContext: "DRINK_MODE: This is a drink/beverage image. Identify the drink name, brand if visible, and estimate GL, sugar, alcohol content. Return your standard JSON but focus on drink properties.",
           }),
         });
