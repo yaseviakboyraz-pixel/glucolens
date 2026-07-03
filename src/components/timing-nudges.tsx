@@ -1,12 +1,15 @@
 "use client";
 import { useEffect, useRef } from "react";
 import type { MealAnalysis, GlucoseCurve } from "@/lib/claude-vision";
+import { getT, type Lang } from "@/lib/i18n";
 
 interface Props {
   analysis: MealAnalysis;
+  lang: Lang;
 }
 
-function GlucoseCurveChart({ curve, risk }: { curve: GlucoseCurve; risk: string }) {
+function GlucoseCurveChart({ curve, risk, lang }: { curve: GlucoseCurve; risk: string; lang: Lang }) {
+  const tx = getT(lang);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   const riskColor = risk === "low" ? "#10b981"
@@ -92,7 +95,7 @@ function GlucoseCurveChart({ curve, risk }: { curve: GlucoseCurve; risk: string 
     // Y axis labels
     ctx.textAlign = "right";
     ctx.fillStyle = "rgba(156,163,175,0.4)";
-    ["Low", "High"].forEach((label, i) => {
+    [tx.ua_risk_low, tx.ua_risk_high].forEach((label, i) => {
       ctx.fillText(label, PAD.left - 4, toY([25, 75][i]) + 4);
     });
 
@@ -100,9 +103,9 @@ function GlucoseCurveChart({ curve, risk }: { curve: GlucoseCurve; risk: string 
     ctx.fillStyle = riskColor;
     ctx.textAlign = "center";
     ctx.font = "bold 10px system-ui";
-    ctx.fillText(`Peak ~${curve.peak_minutes}m`, toX(peakPoint.minutes), toY(peakPoint.level) - 12);
+    ctx.fillText(`${tx.tn_peak} ~${curve.peak_minutes}m`, toX(peakPoint.minutes), toY(peakPoint.level) - 12);
 
-  }, [curve, riskColor]);
+  }, [curve, riskColor, lang]);
 
   return (
     <canvas
@@ -115,7 +118,8 @@ function GlucoseCurveChart({ curve, risk }: { curve: GlucoseCurve; risk: string 
   );
 }
 
-export function TimingNudges({ analysis }: Props) {
+export function TimingNudges({ analysis, lang }: Props) {
+  const tx = getT(lang);
   const { timing_actions, glucose_curve, glucose_risk, total_glycemic_load } = analysis;
   if (!timing_actions && !glucose_curve) return null;
 
@@ -129,10 +133,10 @@ export function TimingNudges({ analysis }: Props) {
     : "border-red-500/30 bg-red-950/30";
 
   const peakLabel = glucose_risk === "low"
-    ? "Gentle rise — minimal spike"
+    ? tx.tn_peak_gentle
     : glucose_risk === "medium"
-    ? "Moderate rise — manageable spike"
-    : "Sharp rise — significant spike";
+    ? tx.tn_peak_moderate
+    : tx.tn_peak_sharp;
 
   return (
     <div className="space-y-3">
@@ -142,21 +146,21 @@ export function TimingNudges({ analysis }: Props) {
         <div className={`rounded-2xl border p-4 ${riskBorderBg}`}>
           <div className="flex items-center justify-between mb-3">
             <div>
-              <h3 className="text-white font-semibold text-sm">📈 Illustrative Glucose Response</h3>
+              <h3 className="text-white font-semibold text-sm">{tx.tn_glucose_response}</h3>
               <p className={`text-xs mt-0.5 ${riskTextColor}`}>{peakLabel}</p>
             </div>
             <div className="text-right">
               <div className={`text-lg font-bold ${riskTextColor}`}>
-                ~{glucose_curve.peak_minutes}min
+                ~{glucose_curve.peak_minutes}{tx.wr_min}
               </div>
-              <div className="text-xs text-gray-500">to peak</div>
+              <div className="text-xs text-gray-500">{tx.tn_to_peak}</div>
             </div>
           </div>
 
-          <GlucoseCurveChart curve={glucose_curve} risk={glucose_risk} />
+          <GlucoseCurveChart curve={glucose_curve} risk={glucose_risk} lang={lang} />
 
           <p className="text-[10px] text-gray-500 mt-2 leading-relaxed">
-            Illustrative relative response based on this meal&apos;s glycemic load — not a blood-glucose measurement or a personal prediction.
+            {tx.tn_disclaimer}
           </p>
 
           <div className="flex justify-between mt-3 text-xs">
@@ -164,17 +168,17 @@ export function TimingNudges({ analysis }: Props) {
               <div className={`font-semibold ${riskTextColor}`}>
                 {glucose_curve.peak_minutes}m
               </div>
-              <div className="text-gray-600">Peak</div>
+              <div className="text-gray-600">{tx.tn_peak}</div>
             </div>
             <div className="text-center">
               <div className="text-gray-400 font-semibold">
                 {glucose_curve.baseline_minutes}m
               </div>
-              <div className="text-gray-600">Baseline</div>
+              <div className="text-gray-600">{tx.tn_baseline}</div>
             </div>
             <div className="text-center">
               <div className="text-blue-400 font-semibold">GL {total_glycemic_load}</div>
-              <div className="text-gray-600">Total load</div>
+              <div className="text-gray-600">{tx.tn_total_load}</div>
             </div>
           </div>
         </div>
@@ -184,7 +188,7 @@ export function TimingNudges({ analysis }: Props) {
       {timing_actions?.pre_meal && timing_actions.pre_meal.length > 0 && (
         <div className="rounded-2xl border border-blue-500/30 bg-blue-950/30 p-4">
           <h3 className="text-blue-300 font-semibold text-sm mb-2.5">
-            ⏱️ Before you eat
+            {tx.tn_before}
           </h3>
           <div className="space-y-2">
             {timing_actions.pre_meal.map((action, i) => (
@@ -203,7 +207,7 @@ export function TimingNudges({ analysis }: Props) {
       {timing_actions?.post_meal && timing_actions.post_meal.length > 0 && (
         <div className="rounded-2xl border border-teal-500/30 bg-teal-950/30 p-4">
           <h3 className="text-teal-300 font-semibold text-sm mb-2.5">
-            🚶 After eating
+            {tx.tn_after}
           </h3>
           <div className="space-y-2">
             {timing_actions.post_meal.map((action, i) => (
@@ -222,7 +226,7 @@ export function TimingNudges({ analysis }: Props) {
       {timing_actions?.meal_mods && timing_actions.meal_mods.length > 0 && (
         <div className="rounded-2xl border border-purple-500/30 bg-purple-950/30 p-4">
           <h3 className="text-purple-300 font-semibold text-sm mb-2.5">
-            🔧 Improve this meal
+            {tx.tn_improve}
           </h3>
           <div className="space-y-2">
             {timing_actions.meal_mods.map((mod, i) => (
@@ -240,7 +244,7 @@ export function TimingNudges({ analysis }: Props) {
         <div className="rounded-2xl border border-emerald-500/30 bg-emerald-950/30 p-4 flex gap-3 items-start">
           <span className="text-2xl shrink-0">🔄</span>
           <div>
-            <p className="text-emerald-300 font-semibold text-sm">Lower-GL alternative</p>
+            <p className="text-emerald-300 font-semibold text-sm">{tx.tn_swap_title}</p>
             <p className="text-gray-300 text-sm mt-1 leading-relaxed">
               {timing_actions.swap_suggestion}
             </p>

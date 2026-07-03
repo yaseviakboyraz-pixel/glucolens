@@ -1,13 +1,16 @@
 "use client";
 import { useRef, useState } from "react";
 import type { MealAnalysis } from "@/lib/claude-vision";
+import { getT, type Lang } from "@/lib/i18n";
 
 interface Props {
   analysis: MealAnalysis;
   photoBase64?: string;
+  lang: Lang;
 }
 
-export function ShareCard({ analysis, photoBase64 }: Props) {
+export function ShareCard({ analysis, photoBase64, lang }: Props) {
+  const tx = getT(lang);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [sharing, setSharing] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -157,7 +160,7 @@ export function ShareCard({ analysis, photoBase64 }: Props) {
   return (
     <div className={`rounded-2xl border p-4 space-y-3 ${riskBg}`}>
       <div className="flex items-center justify-between">
-        <h3 className="text-sm font-semibold text-white">📤 Share This Analysis</h3>
+        <h3 className="text-sm font-semibold text-white">{tx.sc_title}</h3>
         <span style={{ color: riskColor }} className="text-sm font-bold">GL {analysis.total_glycemic_load}</span>
       </div>
 
@@ -165,11 +168,11 @@ export function ShareCard({ analysis, photoBase64 }: Props) {
         <button onClick={handleShare} disabled={sharing}
           className="flex-1 py-2.5 rounded-xl text-white font-medium text-sm transition-all"
           style={{ backgroundColor: riskColor + "cc" }}>
-          {sharing ? "Generating..." : "📸 Share Card"}
+          {sharing ? tx.sc_generating : tx.sc_share_btn}
         </button>
         <button onClick={handleCopyText}
           className="flex-1 py-2.5 rounded-xl bg-gray-800 hover:bg-gray-700 text-gray-300 font-medium text-sm transition-all">
-          {copied ? "✓ Copied!" : "📋 Copy Text"}
+          {copied ? tx.wc_copied : tx.sc_copy_btn}
         </button>
       </div>
 

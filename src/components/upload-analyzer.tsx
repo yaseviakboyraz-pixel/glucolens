@@ -1069,10 +1069,10 @@ export function UploadAnalyzer({ userType = "healthy", lang, onAnalysisComplete 
           )}
 
           {/* Timing Nudges + Glucose Curve */}
-          <TimingNudges analysis={result} />
+          <TimingNudges analysis={result} lang={lang} />
 
           {/* Share */}
-          <ShareCard analysis={result} photoBase64={image || undefined} />
+          <ShareCard analysis={result} photoBase64={image || undefined} lang={lang} />
 
           {result.recommendations.length > 0 && (
             <div className="bg-teal-950 border border-teal-500/30 rounded-xl p-4">
