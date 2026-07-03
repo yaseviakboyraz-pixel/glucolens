@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
 import { rateLimit, clientKey } from "@/lib/rate-limit";
 import { withModelFallback } from "@/lib/ai-client";
+import { resolveLang, langDirective } from "@/lib/ai-lang";
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
@@ -110,6 +111,7 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
     const { imageBase64, userType = "healthy", orderText, text, platform } = body;
+    const lang = resolveLang(body.lang);
 
     if (!imageBase64 && !orderText && !text) {
       return NextResponse.json({ error: "Image or order text required" }, { status: 400 });
@@ -120,6 +122,11 @@ export async function POST(req: NextRequest) {
       : "";
 
     const orderContent = text || orderText;
+
+    const langNote = langDirective(
+      lang,
+      'a "name_local" translation for each food item, "glucose_peak_estimate", "glucose_curve_description", every string inside "timing_actions" (pre_meal, post_meal, meal_mods, swap_suggestion), "recommendations", "warnings", "analysis_note", and each item\'s "delivery_note"'
+    );
 
     const profileNote = userType === "diabetic"
       ? "\n\nUSER: Diabetic. Emphasize high-risk items. Be very specific about glucose warnings."
@@ -151,7 +158,7 @@ export async function POST(req: NextRequest) {
       client.messages.create({
         model,
         max_tokens: 4000,
-        system: DELIVERY_SYSTEM_PROMPT + profileNote + platformHint,
+        system: DELIVERY_SYSTEM_PROMPT + profileNote + platformHint + langNote,
         messages,
       })
     );

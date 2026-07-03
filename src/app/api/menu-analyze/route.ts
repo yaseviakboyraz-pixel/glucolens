@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
 import { rateLimit, clientKey } from "@/lib/rate-limit";
 import { withModelFallback } from "@/lib/ai-client";
+import { resolveLang, langDirective } from "@/lib/ai-lang";
 
 export const maxDuration = 60;
 
@@ -44,6 +45,12 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
     const { type, text, base64, contentType, userType = "healthy" } = body;
+    const lang = resolveLang(body.lang);
+
+    const langNote = langDirective(
+      lang,
+      'each dish\'s "notes", the "meal_tips" array, and a "name_local" translation for each dish; write the "top_safe" and "top_risky" dish names in the target language so they match name_local'
+    );
 
     const profileNote = userType === "diabetic"
       ? " USER: Diabetic — flag any dish with GL > 15 as dangerous."
@@ -78,7 +85,7 @@ export async function POST(req: NextRequest) {
       client.messages.create({
         model,
         max_tokens: 3000,
-        system: MENU_SYSTEM + profileNote,
+        system: MENU_SYSTEM + profileNote + langNote,
         messages: [{ role: "user", content: messageContent }],
       })
     );

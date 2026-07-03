@@ -86,7 +86,7 @@ export function UploadAnalyzer({ userType = "healthy", lang, onAnalysisComplete 
   const [elapsed, setElapsed] = useState(0);
   const [urlInput, setUrlInput] = useState("");
   const [urlLoading, setUrlLoading] = useState(false);
-  const [menuResult, setMenuResult] = useState<null | { restaurant_name?: string; cuisine_type?: string; dishes: Array<{ name: string; name_tr?: string; estimated_gl: number; glucose_risk: string; notes: string; category: string; gi_estimate: number }>; top_safe: string[]; top_risky: string[]; meal_tips: string[] }>(null);
+  const [menuResult, setMenuResult] = useState<null | { restaurant_name?: string; cuisine_type?: string; dishes: Array<{ name: string; name_tr?: string; name_local?: string; estimated_gl: number; glucose_risk: string; notes: string; category: string; gi_estimate: number }>; top_safe: string[]; top_risky: string[]; meal_tips: string[] }>(null);
 
   const cameraRef = useRef<HTMLInputElement>(null);
   const galleryRef = useRef<HTMLInputElement>(null);
@@ -284,7 +284,7 @@ export function UploadAnalyzer({ userType = "healthy", lang, onAnalysisComplete 
         const analyzeRes = await fetchWithTimeout("/api/delivery-analyze", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ text: fetchData.text, url, userType, platform: fetchData.platform }),
+          body: JSON.stringify({ text: fetchData.text, url, userType, platform: fetchData.platform, lang }),
         });
         const analyzeData = await analyzeRes.json();
         if (!analyzeRes.ok) throw new Error(analyzeData.error || tx.ua_delivery_fail);
@@ -294,7 +294,7 @@ export function UploadAnalyzer({ userType = "healthy", lang, onAnalysisComplete 
         const analyzeRes = await fetchWithTimeout("/api/menu-analyze", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ ...fetchData, userType }),
+          body: JSON.stringify({ ...fetchData, userType, lang }),
         });
         const analyzeData = await analyzeRes.json();
         if (!analyzeRes.ok) throw new Error(analyzeData.error || tx.ua_menu_fail);
@@ -630,7 +630,7 @@ export function UploadAnalyzer({ userType = "healthy", lang, onAnalysisComplete 
               return (
                 <div key={i} className={`rounded-xl p-3 border ${rb} flex justify-between items-start`}>
                   <div className="flex-1 min-w-0">
-                    <div className="text-white text-sm font-medium">{lang === "tr" ? (dish.name_tr || dish.name) : dish.name}</div>
+                    <div className="text-white text-sm font-medium">{dish.name_local || (lang === "tr" ? dish.name_tr : null) || dish.name}</div>
                     <div className="text-gray-500 text-xs mt-0.5">GI ~{dish.gi_estimate} · {dish.category}</div>
                     {dish.notes && <p className="text-gray-600 text-xs mt-1">{dish.notes}</p>}
                   </div>
