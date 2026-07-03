@@ -17,7 +17,7 @@ const POPULAR_INGREDIENTS = [
   "nohut", "mercimek", "tavuk", "beyaz peynir", "badem",
 ];
 
-export function SingleIngredientAnalyzer({ lang: _lang, onSaved }: Props) {
+export function SingleIngredientAnalyzer({ lang, onSaved }: Props) {
   const [query, setQuery] = useState("");
   const [portionG, setPortionG] = useState(100);
   const [result, setResult] = useState<ReturnType<typeof lookupIngredient> | null>(null);
@@ -45,7 +45,7 @@ export function SingleIngredientAnalyzer({ lang: _lang, onSaved }: Props) {
     } else {
       setResult(null);
       setAiLoading(true);
-      const estimate = await claudeGIEstimate(name, portionG);
+      const estimate = await claudeGIEstimate(name, portionG, "", lang);
       setAiLoading(false);
       if (estimate) setAiResult(estimate);
     }

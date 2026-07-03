@@ -22,13 +22,14 @@ export interface ClaudeFallbackResult {
 export async function claudeGIEstimate(
   food: string,
   portion_g = 100,
-  context = ""
+  context = "",
+  lang = "en"
 ): Promise<ClaudeFallbackResult | null> {
   try {
     const res = await fetch("/api/gi-estimate", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ food, portion_g, context }),
+      body: JSON.stringify({ food, portion_g, context, lang }),
     });
 
     if (!res.ok) return null;

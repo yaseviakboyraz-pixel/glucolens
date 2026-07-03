@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
 import { rateLimit, clientKey } from "@/lib/rate-limit";
 import { withModelFallback } from "@/lib/ai-client";
+import { resolveLang, langDirective } from "@/lib/ai-lang";
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
@@ -27,7 +28,9 @@ export async function POST(req: NextRequest) {
   const { allowed } = await rateLimit(clientKey(req, "gi-estimate"), 30, 60);
   if (!allowed) return NextResponse.json({ error: "Too many requests. Please slow down." }, { status: 429 });
   try {
-    const { food, portion_g = 100, context = "", userType = "healthy" } = await req.json();
+    const body = await req.json();
+    const { food, portion_g = 100, context = "", userType = "healthy" } = body;
+    const lang = resolveLang(body.lang);
 
     if (!food) {
       return NextResponse.json({ error: "Food name required" }, { status: 400 });
@@ -39,8 +42,14 @@ export async function POST(req: NextRequest) {
       ? " Note: User is pre-diabetic — flag if GL > 15."
       : "";
 
+    const langNote = langDirective(
+      lang,
+      'the "notes" field (the glycemic-impact insight) and each entry of "similar_lower_gl"',
+      false
+    );
+
     const prompt = `Estimate nutritional and glycemic values for: "${food}"${context ? ` (${context})` : ""}
-Portion: ${portion_g}g${userNote}
+Portion: ${portion_g}g${userNote}${langNote}
 
 Return ONLY this JSON (all values for the ${portion_g}g portion):
 {

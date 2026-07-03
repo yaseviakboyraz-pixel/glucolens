@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
 import { rateLimit, clientKey } from "@/lib/rate-limit";
 import { withModelFallback } from "@/lib/ai-client";
+import { resolveLang, langDirective } from "@/lib/ai-lang";
 
 export const maxDuration = 60;
 
@@ -63,7 +64,8 @@ export async function POST(req: NextRequest) {
   const { allowed } = await rateLimit(clientKey(req, "meal-plan"), 10, 60);
   if (!allowed) return NextResponse.json({ error: "Too many requests. Please slow down." }, { status: 429 });
   try {
-    const { userType = "healthy", preferences = "", lang = "en" } = await req.json();
+    const { userType = "healthy", preferences = "", lang: rawLang } = await req.json();
+    const lang = resolveLang(rawLang);
 
     const profileNote = userType === "diabetic"
       ? "DIABETIC: Keep every meal GL very low. No refined carbs, no added sugar, no white rice/bread. Prioritize protein + fiber + healthy fats."
@@ -71,9 +73,19 @@ export async function POST(req: NextRequest) {
       ? "PRE-DIABETIC: Moderate carb restriction. Whole grains only. No sugary drinks or desserts. Mediterranean diet principles."
       : "HEALTHY: Balanced nutrition with good GL management. Include variety. Can include moderate carb servings.";
 
-    const langNote = lang === "tr"
-      ? "Prefer Turkish dishes. Include traditional Turkish breakfast, lunch, dinner options with Turkish names."
-      : "Mix Turkish and international dishes. Use English names with Turkish alternatives where relevant.";
+    // Cuisine preference (which dishes) is separate from output language (what
+    // language the text is written in). Keep a light regional hint, then let the
+    // shared directive localize every human-readable field. No GI-DB lookup here,
+    // so names localize directly (keepNameEnglish = false).
+    const cuisineNote = lang === "tr"
+      ? "Prefer authentic Turkish dishes with traditional names."
+      : "Include a culturally relevant mix plus international variety.";
+
+    const outputLang = langDirective(
+      lang,
+      'every meal "name", "description", "prep_tip", "why_good", each item "name", every "daily_tips" entry, and each shopping_list "item"',
+      false
+    );
 
     const prefNote = preferences
       ? `User preferences/restrictions: ${preferences}`
@@ -82,9 +94,9 @@ export async function POST(req: NextRequest) {
     const prompt = `Generate a full day meal plan (breakfast, lunch, dinner, 1-2 snacks).
 Profile: ${userType}
 ${profileNote}
-${langNote}
+${cuisineNote}
 ${prefNote}
-Make it realistic and culturally relevant. Include a shopping list.`;
+Make it realistic and culturally relevant. Include a shopping list.${outputLang}`;
 
     const { response } = await withModelFallback((model) =>
       client.messages.create({
