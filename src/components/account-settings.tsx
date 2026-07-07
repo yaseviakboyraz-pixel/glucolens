@@ -2,13 +2,16 @@
 import { useState } from "react";
 import { supabase, getDeviceId } from "@/lib/supabase";
 import { signOut, type User } from "@/lib/auth";
+import { getT, type Lang } from "@/lib/i18n";
 
 interface Props {
   user: User | null;
   onClose: () => void;
+  lang: Lang;
 }
 
-export function AccountSettings({ user, onClose }: Props) {
+export function AccountSettings({ user, onClose, lang }: Props) {
+  const tx = getT(lang);
   const [confirming, setConfirming] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -27,7 +30,7 @@ export function AccountSettings({ user, onClose }: Props) {
         body: JSON.stringify({ deviceId: getDeviceId() }),
       });
       const data = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(data.error || "Deletion failed");
+      if (!res.ok) throw new Error(data.error || tx.as_delete_fail);
 
       // Sign out and wipe all local GlucoLens data
       try { await signOut(); } catch { /* ignore */ }
@@ -38,7 +41,7 @@ export function AccountSettings({ user, onClose }: Props) {
       // Hard reload to a fresh state
       window.location.href = "/";
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Deletion failed. Please try again.");
+      setError(e instanceof Error ? e.message : tx.as_delete_fail);
       setDeleting(false);
     }
   }
@@ -49,9 +52,9 @@ export function AccountSettings({ user, onClose }: Props) {
         {/* Header */}
         <div className="p-6 pb-4 flex justify-between items-start">
           <div>
-            <h2 className="text-white text-2xl font-bold">Account & Data</h2>
+            <h2 className="text-white text-2xl font-bold">{tx.as_title}</h2>
             <p className="text-gray-500 text-sm mt-1">
-              {user?.email ? user.email : "Guest — data stored on this device"}
+              {user?.email ? user.email : tx.as_guest}
             </p>
           </div>
           <button onClick={onClose} className="text-gray-600 hover:text-gray-400 text-2xl leading-none">×</button>
@@ -64,16 +67,15 @@ export function AccountSettings({ user, onClose }: Props) {
               onClick={() => signOut().then(() => (window.location.href = "/")).catch(() => {})}
               className="w-full py-3 rounded-xl font-medium text-sm text-gray-300 bg-gray-900 hover:bg-gray-800 border border-gray-800 transition-all"
             >
-              Sign out
+              {tx.as_sign_out}
             </button>
           )}
 
           {/* Danger zone */}
           <div className="rounded-2xl border border-red-500/30 bg-red-950/20 p-4">
-            <h3 className="text-red-400 font-semibold text-sm mb-1">Delete account & all data</h3>
+            <h3 className="text-red-400 font-semibold text-sm mb-1">{tx.as_delete_title}</h3>
             <p className="text-gray-400 text-xs leading-relaxed mb-3">
-              This permanently deletes your {user ? "account, " : ""}meal history, photos, and all
-              wellness logs from both this device and our servers. This cannot be undone.
+              {tx.as_delete_body.replace("{acct}", user ? tx.as_acct_prefix : "")}
             </p>
 
             {!confirming ? (
@@ -81,12 +83,12 @@ export function AccountSettings({ user, onClose }: Props) {
                 onClick={() => setConfirming(true)}
                 className="w-full py-3 rounded-xl font-semibold text-sm text-white bg-red-600 hover:bg-red-500 transition-all"
               >
-                Delete everything
+                {tx.as_delete_btn}
               </button>
             ) : (
               <div className="space-y-2">
                 <p className="text-red-300 text-xs font-medium">
-                  Are you absolutely sure? This is permanent.
+                  {tx.as_confirm_q}
                 </p>
                 <div className="flex gap-2">
                   <button
@@ -94,14 +96,14 @@ export function AccountSettings({ user, onClose }: Props) {
                     disabled={deleting}
                     className="flex-1 py-3 rounded-xl text-gray-300 bg-gray-800 hover:bg-gray-700 text-sm transition-all disabled:opacity-50"
                   >
-                    Cancel
+                    {tx.ua_cancel}
                   </button>
                   <button
                     onClick={handleDelete}
                     disabled={deleting}
                     className="flex-1 py-3 rounded-xl text-white bg-red-600 hover:bg-red-500 font-semibold text-sm transition-all disabled:opacity-50"
                   >
-                    {deleting ? "Deleting..." : "Yes, delete"}
+                    {deleting ? tx.as_deleting : tx.as_yes_delete}
                   </button>
                 </div>
               </div>
@@ -115,7 +117,7 @@ export function AccountSettings({ user, onClose }: Props) {
           </div>
 
           <p className="text-center text-gray-700 text-xs">
-            Questions about your data? privacy@glucolens.app
+            {tx.as_data_q}
           </p>
         </div>
       </div>

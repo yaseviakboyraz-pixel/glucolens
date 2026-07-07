@@ -223,7 +223,7 @@ export default function Home() {
             <HealthTracker lang={lang} />
             <div className="mt-6">
               <h3 className="text-white font-semibold text-sm mb-3">🔔 {lang === "tr" ? "Bildirim Ayarları" : "Notification Settings"}</h3>
-              <NotificationSettings />
+              <NotificationSettings lang={lang} />
             </div>
           </div>
         )}
@@ -307,7 +307,7 @@ export default function Home() {
 
       {/* Account & data settings */}
       {showAccount && (
-        <AccountSettings user={user} onClose={() => setShowAccount(false)} />
+        <AccountSettings user={user} onClose={() => setShowAccount(false)} lang={lang} />
       )}
     </div>
   );

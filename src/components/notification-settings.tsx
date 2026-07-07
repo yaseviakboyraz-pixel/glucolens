@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { Capacitor } from "@capacitor/core";
 import { syncReminders, requestLocalNotifPermission } from "@/lib/local-notifications";
+import { getT, type Lang } from "@/lib/i18n";
 
 interface NotificationSettings {
   mealReminder: boolean;
@@ -35,7 +36,8 @@ function saveSettings(s: NotificationSettings) {
   localStorage.setItem("glucolens_notif_settings", JSON.stringify(s));
 }
 
-export function NotificationSettings() {
+export function NotificationSettings({ lang }: { lang: Lang }) {
+  const tx = getT(lang);
   const [settings, setSettings] = useState<NotificationSettings>(DEFAULT_SETTINGS);
   const [permissionStatus, setPermissionStatus] = useState<"unknown" | "granted" | "denied" | "prompt">("unknown");
   const [loading, setLoading] = useState(false);
@@ -127,17 +129,17 @@ export function NotificationSettings() {
         <div className="bg-amber-950/50 border border-amber-500/30 rounded-xl p-4">
           <div className="flex items-center justify-between gap-3">
             <div>
-              <div className="text-amber-300 text-sm font-semibold">Bildirimler Kapalı</div>
+              <div className="text-amber-300 text-sm font-semibold">{tx.ns_disabled_title}</div>
               <div className="text-amber-400/70 text-xs mt-0.5">
                 {permissionStatus === "denied"
-                  ? "İzin verilmedi. Ayarlardan etkinleştir."
-                  : "Öğün hatırlatıcıları ve uyarılar için izin gerekli."}
+                  ? tx.ns_denied
+                  : tx.ns_need_perm}
               </div>
             </div>
             {permissionStatus !== "denied" && (
               <button onClick={requestPermission} disabled={loading}
                 className="px-4 py-2 bg-amber-600 hover:bg-amber-500 text-white rounded-xl text-xs font-semibold shrink-0 transition-all disabled:opacity-50">
-                {loading ? "..." : "İzin Ver"}
+                {loading ? "..." : tx.ns_grant}
               </button>
             )}
           </div>
@@ -145,22 +147,22 @@ export function NotificationSettings() {
       )}
 
       {saved && (
-        <div className="text-center text-xs text-teal-400">✓ Kaydedildi</div>
+        <div className="text-center text-xs text-teal-400">{tx.ns_saved}</div>
       )}
 
       {/* Meal reminders */}
       <div className={`bg-gray-900 border border-gray-800 rounded-xl p-4 space-y-3 ${!isGranted ? "opacity-60 pointer-events-none" : ""}`}>
         <div className="flex items-center justify-between">
           <div>
-            <div className="text-white text-sm font-medium">🍽 Öğün Hatırlatıcı</div>
-            <div className="text-gray-500 text-xs mt-0.5">Analiz etmeyi unutmaman için hatırlatır</div>
+            <div className="text-white text-sm font-medium">{tx.ns_meal_title}</div>
+            <div className="text-gray-500 text-xs mt-0.5">{tx.ns_meal_desc}</div>
           </div>
           <Toggle value={settings.mealReminder} onChange={v => update({ mealReminder: v })} />
         </div>
 
         {settings.mealReminder && (
           <div className="space-y-2 pt-1 border-t border-gray-800">
-            <div className="text-xs text-gray-500">Hatırlatma saatleri</div>
+            <div className="text-xs text-gray-500">{tx.ns_reminder_times}</div>
             {settings.mealReminderTimes.map((time, i) => (
               <div key={i} className="flex items-center gap-2">
                 <input type="time" step={300} value={time} onChange={e => updateTime(i, e.target.value)}
@@ -176,7 +178,7 @@ export function NotificationSettings() {
             {settings.mealReminderTimes.length < 5 && (
               <button onClick={addTime}
                 className="text-xs text-teal-500 hover:text-teal-400 transition-colors">
-                + Saat Ekle
+                {tx.ns_add_time}
               </button>
             )}
           </div>
@@ -187,8 +189,8 @@ export function NotificationSettings() {
       <div className={`bg-gray-900 border border-gray-800 rounded-xl p-4 ${!isGranted ? "opacity-60 pointer-events-none" : ""}`}>
         <div className="flex items-center justify-between">
           <div>
-            <div className="text-white text-sm font-medium">🔴 Yüksek GL Uyarısı</div>
-            <div className="text-gray-500 text-xs mt-0.5">Öğün GL hedefini aştığında bildirim gönderir</div>
+            <div className="text-white text-sm font-medium">{tx.ns_gl_title}</div>
+            <div className="text-gray-500 text-xs mt-0.5">{tx.ns_gl_desc}</div>
           </div>
           <Toggle value={settings.glSpikeAlert} onChange={v => update({ glSpikeAlert: v })} />
         </div>
@@ -198,20 +200,20 @@ export function NotificationSettings() {
       <div className={`bg-gray-900 border border-gray-800 rounded-xl p-4 space-y-3 ${!isGranted ? "opacity-60 pointer-events-none" : ""}`}>
         <div className="flex items-center justify-between">
           <div>
-            <div className="text-white text-sm font-medium">💧 Su Hatırlatıcı</div>
-            <div className="text-gray-500 text-xs mt-0.5">Her {settings.waterReminderInterval} saatte bir su içmeyi hatırlatır</div>
+            <div className="text-white text-sm font-medium">{tx.ns_water_title}</div>
+            <div className="text-gray-500 text-xs mt-0.5">{tx.ns_water_desc.replace("{h}", String(settings.waterReminderInterval))}</div>
           </div>
           <Toggle value={settings.waterReminder} onChange={v => update({ waterReminder: v })} />
         </div>
 
         {settings.waterReminder && (
           <div className="flex items-center gap-3 pt-1 border-t border-gray-800">
-            <span className="text-xs text-gray-500">Aralık:</span>
+            <span className="text-xs text-gray-500">{tx.ns_interval}</span>
             <div className="flex gap-1.5">
               {[1, 2, 3, 4].map(h => (
                 <button key={h} onClick={() => update({ waterReminderInterval: h })}
                   className={`px-3 py-1.5 rounded-lg text-xs transition-all ${settings.waterReminderInterval === h ? "bg-teal-600 text-white" : "bg-gray-800 text-gray-400 hover:bg-gray-700"}`}>
-                  {h}s
+                  {h}{tx.ht_unit_h}
                 </button>
               ))}
             </div>
@@ -223,8 +225,8 @@ export function NotificationSettings() {
       <div className={`bg-gray-900 border border-gray-800 rounded-xl p-4 ${!isGranted ? "opacity-60 pointer-events-none" : ""}`}>
         <div className="flex items-center justify-between">
           <div>
-            <div className="text-white text-sm font-medium">⏱ Oruç Tamamlandı Uyarısı</div>
-            <div className="text-gray-500 text-xs mt-0.5">Oruç hedefine ulaştığında bildirim gönderir</div>
+            <div className="text-white text-sm font-medium">{tx.ns_fasting_title}</div>
+            <div className="text-gray-500 text-xs mt-0.5">{tx.ns_fasting_desc}</div>
           </div>
           <Toggle value={settings.fastingAlert} onChange={v => update({ fastingAlert: v })} />
         </div>
@@ -234,8 +236,8 @@ export function NotificationSettings() {
       <div className={`bg-gray-900 border border-gray-800 rounded-xl p-4 ${!isGranted ? "opacity-60 pointer-events-none" : ""}`}>
         <div className="flex items-center justify-between">
           <div>
-            <div className="text-white text-sm font-medium">📊 Haftalık Rapor</div>
-            <div className="text-gray-500 text-xs mt-0.5">Pazartesi günleri haftalık GL özetini gönderir</div>
+            <div className="text-white text-sm font-medium">{tx.ns_weekly_title}</div>
+            <div className="text-gray-500 text-xs mt-0.5">{tx.ns_weekly_desc}</div>
           </div>
           <Toggle value={settings.weeklyReport} onChange={v => update({ weeklyReport: v })} />
         </div>
