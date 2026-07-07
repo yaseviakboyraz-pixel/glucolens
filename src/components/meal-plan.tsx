@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import type { Lang } from "@/lib/i18n";
+import { getT, type Lang } from "@/lib/i18n";
 
 interface MealItem {
   name: string;
@@ -52,14 +52,11 @@ const MEAL_ICONS = {
   snack: "🍎",
 };
 
-const MEAL_LABELS = {
-  breakfast: "Breakfast",
-  lunch: "Lunch",
-  dinner: "Dinner",
-  snack: "Snack",
-};
-
 export function MealPlanGenerator({ lang, userType = "healthy" }: Props) {
+  const tx = getT(lang);
+  const mealLabel: Record<string, string> = {
+    breakfast: tx.gt_breakfast, lunch: tx.gt_lunch, dinner: tx.gt_dinner, snack: tx.mp_snack,
+  };
   const [plan, setPlan] = useState<MealPlan | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -93,18 +90,18 @@ export function MealPlanGenerator({ lang, userType = "healthy" }: Props) {
         body: JSON.stringify({ userType, preferences, lang }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Failed to generate plan");
+      if (!res.ok) throw new Error(data.error || tx.mp_gen_fail);
       setPlan(data.plan);
       setExpandedMeal(0);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Something went wrong");
+      setError(e instanceof Error ? e.message : tx.qm_generic_err);
     } finally {
       setLoading(false);
     }
   }
 
-  const profileLabel = userType === "diabetic" ? "Diabetic"
-    : userType === "pre_diabetic" ? "Pre-diabetic" : "Healthy";
+  const profileLabel = userType === "diabetic" ? tx.mp_prof_diabetic
+    : userType === "pre_diabetic" ? tx.mp_prof_prediabetic : tx.mp_prof_healthy;
 
   const profileColor = userType === "diabetic" ? "text-red-400"
     : userType === "pre_diabetic" ? "text-amber-400" : "text-green-400";
@@ -117,9 +114,9 @@ export function MealPlanGenerator({ lang, userType = "healthy" }: Props) {
     <div className="space-y-4">
       <div className="text-center">
         <div className="text-4xl mb-2">🗓️</div>
-        <h2 className="text-white font-bold text-lg">Daily Meal Plan</h2>
+        <h2 className="text-white font-bold text-lg">{tx.mp_title}</h2>
         <p className={`text-sm mt-1 ${profileColor}`}>
-          Personalized for {profileLabel} profile
+          {tx.mp_personalized.replace("{p}", profileLabel)}
         </p>
       </div>
 
@@ -128,26 +125,26 @@ export function MealPlanGenerator({ lang, userType = "healthy" }: Props) {
         <div className="space-y-3">
           <div>
             <label className="text-xs text-gray-500 mb-1.5 block">
-              Preferences or restrictions (optional)
+              {tx.mp_prefs_label}
             </label>
             <input
               type="text"
               value={preferences}
               onChange={(e) => setPreferences(e.target.value)}
-              placeholder="e.g. vegetarian, no gluten, prefer Turkish food..."
+              placeholder={tx.mp_prefs_ph}
               className="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-gray-200 placeholder-gray-600 focus:outline-none focus:border-teal-500 text-sm"
             />
           </div>
 
           {/* Profile GL targets */}
           <div className="bg-gray-900 border border-gray-800 rounded-xl p-4">
-            <p className="text-xs text-gray-500 mb-3">Your daily GL targets</p>
+            <p className="text-xs text-gray-500 mb-3">{tx.mp_gl_targets}</p>
             <div className="grid grid-cols-4 gap-2 text-center">
               {[
-                { label: "Breakfast", value: userType === "diabetic" ? "<10" : userType === "pre_diabetic" ? "<12" : "<15" },
-                { label: "Lunch", value: userType === "diabetic" ? "<12" : userType === "pre_diabetic" ? "<15" : "<20" },
-                { label: "Dinner", value: userType === "diabetic" ? "<12" : userType === "pre_diabetic" ? "<15" : "<20" },
-                { label: "Daily", value: userType === "diabetic" ? "<35" : userType === "pre_diabetic" ? "<45" : "<60" },
+                { label: tx.gt_breakfast, value: userType === "diabetic" ? "<10" : userType === "pre_diabetic" ? "<12" : "<15" },
+                { label: tx.gt_lunch, value: userType === "diabetic" ? "<12" : userType === "pre_diabetic" ? "<15" : "<20" },
+                { label: tx.gt_dinner, value: userType === "diabetic" ? "<12" : userType === "pre_diabetic" ? "<15" : "<20" },
+                { label: tx.mp_daily, value: userType === "diabetic" ? "<35" : userType === "pre_diabetic" ? "<45" : "<60" },
               ].map((t) => (
                 <div key={t.label} className="bg-gray-800 rounded-lg p-2">
                   <div className={`text-sm font-bold ${profileColor}`}>{t.value}</div>
@@ -159,7 +156,7 @@ export function MealPlanGenerator({ lang, userType = "healthy" }: Props) {
 
           <button onClick={generate}
             className="w-full py-4 rounded-xl font-semibold text-white bg-teal-600 hover:bg-teal-500 active:scale-95 transition-all text-lg">
-            🗓️ Generate My Plan
+            🗓️ {tx.mp_generate.replace(/^🗓️\s*/u, "")}
           </button>
         </div>
       )}
@@ -168,8 +165,8 @@ export function MealPlanGenerator({ lang, userType = "healthy" }: Props) {
       {loading && (
         <div className="text-center py-16 space-y-4">
           <div className="text-5xl animate-bounce">🧠</div>
-          <p className="text-teal-400 font-semibold">Crafting your meal plan...</p>
-          <p className="text-gray-500 text-sm">Claude is selecting optimal dishes for your profile</p>
+          <p className="text-teal-400 font-semibold">{tx.mp_loading}</p>
+          <p className="text-gray-500 text-sm">{tx.mp_loading_sub}</p>
           <div className="flex justify-center gap-1 mt-2">
             {[0, 1, 2].map(i => (
               <div key={i} className="w-2 h-2 bg-teal-500 rounded-full animate-bounce"
@@ -192,14 +189,14 @@ export function MealPlanGenerator({ lang, userType = "healthy" }: Props) {
           {/* Daily summary */}
           <div className="bg-gray-900 border border-gray-800 rounded-2xl p-4">
             <div className="flex justify-between items-center mb-3">
-              <h3 className="text-white font-semibold">Today&apos;s Summary</h3>
+              <h3 className="text-white font-semibold">{tx.mp_today_summary}</h3>
               <span className={`text-xs font-medium ${profileColor}`}>{profileLabel}</span>
             </div>
 
             {/* GL progress bar */}
             <div className="mb-4">
               <div className="flex justify-between text-xs mb-1.5">
-                <span className="text-gray-400">Total GL</span>
+                <span className="text-gray-400">{tx.mp_total_gl}</span>
                 <span className="text-white font-semibold">
                   {plan.daily_gl_total} / {plan.daily_gl_target}
                 </span>
@@ -212,16 +209,16 @@ export function MealPlanGenerator({ lang, userType = "healthy" }: Props) {
               </div>
               <p className="text-xs text-gray-600 mt-1">
                 {plan.daily_gl_target - plan.daily_gl_total > 0
-                  ? `${plan.daily_gl_target - plan.daily_gl_total} GL remaining`
-                  : "GL target reached"}
+                  ? `${plan.daily_gl_target - plan.daily_gl_total} ${tx.gt_gl_remaining}`
+                  : tx.mp_target_reached}
               </p>
             </div>
 
             <div className="grid grid-cols-3 gap-2">
               {[
-                { label: "Calories", value: `~${totalCalories}`, unit: "kcal", color: "text-orange-400" },
-                { label: "Protein", value: `${totalProtein}g`, unit: "", color: "text-purple-400" },
-                { label: "Fiber", value: `${totalFiber}g`, unit: "", color: "text-green-400" },
+                { label: tx.at_calories, value: `~${totalCalories}`, unit: "kcal", color: "text-orange-400" },
+                { label: tx.ua_protein, value: `${totalProtein}g`, unit: "", color: "text-purple-400" },
+                { label: tx.fiber, value: `${totalFiber}g`, unit: "", color: "text-green-400" },
               ].map((s) => (
                 <div key={s.label} className="bg-gray-800 rounded-xl p-2.5 text-center">
                   <div className={`text-base font-bold ${s.color}`}>{s.value}</div>
@@ -246,7 +243,7 @@ export function MealPlanGenerator({ lang, userType = "healthy" }: Props) {
                       <div>
                         <div className="flex items-center gap-2">
                           <span className="text-xs text-gray-500 uppercase tracking-wide">
-                            {MEAL_LABELS[meal.type]}
+                            {mealLabel[meal.type]}
                           </span>
                           <span className="text-xs text-gray-600">· {meal.time_suggestion}</span>
                         </div>
@@ -287,9 +284,9 @@ export function MealPlanGenerator({ lang, userType = "healthy" }: Props) {
 
                     {/* Nutrition mini */}
                     <div className="flex gap-3 text-xs">
-                      <span className="text-purple-400">💪 {meal.protein_g}g protein</span>
-                      <span className="text-green-400">🌿 {meal.fiber_g}g fiber</span>
-                      <span className="text-gray-500">GI avg ~{meal.meal_gi_avg}</span>
+                      <span className="text-purple-400">💪 {meal.protein_g}g {tx.ua_protein}</span>
+                      <span className="text-green-400">🌿 {meal.fiber_g}g {tx.fiber}</span>
+                      <span className="text-gray-500">{tx.mp_gi_avg}{meal.meal_gi_avg}</span>
                     </div>
 
                     {/* Prep tip */}
@@ -312,7 +309,7 @@ export function MealPlanGenerator({ lang, userType = "healthy" }: Props) {
           {/* Daily tips */}
           {plan.daily_tips.length > 0 && (
             <div className="bg-teal-950/40 border border-teal-500/30 rounded-2xl p-4">
-              <h3 className="text-teal-400 font-semibold text-sm mb-2">💡 Tips for today</h3>
+              <h3 className="text-teal-400 font-semibold text-sm mb-2">{tx.mp_tips_today}</h3>
               <div className="space-y-1.5">
                 {plan.daily_tips.map((tip, i) => (
                   <p key={i} className="text-gray-300 text-sm">→ {tip}</p>
@@ -328,9 +325,9 @@ export function MealPlanGenerator({ lang, userType = "healthy" }: Props) {
                 onClick={() => setShowShopping(!showShopping)}
                 className="w-full p-4 flex justify-between items-center"
               >
-                <span className="text-white font-semibold text-sm">🛒 Shopping List</span>
+                <span className="text-white font-semibold text-sm">{tx.mp_shopping}</span>
                 <div className="flex items-center gap-2">
-                  <span className="text-xs text-gray-500">{plan.shopping_list.length} items</span>
+                  <span className="text-xs text-gray-500">{plan.shopping_list.length} {tx.mp_items}</span>
                   <span className="text-gray-500">{showShopping ? "▲" : "▼"}</span>
                 </div>
               </button>
@@ -353,13 +350,13 @@ export function MealPlanGenerator({ lang, userType = "healthy" }: Props) {
               onClick={() => { setPlan(null); setExpandedMeal(null); setShowShopping(false); }}
               className="flex-1 py-3 rounded-xl text-gray-400 bg-gray-900 border border-gray-800 text-sm"
             >
-              ← Change preferences
+              {tx.mp_change_prefs}
             </button>
             <button
               onClick={generate}
               className="flex-1 py-3 rounded-xl text-white bg-teal-600 hover:bg-teal-500 font-semibold text-sm transition-all"
             >
-              🔄 New plan
+              {tx.mp_new_plan}
             </button>
           </div>
         </div>
