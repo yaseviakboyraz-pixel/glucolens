@@ -1,10 +1,11 @@
 "use client";
 import { useState, useRef, useCallback } from "react";
-import type { Lang } from "@/lib/i18n";
+import { getT, type Lang } from "@/lib/i18n";
 
 interface Dish {
   name: string;
   name_tr?: string;
+  name_local?: string;
   category: string;
   estimated_gl: number;
   glucose_risk: "low" | "medium" | "high";
@@ -33,6 +34,7 @@ interface Props {
 }
 
 export function QRMenuAnalyzer({ lang, userType = "healthy" }: Props) {
+  const tx = getT(lang);
   const [step, setStep] = useState<Step>("scan");
   const [manualUrl, setManualUrl] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -49,7 +51,7 @@ export function QRMenuAnalyzer({ lang, userType = "healthy" }: Props) {
   const riskBg = (risk: string) =>
     risk === "low" ? "bg-green-500/20 border-green-500/30" : risk === "medium" ? "bg-amber-500/20 border-amber-500/30" : "bg-red-500/20 border-red-500/30";
   const riskLabel = (risk: string) =>
-    risk === "low" ? "✅ Safe" : risk === "medium" ? "⚠️ Moderate" : "🔴 High Risk";
+    risk === "low" ? tx.dr_risk_safe : risk === "medium" ? tx.dr_risk_moderate : tx.dr_risk_high;
 
   const analyzeUrl = useCallback(async (url: string) => {
     setStep("fetching");
@@ -62,7 +64,7 @@ export function QRMenuAnalyzer({ lang, userType = "healthy" }: Props) {
         body: JSON.stringify({ url }),
       });
       const fetchData = await fetchRes.json();
-      if (!fetchRes.ok) throw new Error(fetchData.error || "Could not load menu");
+      if (!fetchRes.ok) throw new Error(fetchData.error || tx.qm_load_fail);
 
       setStep("analyzing");
 
@@ -70,15 +72,15 @@ export function QRMenuAnalyzer({ lang, userType = "healthy" }: Props) {
       const analyzeRes = await fetch("/api/menu-analyze", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...fetchData, userType }),
+        body: JSON.stringify({ ...fetchData, userType, lang }),
       });
       const analyzeData = await analyzeRes.json();
-      if (!analyzeRes.ok) throw new Error(analyzeData.error || "Analysis failed");
+      if (!analyzeRes.ok) throw new Error(analyzeData.error || tx.dr_analysis_failed);
 
       setMenu(analyzeData.menu);
       setStep("result");
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Something went wrong");
+      setError(e instanceof Error ? e.message : tx.qm_generic_err);
       setStep("error");
     }
   }, [userType]);
@@ -96,18 +98,18 @@ export function QRMenuAnalyzer({ lang, userType = "healthy" }: Props) {
         const analyzeRes = await fetch("/api/menu-analyze", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ type: "image", base64, contentType, userType }),
+          body: JSON.stringify({ type: "image", base64, contentType, userType, lang }),
         });
         const analyzeData = await analyzeRes.json();
-        if (!analyzeRes.ok) throw new Error(analyzeData.error || "Analysis failed");
+        if (!analyzeRes.ok) throw new Error(analyzeData.error || tx.dr_analysis_failed);
 
         setMenu(analyzeData.menu);
         setStep("result");
       };
-      reader.onerror = () => { throw new Error("Could not read image"); };
+      reader.onerror = () => { throw new Error(tx.dr_img_unreadable); };
       reader.readAsDataURL(file);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Something went wrong");
+      setError(e instanceof Error ? e.message : tx.qm_generic_err);
       setStep("error");
     }
   }, [userType]);
@@ -132,16 +134,16 @@ export function QRMenuAnalyzer({ lang, userType = "healthy" }: Props) {
               if (qrUrl.startsWith("http")) {
                 await analyzeUrl(qrUrl);
               } else {
-                setError(`QR contains: "${qrUrl}" — not a URL. Try URL mode.`);
+                setError(tx.qm_qr_not_url);
                 setStep("error");
               }
             } else {
-              setError("No QR code found in image. Try URL mode or photo menu.");
+              setError(tx.qm_qr_none);
               setStep("error");
             }
           } catch {
             URL.revokeObjectURL(url);
-            setError("QR detection failed. Try URL mode.");
+            setError(tx.qm_qr_failed);
             setStep("error");
           }
         };
@@ -151,7 +153,7 @@ export function QRMenuAnalyzer({ lang, userType = "healthy" }: Props) {
         await analyzeImage(file);
       }
     } catch (e) {
-      setError(e instanceof Error ? e.message : "QR scan failed");
+      setError(e instanceof Error ? e.message : tx.qm_generic_err);
       setStep("error");
     }
   }, [analyzeUrl, analyzeImage]);
@@ -177,7 +179,7 @@ export function QRMenuAnalyzer({ lang, userType = "healthy" }: Props) {
     return true;
   }) || [];
 
-  const dishName = (d: Dish) => lang === "tr" ? (d.name_tr || d.name) : d.name;
+  const dishName = (d: Dish) => d.name_local || (lang === "tr" ? d.name_tr : null) || d.name;
 
   // ── SCAN STEP ─────────────────────────────────
   if (step === "scan") {
@@ -185,18 +187,18 @@ export function QRMenuAnalyzer({ lang, userType = "healthy" }: Props) {
       <div className="space-y-4">
         <div className="text-center">
           <div className="text-4xl mb-2">🍽️</div>
-          <h2 className="text-white font-bold text-lg">Restaurant Menu Analyzer</h2>
+          <h2 className="text-white font-bold text-lg">{tx.qm_title}</h2>
           <p className="text-gray-500 text-sm mt-1">
-            Scan QR menu, photo, or paste URL to get GL scores for every dish
+            {tx.qm_subtitle}
           </p>
         </div>
 
         {/* Mode tabs */}
         <div className="grid grid-cols-3 gap-2">
           {([
-            { key: "qr", icon: "📷", label: "Scan QR" },
-            { key: "photo", icon: "🖼️", label: "Menu Photo" },
-            { key: "url", icon: "🔗", label: "Paste URL" },
+            { key: "qr", icon: "📷", label: tx.qm_mode_qr },
+            { key: "photo", icon: "🖼️", label: tx.qm_mode_photo },
+            { key: "url", icon: "🔗", label: tx.qm_mode_url },
           ] as { key: typeof scanMode; icon: string; label: string }[]).map(m => (
             <button key={m.key} onClick={() => setScanMode(m.key)}
               className={`py-3 rounded-xl text-sm font-medium transition-all ${
@@ -214,12 +216,12 @@ export function QRMenuAnalyzer({ lang, userType = "healthy" }: Props) {
             <button onClick={() => qrInputRef.current?.click()}
               className="w-full py-5 rounded-2xl font-semibold text-white bg-teal-600 hover:bg-teal-500 active:scale-95 transition-all flex items-center justify-center gap-3 text-lg">
               <span className="text-2xl">📷</span>
-              Scan QR Code
+              {tx.qm_scan_btn}
             </button>
             <input ref={qrInputRef} type="file" accept="image/*" capture="environment" className="hidden"
               onChange={(e) => { const f = e.target.files?.[0]; if (f) handleQRScan(f); e.target.value = ""; }} />
             <p className="text-center text-gray-600 text-xs">
-              Point your camera at the QR code on the menu
+              {tx.qm_scan_hint}
             </p>
           </div>
         )}
@@ -230,12 +232,12 @@ export function QRMenuAnalyzer({ lang, userType = "healthy" }: Props) {
             <button onClick={() => menuPhotoRef.current?.click()}
               className="w-full py-5 rounded-2xl font-semibold text-white bg-teal-600 hover:bg-teal-500 active:scale-95 transition-all flex items-center justify-center gap-3 text-lg">
               <span className="text-2xl">🖼️</span>
-              Take Menu Photo
+              {tx.qm_photo_btn}
             </button>
             <input ref={menuPhotoRef} type="file" accept="image/*" capture="environment" className="hidden"
               onChange={(e) => { const f = e.target.files?.[0]; if (f) analyzeImage(f); e.target.value = ""; }} />
             <p className="text-center text-gray-600 text-xs">
-              Photo the printed or digital menu — Claude will read it
+              {tx.qm_photo_hint}
             </p>
           </div>
         )}
@@ -245,16 +247,16 @@ export function QRMenuAnalyzer({ lang, userType = "healthy" }: Props) {
           <div className="space-y-3">
             <input type="url" value={manualUrl}
               onChange={(e) => setManualUrl(e.target.value)}
-              placeholder="https://restaurant.com/menu"
+              placeholder={tx.qm_url_ph}
               className="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-gray-200 placeholder-gray-600 focus:outline-none focus:border-teal-500" />
             <button
               onClick={() => manualUrl.trim() && analyzeUrl(manualUrl.trim())}
               disabled={!manualUrl.trim()}
               className="w-full py-4 rounded-xl font-semibold text-white bg-teal-600 hover:bg-teal-500 disabled:opacity-40 transition-all">
-              Analyze Menu
+              {tx.qm_analyze_btn}
             </button>
             <p className="text-center text-gray-600 text-xs">
-              Paste the URL from the QR code or restaurant website
+              {tx.qm_url_hint}
             </p>
           </div>
         )}
@@ -269,12 +271,12 @@ export function QRMenuAnalyzer({ lang, userType = "healthy" }: Props) {
         <div className="text-5xl animate-bounce">{step === "fetching" ? "🔗" : "🧠"}</div>
         <div>
           <p className="text-teal-400 font-semibold text-lg">
-            {step === "fetching" ? "Loading menu..." : "Analyzing dishes..."}
+            {step === "fetching" ? tx.qm_loading_fetch : tx.qm_loading_analyze}
           </p>
           <p className="text-gray-500 text-sm mt-1">
             {step === "fetching"
-              ? "Fetching menu content"
-              : "Claude is calculating GL for every dish"}
+              ? tx.qm_loading_fetch_sub
+              : tx.qm_loading_analyze_sub}
           </p>
         </div>
         <div className="flex justify-center gap-1">
@@ -293,18 +295,18 @@ export function QRMenuAnalyzer({ lang, userType = "healthy" }: Props) {
       <div className="space-y-4">
         <div className="bg-red-950 border border-red-500/40 rounded-2xl p-6 text-center space-y-3">
           <div className="text-3xl">⚠️</div>
-          <p className="text-red-300 font-medium">Could not analyze menu</p>
+          <p className="text-red-300 font-medium">{tx.qm_err_title}</p>
           <p className="text-red-400/70 text-sm">{error}</p>
         </div>
         <div className="space-y-2">
-          <p className="text-gray-500 text-xs text-center">Try a different method:</p>
+          <p className="text-gray-500 text-xs text-center">{tx.qm_err_try}</p>
           <button onClick={() => { setScanMode("photo"); reset(); }}
             className="w-full py-3 rounded-xl bg-gray-900 text-gray-300 border border-gray-800 text-sm">
-            📷 Take a photo of the menu instead
+            {tx.qm_err_photo_btn}
           </button>
           <button onClick={reset}
             className="w-full py-3 rounded-xl bg-gray-900 text-gray-400 border border-gray-800 text-sm">
-            ← Try again
+            {tx.qm_err_retry}
           </button>
         </div>
       </div>
@@ -324,28 +326,28 @@ export function QRMenuAnalyzer({ lang, userType = "healthy" }: Props) {
         <div className="flex justify-between items-start">
           <div>
             <h2 className="text-white font-bold text-lg">
-              {menu.restaurant_name || "Menu Analysis"}
+              {menu.restaurant_name || tx.qm_menu_analysis}
             </h2>
             {menu.cuisine_type && (
-              <p className="text-gray-500 text-sm">{menu.cuisine_type} cuisine</p>
+              <p className="text-gray-500 text-sm">{menu.cuisine_type} {tx.qm_cuisine}</p>
             )}
           </div>
-          <button onClick={reset} className="text-gray-600 hover:text-gray-400 text-sm">✕ New</button>
+          <button onClick={reset} className="text-gray-600 hover:text-gray-400 text-sm">{tx.qm_new}</button>
         </div>
 
         {/* Summary stats */}
         <div className="grid grid-cols-3 gap-3 mt-4">
           <div className="bg-gray-800 rounded-xl p-3 text-center">
             <div className="text-2xl font-bold text-white">{menu.dishes.length}</div>
-            <div className="text-xs text-gray-500 mt-0.5">Total dishes</div>
+            <div className="text-xs text-gray-500 mt-0.5">{tx.qm_total_dishes}</div>
           </div>
           <div className="bg-green-950/60 rounded-xl p-3 text-center border border-green-500/20">
             <div className="text-2xl font-bold text-green-400">{safeCount}</div>
-            <div className="text-xs text-gray-500 mt-0.5">Safe choices</div>
+            <div className="text-xs text-gray-500 mt-0.5">{tx.qm_safe_choices}</div>
           </div>
           <div className="bg-red-950/60 rounded-xl p-3 text-center border border-red-500/20">
             <div className="text-2xl font-bold text-red-400">{riskyCount}</div>
-            <div className="text-xs text-gray-500 mt-0.5">High risk</div>
+            <div className="text-xs text-gray-500 mt-0.5">{tx.qm_high_risk}</div>
           </div>
         </div>
       </div>
@@ -353,7 +355,7 @@ export function QRMenuAnalyzer({ lang, userType = "healthy" }: Props) {
       {/* Top recommendations */}
       {menu.top_safe.length > 0 && (
         <div className="bg-green-950/40 border border-green-500/30 rounded-2xl p-4">
-          <h3 className="text-green-400 font-semibold text-sm mb-2">✅ Best choices for you</h3>
+          <h3 className="text-green-400 font-semibold text-sm mb-2">{tx.qm_best_choices}</h3>
           <div className="flex flex-wrap gap-2">
             {menu.top_safe.map(d => (
               <span key={d} className="text-xs bg-green-900/50 text-green-300 px-3 py-1.5 rounded-full border border-green-500/20">
@@ -366,7 +368,7 @@ export function QRMenuAnalyzer({ lang, userType = "healthy" }: Props) {
 
       {menu.top_risky.length > 0 && (
         <div className="bg-red-950/40 border border-red-500/30 rounded-2xl p-4">
-          <h3 className="text-red-400 font-semibold text-sm mb-2">🔴 Avoid or limit</h3>
+          <h3 className="text-red-400 font-semibold text-sm mb-2">{tx.qm_avoid_limit}</h3>
           <div className="flex flex-wrap gap-2">
             {menu.top_risky.map(d => (
               <span key={d} className="text-xs bg-red-900/50 text-red-300 px-3 py-1.5 rounded-full border border-red-500/20">
@@ -380,7 +382,7 @@ export function QRMenuAnalyzer({ lang, userType = "healthy" }: Props) {
       {/* Tips */}
       {menu.meal_tips.length > 0 && (
         <div className="bg-teal-950/40 border border-teal-500/30 rounded-2xl p-4">
-          <h3 className="text-teal-400 font-semibold text-sm mb-2">💡 Tips for this restaurant</h3>
+          <h3 className="text-teal-400 font-semibold text-sm mb-2">{tx.qm_tips_title}</h3>
           {menu.meal_tips.map((tip, i) => (
             <p key={i} className="text-gray-300 text-sm mt-1">→ {tip}</p>
           ))}
@@ -391,9 +393,9 @@ export function QRMenuAnalyzer({ lang, userType = "healthy" }: Props) {
       <div className="space-y-2">
         <div className="flex gap-2">
           {([
-            { key: "all", label: `All (${menu.dishes.length})` },
-            { key: "safe", label: `✅ Safe (${safeCount})` },
-            { key: "risky", label: `🔴 Risky (${riskyCount})` },
+            { key: "all", label: `${tx.qm_f_all} (${menu.dishes.length})` },
+            { key: "safe", label: `${tx.qm_f_safe} (${safeCount})` },
+            { key: "risky", label: `${tx.qm_f_risky} (${riskyCount})` },
           ] as { key: typeof filter; label: string }[]).map(f => (
             <button key={f.key} onClick={() => setFilter(f.key)}
               className={`flex-1 py-2 rounded-xl text-xs font-medium transition-all ${
@@ -414,7 +416,7 @@ export function QRMenuAnalyzer({ lang, userType = "healthy" }: Props) {
                     ? "bg-gray-600 text-white"
                     : "bg-gray-900 text-gray-500 border border-gray-800"
                 }`}>
-                {cat === "all" ? "All categories" : cat}
+                {cat === "all" ? tx.qm_all_categories : cat}
               </button>
             ))}
           </div>
@@ -424,7 +426,7 @@ export function QRMenuAnalyzer({ lang, userType = "healthy" }: Props) {
       {/* Dish list */}
       <div className="space-y-2">
         {filteredDishes.length === 0 ? (
-          <div className="text-center py-8 text-gray-600">No dishes match this filter</div>
+          <div className="text-center py-8 text-gray-600">{tx.qm_no_match}</div>
         ) : (
           filteredDishes.map((dish, i) => (
             <div key={i} className={`rounded-xl p-4 border ${riskBg(dish.glucose_risk)}`}>
@@ -439,9 +441,9 @@ export function QRMenuAnalyzer({ lang, userType = "healthy" }: Props) {
                   <div className="flex gap-3 mt-1 text-xs text-gray-500">
                     <span>GL ~{dish.estimated_gl}</span>
                     <span>GI ~{dish.gi_estimate}</span>
-                    {dish.protein_rich && <span className="text-purple-400">💪 Protein</span>}
-                    {dish.fiber_rich && <span className="text-green-400">🌿 Fiber</span>}
-                    {dish.carb_heavy && <span className="text-amber-400">🍞 Carb heavy</span>}
+                    {dish.protein_rich && <span className="text-purple-400">{tx.qm_protein}</span>}
+                    {dish.fiber_rich && <span className="text-green-400">{tx.qm_fiber}</span>}
+                    {dish.carb_heavy && <span className="text-amber-400">{tx.qm_carb_heavy}</span>}
                   </div>
                   {dish.notes && (
                     <p className="text-gray-500 text-xs mt-1.5">{dish.notes}</p>
@@ -458,7 +460,7 @@ export function QRMenuAnalyzer({ lang, userType = "healthy" }: Props) {
 
       <button onClick={reset}
         className="w-full py-4 rounded-xl font-semibold text-white bg-teal-600 hover:bg-teal-500 transition-all">
-        🍽️ Analyze Another Restaurant
+        🍽️ {tx.qm_analyze_another.replace(/^🍽️\s*/u, "")}
       </button>
     </div>
   );
