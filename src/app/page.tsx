@@ -13,7 +13,7 @@ import { Paywall } from "@/components/paywall";
 import { HealthTracker } from "@/components/health-tracker";
 import { NotificationSettings } from "@/components/notification-settings";
 import { getProfile, saveProfile, syncFromCloud, type UserProfile } from "@/lib/storage";
-import { detectBrowserLang, type Lang } from "@/lib/i18n";
+import { detectBrowserLang, getT, type Lang } from "@/lib/i18n";
 import { onAuthStateChange, type User } from "@/lib/auth";
 import { initPushNotifications } from "@/lib/push-notifications";
 import { initNetworkMonitor, onNetworkChange, isOnline, type NetworkStatus } from "@/lib/network";
@@ -119,6 +119,8 @@ export default function Home() {
     );
   }
 
+  const tx = getT(lang);
+
   return (
     <div className="nova-page">
 
@@ -181,13 +183,13 @@ export default function Home() {
               <div style={{ margin: "0 0 4px", padding: "12px 14px", background: "var(--nova-surface)", border: "0.5px solid var(--nova-border)", borderRadius: 16, position: "relative" }}>
                 <button onClick={dismissHint} aria-label="dismiss" style={{ position: "absolute", top: 8, right: 10, background: "none", border: "none", color: "var(--nova-text-4)", fontSize: 16, cursor: "pointer", lineHeight: 1 }}>×</button>
                 <div style={{ fontSize: 11, color: "var(--nova-text-2)", fontWeight: 500, marginBottom: 8 }}>
-                  {lang === "tr" ? "Nasıl çalışır" : "How it works"}
+                  {tx.pg_hint_title}
                 </div>
                 <div style={{ display: "flex", gap: 6 }}>
                   {[
-                    { Icon: Camera, t: lang === "tr" ? "Fotoğraf çek" : "Snap a photo" },
-                    { Icon: LineChart, t: lang === "tr" ? "Glukoz etkisini gör" : "See glucose impact" },
-                    { Icon: Check, t: lang === "tr" ? "Daha iyi seç" : "Choose better" },
+                    { Icon: Camera, t: tx.pg_hint_snap },
+                    { Icon: LineChart, t: tx.pg_hint_see },
+                    { Icon: Check, t: tx.pg_hint_choose },
                   ].map((s, idx) => (
                     <div key={idx} style={{ flex: 1, textAlign: "center", padding: "8px 4px", background: "var(--nova-bg)", borderRadius: 10, border: "0.5px solid var(--nova-border)" }}>
                       <s.Icon size={16} strokeWidth={1.75} color="var(--nova-purple)" style={{ display: "block", margin: "0 auto 4px" }} aria-hidden="true" />
@@ -218,11 +220,11 @@ export default function Home() {
         )}
         {view === "health" && (
           <div className="px-4 py-4">
-            <h2 className="text-white font-bold text-lg mb-1">🧘 {lang === "tr" ? "Sağlık Takibi" : "Health Tracking"}</h2>
-            <p className="text-gray-500 text-xs mb-4">{lang === "tr" ? "Uyku, oruç, HOMA-IR ve trend analizi" : "Sleep, fasting, HOMA-IR & trends"}</p>
+            <h2 className="text-white font-bold text-lg mb-1">🧘 {tx.pg_health_title}</h2>
+            <p className="text-gray-500 text-xs mb-4">{tx.pg_health_sub}</p>
             <HealthTracker lang={lang} />
             <div className="mt-6">
-              <h3 className="text-white font-semibold text-sm mb-3">🔔 {lang === "tr" ? "Bildirim Ayarları" : "Notification Settings"}</h3>
+              <h3 className="text-white font-semibold text-sm mb-3">🔔 {tx.pg_notif_settings}</h3>
               <NotificationSettings lang={lang} />
             </div>
           </div>
@@ -230,16 +232,16 @@ export default function Home() {
         {view === "tools" && (
           <div style={{ padding: "16px 16px 8px" }}>
             <div style={{ fontSize: 19, fontWeight: 600, color: "var(--nova-text-1)", marginBottom: 2 }}>
-              {lang === "tr" ? "Araçlar" : "Tools"}
+              {tx.pg_tools}
             </div>
             <div style={{ fontSize: 12, color: "var(--nova-text-3)", marginBottom: 16 }}>
-              {lang === "tr" ? "Ek analiz araçların" : "Your extra analysis tools"}
+              {tx.pg_tools_sub}
             </div>
             <div style={{ display: "grid", gap: 10 }}>
               {([
-                { v: "drink", Icon: GlassWater, color: "rgba(6,182,212,0.9)", title: lang === "tr" ? "İçecek Analizi" : "Drink Analysis", desc: lang === "tr" ? "İçeceklerin gizli şekerini ve glukoz etkisini ölç" : "Measure drinks' hidden sugar & glucose impact" },
-                { v: "ingredient", Icon: Search, color: "rgba(139,92,246,0.9)", title: lang === "tr" ? "Malzeme Arama" : "Ingredient Search", desc: lang === "tr" ? "5000+ yiyecekte tek bir malzemenin GI'sini bul" : "Look up any single food's GI across 5000+ items" },
-                { v: "plan", Icon: CalendarDays, color: "rgba(16,185,129,0.9)", title: lang === "tr" ? "Öğün Planı" : "Meal Plan", desc: lang === "tr" ? "Sana özel, düşük-glisemik günlük öğün planı" : "Your personalized low-glycemic daily plan" },
+                { v: "drink", Icon: GlassWater, color: "rgba(6,182,212,0.9)", title: tx.pg_tool_drink, desc: tx.pg_tool_drink_d },
+                { v: "ingredient", Icon: Search, color: "rgba(139,92,246,0.9)", title: tx.pg_tool_ing, desc: tx.pg_tool_ing_d },
+                { v: "plan", Icon: CalendarDays, color: "rgba(16,185,129,0.9)", title: tx.pg_tool_plan, desc: tx.pg_tool_plan_d },
               ] as { v: View; Icon: typeof GlassWater; color: string; title: string; desc: string }[]).map(({ v, Icon, color, title, desc }) => (
                 <button key={v} onClick={() => setView(v)}
                   style={{ display: "flex", alignItems: "center", gap: 12, textAlign: "left", padding: 14, borderRadius: 16, background: "var(--nova-surface)", border: "0.5px solid var(--nova-border)", cursor: "pointer", width: "100%" }}>
@@ -272,26 +274,26 @@ export default function Home() {
         <button className={`nova-nav-item ${view === "history" ? "active" : ""}`}
           onClick={() => setView("history")}>
           <ClipboardList size={22} strokeWidth={1.75} />
-          <span>{lang === "tr" ? "Günlük" : "Log"}</span>
+          <span>{tx.pg_nav_log}</span>
           {view === "history" && <div className="nova-nav-dot" />}
         </button>
 
         <button className={`nova-nav-item ${view === "health" ? "active" : ""}`}
           onClick={() => setView("health")}>
           <HeartPulse size={22} strokeWidth={1.75} />
-          <span>{lang === "tr" ? "Sağlık" : "Health"}</span>
+          <span>{tx.pg_nav_health}</span>
           {view === "health" && <div className="nova-nav-dot" />}
         </button>
 
         {/* FAB — Analyze (core action) */}
-        <button className="nova-fab" onClick={() => setView("analyze")} aria-label={lang === "tr" ? "Yemek analiz et" : "Analyze meal"}>
+        <button className="nova-fab" onClick={() => setView("analyze")} aria-label={tx.pg_analyze_meal}>
           <Camera size={22} strokeWidth={1.75} color="rgba(139,92,246,0.85)" />
         </button>
 
         <button className={`nova-nav-item ${["tools","drink","ingredient","plan","menu"].includes(view) ? "active" : ""}`}
           onClick={() => setView("tools")}>
           <LayoutGrid size={22} strokeWidth={1.75} />
-          <span>{lang === "tr" ? "Araçlar" : "Tools"}</span>
+          <span>{tx.pg_tools}</span>
           {["tools","drink","ingredient","plan","menu"].includes(view) && <div className="nova-nav-dot" />}
         </button>
       </nav>
