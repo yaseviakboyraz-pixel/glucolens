@@ -1,6 +1,7 @@
 "use client";
 import { useState, useRef, useCallback } from "react";
 import { getT, type Lang } from "@/lib/i18n";
+import { scanBarcode, isNativePlatform } from "@/lib/barcode-scanner";
 
 interface Dish {
   name: string;
@@ -158,6 +159,25 @@ export function QRMenuAnalyzer({ lang, userType = "healthy" }: Props) {
     }
   }, [analyzeUrl, analyzeImage]);
 
+  // Native QR scan (iOS/Android) uses MLKit — WKWebView has no BarcodeDetector,
+  // so on native we must go through the native scanner (which supports QrCode).
+  const handleNativeQR = useCallback(async () => {
+    setError(null);
+    try {
+      const result = await scanBarcode(); // no video arg -> native MLKit scanner
+      if (!result) return; // cancelled or nothing found -> stay on scan screen
+      if (result.barcode.startsWith("http")) {
+        await analyzeUrl(result.barcode);
+      } else {
+        setError(tx.qm_qr_not_url);
+        setStep("error");
+      }
+    } catch (e) {
+      setError(e instanceof Error ? e.message : tx.qm_qr_failed);
+      setStep("error");
+    }
+  }, [analyzeUrl]);
+
   const reset = () => {
     setStep("scan");
     setMenu(null);
@@ -213,7 +233,7 @@ export function QRMenuAnalyzer({ lang, userType = "healthy" }: Props) {
         {/* QR Mode */}
         {scanMode === "qr" && (
           <div className="space-y-3">
-            <button onClick={() => qrInputRef.current?.click()}
+            <button onClick={() => { if (isNativePlatform()) handleNativeQR(); else qrInputRef.current?.click(); }}
               className="w-full py-5 rounded-2xl font-semibold text-white bg-teal-600 hover:bg-teal-500 active:scale-95 transition-all flex items-center justify-center gap-3 text-lg">
               <span className="text-2xl">📷</span>
               {tx.qm_scan_btn}
