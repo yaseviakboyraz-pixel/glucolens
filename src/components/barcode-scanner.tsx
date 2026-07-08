@@ -1,7 +1,7 @@
 "use client";
 import { useState, useRef, useEffect, useCallback } from "react";
 import { scanBarcode, isNativePlatform } from "@/lib/barcode-scanner";
-import type { Lang } from "@/lib/i18n";
+import { getT, type Lang } from "@/lib/i18n";
 
 interface BarcodeResult {
   name: string;
@@ -26,6 +26,7 @@ interface Props {
 }
 
 export function BarcodeScanner({ lang, onResult, onClose }: Props) {
+  const tx = getT(lang);
   const videoRef = useRef<HTMLVideoElement>(null);
   const [scanning, setScanning] = useState(false);
   const [manualBarcode, setManualBarcode] = useState("");
@@ -63,7 +64,7 @@ export function BarcodeScanner({ lang, onResult, onClose }: Props) {
       if (result) {
         await fetchProduct(result.barcode);
       } else {
-        setError("Scan cancelled or no barcode found.");
+        setError(tx.bc_err_cancelled);
       }
       return;
     }
@@ -81,7 +82,7 @@ export function BarcodeScanner({ lang, onResult, onClose }: Props) {
       setScanning(true);
       startScanning();
     } catch {
-      setError("Camera access denied. Use manual entry below.");
+      setError(tx.bc_err_camera_denied);
       setMode("manual");
     }
   }
@@ -121,7 +122,7 @@ export function BarcodeScanner({ lang, onResult, onClose }: Props) {
       const data = await res.json();
 
       if (data.status === 0 || !data.product) {
-        throw new Error(`Product not found (${barcode}). Try manual search.`);
+        throw new Error(tx.bc_err_not_found.replace("{b}", barcode));
       }
 
       const p = data.product;
@@ -153,7 +154,7 @@ export function BarcodeScanner({ lang, onResult, onClose }: Props) {
 
       onResult(result);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Could not fetch product info.");
+      setError(e instanceof Error ? e.message : tx.bc_err_fetch);
     } finally {
       setLoading(false);
     }
@@ -186,7 +187,7 @@ export function BarcodeScanner({ lang, onResult, onClose }: Props) {
     <div className="fixed inset-0 bg-black/90 z-50 flex flex-col">
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3 bg-gray-900 border-b border-gray-800">
-        <h2 className="text-white font-semibold">🔍 Barcode Scanner</h2>
+        <h2 className="text-white font-semibold">{tx.bc_title}</h2>
         <button onClick={() => { stopCamera(); onClose(); }}
           className="text-gray-400 hover:text-white text-2xl leading-none">✕</button>
       </div>
@@ -195,11 +196,11 @@ export function BarcodeScanner({ lang, onResult, onClose }: Props) {
       <div className="flex gap-2 px-4 py-3 bg-gray-900">
         <button onClick={() => { setMode("camera"); setError(null); }}
           className={`flex-1 py-2 rounded-xl text-sm font-medium transition-all ${mode === "camera" ? "bg-teal-600 text-white" : "bg-gray-800 text-gray-400"}`}>
-          📷 Scan
+          {tx.bc_tab_scan}
         </button>
         <button onClick={() => { stopCamera(); setMode("manual"); setError(null); }}
           className={`flex-1 py-2 rounded-xl text-sm font-medium transition-all ${mode === "manual" ? "bg-teal-600 text-white" : "bg-gray-800 text-gray-400"}`}>
-          ⌨️ Manual
+          {tx.bc_tab_manual}
         </button>
       </div>
 
@@ -209,7 +210,7 @@ export function BarcodeScanner({ lang, onResult, onClose }: Props) {
           {!scanning ? (
             <button onClick={startCamera}
               className="px-8 py-4 bg-teal-600 hover:bg-teal-500 text-white rounded-2xl font-semibold text-lg">
-              📷 Start Camera
+              {tx.bc_start_camera}
             </button>
           ) : (
             <div className="w-full max-w-sm relative">
@@ -225,20 +226,20 @@ export function BarcodeScanner({ lang, onResult, onClose }: Props) {
                 </div>
               </div>
               <p className="text-center text-gray-400 text-sm mt-3">
-                Point at barcode — auto-detects EAN/UPC
+                {tx.bc_point_hint}
               </p>
               <button onClick={stopCamera}
                 className="w-full mt-2 py-2 bg-gray-800 text-gray-400 rounded-xl text-sm">
-                Stop
+                {tx.bc_stop}
               </button>
             </div>
           )}
 
           {/* Fallback: file-based barcode */}
           <div className="text-center">
-            <p className="text-gray-600 text-xs mb-2">Or upload a barcode image</p>
+            <p className="text-gray-600 text-xs mb-2">{tx.bc_or_upload}</p>
             <label className="cursor-pointer text-teal-500 text-sm underline">
-              Choose image
+              {tx.bc_choose_image}
               <input type="file" accept="image/*" className="hidden"
                 onChange={async (e) => {
                   const file = e.target.files?.[0];
@@ -262,7 +263,7 @@ export function BarcodeScanner({ lang, onResult, onClose }: Props) {
                       } catch { /* fall through */ }
                     }
                     URL.revokeObjectURL(url);
-                    setError("Could not read barcode from image. Try manual entry.");
+                    setError(tx.bc_err_img_read);
                     setLoading(false);
                   };
                   img.src = url;
@@ -278,13 +279,13 @@ export function BarcodeScanner({ lang, onResult, onClose }: Props) {
         <div className="flex-1 flex flex-col items-center justify-center p-6 space-y-4">
           <div className="text-center">
             <div className="text-4xl mb-2">🏷️</div>
-            <p className="text-gray-400 text-sm">Enter the barcode number from the product</p>
+            <p className="text-gray-400 text-sm">{tx.bc_manual_hint}</p>
           </div>
           <input
             type="number"
             value={manualBarcode}
             onChange={(e) => setManualBarcode(e.target.value)}
-            placeholder="e.g. 8690526474562"
+            placeholder={tx.bc_manual_ph}
             className="w-full max-w-sm bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-white text-center text-lg tracking-wider focus:outline-none focus:border-teal-500"
           />
           <button
@@ -292,11 +293,11 @@ export function BarcodeScanner({ lang, onResult, onClose }: Props) {
             disabled={manualBarcode.length < 8 || loading}
             className="w-full max-w-sm py-4 rounded-xl font-semibold text-white bg-teal-600 hover:bg-teal-500 disabled:opacity-40 transition-all"
           >
-            {loading ? "Looking up..." : "Search Product"}
+            {loading ? tx.bc_looking_up : tx.bc_search_product}
           </button>
 
           <p className="text-gray-600 text-xs text-center max-w-xs">
-            Powered by Open Food Facts — 3M+ products worldwide
+            {tx.bc_powered_by}
           </p>
         </div>
       )}
@@ -306,7 +307,7 @@ export function BarcodeScanner({ lang, onResult, onClose }: Props) {
         <div className="absolute inset-0 bg-black/70 flex items-center justify-center">
           <div className="bg-gray-900 rounded-2xl p-6 text-center space-y-3">
             <div className="text-3xl animate-bounce">🔍</div>
-            <p className="text-teal-400 font-medium">Looking up product...</p>
+            <p className="text-teal-400 font-medium">{tx.bc_looking_up_product}</p>
           </div>
         </div>
       )}
