@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
 import { rateLimit, clientKey } from "@/lib/rate-limit";
-import { withModelFallback } from "@/lib/ai-client";
+import { withModelFallback, QUALITY_CHAIN } from "@/lib/ai-client";
 import { resolveLang, langDirective } from "@/lib/ai-lang";
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
@@ -81,7 +81,8 @@ Return ONLY this JSON (all values for the ${portion_g}g portion):
         max_tokens: 800,
         system: GI_SYSTEM,
         messages: [{ role: "user", content: prompt }],
-      })
+      }),
+      QUALITY_CHAIN
     );
 
     const text = response.content[0].type === "text" ? response.content[0].text : "";

@@ -29,6 +29,16 @@ export const MODEL_CHAIN: string[] = [
   ...new Set([QUALITY_MODEL, FREE_MODEL, ...EXTRA_FALLBACKS]),
 ];
 
+// Trusted-quality chain: QUALITY_MODEL plus any operator-configured
+// EXTRA_FALLBACKS, but DELIBERATELY never FREE_MODEL (Haiku). Haiku failed
+// live quality on glycemic analysis, so routes that emit GL/nutrition numbers
+// use this chain and FAIL CLOSED — an honest error beats a wrong number for a
+// health product. Set ANTHROPIC_FALLBACK_MODELS to a *trusted* Sonnet-class
+// model to restore auto-failover without reintroducing Haiku.
+export const QUALITY_CHAIN: string[] = [
+  ...new Set([QUALITY_MODEL, ...EXTRA_FALLBACKS]),
+];
+
 // True when trying a DIFFERENT model could plausibly succeed: the model is dead
 // (404) or the server is transiently unhappy (429/500/503/529). Client/auth
 // errors (400/401/403) are NOT retried — another model won't fix a bad image or

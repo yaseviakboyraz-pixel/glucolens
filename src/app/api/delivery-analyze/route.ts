@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
 import { rateLimit, clientKey } from "@/lib/rate-limit";
-import { withModelFallback } from "@/lib/ai-client";
+import { withModelFallback, QUALITY_CHAIN } from "@/lib/ai-client";
 import { resolveLang, langDirective } from "@/lib/ai-lang";
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
@@ -160,7 +160,8 @@ export async function POST(req: NextRequest) {
         max_tokens: 4000,
         system: DELIVERY_SYSTEM_PROMPT + profileNote + platformHint + langNote,
         messages,
-      })
+      }),
+      QUALITY_CHAIN
     );
 
     let raw = (response.content[0] as { type: string; text: string }).text.trim();

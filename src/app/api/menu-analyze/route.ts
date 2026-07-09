@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
 import { rateLimit, clientKey } from "@/lib/rate-limit";
-import { withModelFallback } from "@/lib/ai-client";
+import { withModelFallback, QUALITY_CHAIN } from "@/lib/ai-client";
 import { resolveLang, langDirective } from "@/lib/ai-lang";
 
 export const maxDuration = 60;
@@ -87,7 +87,8 @@ export async function POST(req: NextRequest) {
         max_tokens: 3000,
         system: MENU_SYSTEM + profileNote + langNote,
         messages: [{ role: "user", content: messageContent }],
-      })
+      }),
+      QUALITY_CHAIN
     );
 
     let raw = (response.content[0] as { type: string; text: string }).text.trim();

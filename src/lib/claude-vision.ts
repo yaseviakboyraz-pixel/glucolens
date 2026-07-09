@@ -1,6 +1,6 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { lookupGI } from "./gi-index";
-import { withModelFallback, modelChainFor } from "./ai-client";
+import { withModelFallback, QUALITY_CHAIN } from "./ai-client";
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
@@ -255,7 +255,12 @@ export async function analyzeMealImage(
       ],
     }],
     }),
-    modelChainFor(tier)
+    // QUALITY_CHAIN = Sonnet(+trusted extras), never Haiku. Haiku produced
+    // wrong glycemic analysis on real meal photos, so this route FAILS CLOSED:
+    // if Sonnet is down the call throws and the route returns an honest error
+    // rather than a wrong Haiku number. `tier` no longer selects the model;
+    // kept for metrics + future server-side entitlements.
+    QUALITY_CHAIN
   );
 
   // Lightweight metrics (PII-free) — visible in Vercel logs to measure real
@@ -266,6 +271,7 @@ export async function analyzeMealImage(
   };
   console.log("[metrics] analyze " + JSON.stringify({
     model: modelUsed,
+    tier,
     fell_back: fellBack,
     ms: Date.now() - startedAt,
     in: u?.input_tokens,
