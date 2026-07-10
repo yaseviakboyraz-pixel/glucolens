@@ -40,7 +40,7 @@ function detectUrlType(url: string): "delivery" | "image" | "menu" {
 class TimeoutError extends Error {
   constructor() { super("timeout"); this.name = "TimeoutError"; }
 }
-async function fetchWithTimeout(input: string, init: RequestInit, ms = 35000): Promise<Response> {
+async function fetchWithTimeout(input: string, init: RequestInit, ms = 50000): Promise<Response> {
   const ctrl = new AbortController();
   const tid = setTimeout(() => ctrl.abort(), ms);
   try {
