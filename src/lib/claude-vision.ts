@@ -48,10 +48,10 @@ Rules:
 - Plain tea (çay, siyah çay) has GI=0, sugar=0. Only add sugar if visible.
 - gi_confidence: 0.9+ for well-known items, 0.7-0.9 for estimated
 
-For timing_actions, provide SPECIFIC and ACTIONABLE nudges:
-- pre_meal: 2-3 actions user can do RIGHT NOW before eating (e.g. "Walk briskly for 10 minutes — reduces glucose peak by ~20%")
-- post_meal: 2-3 actions for AFTER eating (e.g. "Take a 15-minute walk within 30 minutes of finishing")
-- meal_mods: 2-3 meal modifications (e.g. "Squeeze lemon on rice — lowers GI by 10-15%")
+For timing_actions, provide SPECIFIC, ACTIONABLE, CONCISE nudges — ONE short sentence each (max ~12 words); keep a brief "~X%" effect hint where natural:
+- pre_meal: exactly 2 actions to do before eating
+- post_meal: exactly 2 actions for after eating
+- meal_mods: exactly 2 meal modifications
 - swap_suggestion: ONE specific lower-GL alternative dish
 
 Do NOT output a glucose_curve object — the app computes the response curve itself from total GL. Omit it entirely.
