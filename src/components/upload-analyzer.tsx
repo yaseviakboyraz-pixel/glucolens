@@ -1,6 +1,6 @@
 "use client";
 import React, { useState, useRef, useCallback, useEffect } from "react";
-import { GlucoseMeter } from "./glucose-meter";
+import { OrbitalHero, collapsedIds, REST_NODE_ID } from "./orbital-hero";
 import { BarcodeScanner } from "./barcode-scanner";
 import { canAnalyze, recordAnalysis } from "@/lib/subscriptions";
 import { Paywall } from "./paywall";
@@ -93,6 +93,27 @@ export function UploadAnalyzer({ userType = "healthy", lang, onAnalysisComplete 
   const gallery2Ref = useRef<HTMLInputElement>(null);
 
   const tx = getT(lang);
+
+  // The orbit takes a narrow presentational contract — it never sees
+  // MealAnalysis, so a schema change lands here in the adapter rather than
+  // inside the component.
+  const orbitalItems = React.useMemo(
+    () => (result?.food_items ?? []).map((f, i) => ({
+      id: String(i),
+      gl: f.glycemic_load ?? 0,
+      confidence: f.gi_confidence ?? 1,
+    })),
+    [result]
+  );
+  const restIds = React.useMemo(() => collapsedIds(orbitalItems), [orbitalItems]);
+
+  // Selection is scoped to the analysis it was made on. When a new result
+  // lands the stored reference stops matching, so the highlight clears itself
+  // — no effect, no cross-render synchronization, nothing to keep in step.
+  const [selection, setSelection] = useState<{ for: MealAnalysis; id: string } | null>(null);
+  const selectedItem = selection && selection.for === result ? selection.id : null;
+  const selectItem = (id: string | null) =>
+    setSelection(id && result ? { for: result, id } : null);
 
   // Elapsed-time tracker driving staged loading progress (perceived latency).
   // The analysis is output-bound (~17s), so we can't make it truly fast — but a
@@ -971,7 +992,15 @@ export function UploadAnalyzer({ userType = "healthy", lang, onAnalysisComplete 
             </div>
           )}
 
-          <GlucoseMeter risk={result.glucose_risk} gl={result.total_glycemic_load} lang={lang} />
+          <OrbitalHero
+            items={orbitalItems}
+            totalGl={result.total_glycemic_load}
+            risk={result.glucose_risk}
+            lang={lang}
+            kicker={tx.dr_gl_label}
+            selectedId={selectedItem}
+            onSelect={selectItem}
+          />
 
           {/* Honesty: AI estimate + confidence — for a health app, trust is the product */}
           {(() => {
@@ -1042,12 +1071,24 @@ export function UploadAnalyzer({ userType = "healthy", lang, onAnalysisComplete 
               const gl = item.glycemic_load;
               const accent = gl < 10 ? "rgba(16,185,129,0.65)" : gl <= 20 ? "rgba(245,158,11,0.65)" : "rgba(239,68,68,0.65)";
               const glColor = gl < 10 ? "rgba(16,185,129,0.85)" : gl <= 20 ? "rgba(245,158,11,0.85)" : "rgba(239,68,68,0.85)";
+              const on = selectedItem === String(i)
+                || (selectedItem === REST_NODE_ID && restIds.has(String(i)));
               return (
-                <div key={i} style={{
-                  background: "var(--nova-surface)", border: "0.5px solid var(--nova-border)",
-                  borderRadius: 12, padding: "8px 10px", display: "flex", alignItems: "center",
-                  gap: 8, marginBottom: 5,
-                }}>
+                <div key={i} role="button" tabIndex={0}
+                  onClick={() => selectItem(on ? null : String(i))}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      selectItem(on ? null : String(i));
+                    }
+                  }}
+                  style={{
+                    background: on ? "rgba(45,212,191,0.07)" : "var(--nova-surface)",
+                    border: `0.5px solid ${on ? "rgba(45,212,191,0.45)" : "var(--nova-border)"}`,
+                    borderRadius: 12, padding: "8px 10px", display: "flex", alignItems: "center",
+                    gap: 8, marginBottom: 5, cursor: "pointer",
+                    transition: "background 0.18s, border-color 0.18s",
+                  }}>
                   <div style={{ width: 2, borderRadius: 1, alignSelf: "stretch", flexShrink: 0, background: accent }} />
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontSize: 10, color: "var(--nova-text-2)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{foodName(item)}</div>
