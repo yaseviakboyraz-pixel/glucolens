@@ -23,6 +23,15 @@ import { ClipboardList, HeartPulse, Camera, LayoutGrid, GlassWater, Search, Cale
 
 type View = "setup" | "analyze" | "history" | "ingredient" | "menu" | "drink" | "plan" | "health" | "tools";
 
+// Keeps the document's language and direction in step with React state.
+// Called from BOTH the mount restore and the switcher — these drifted apart
+// before, which left returning Arabic users in LTR on every cold start until
+// they re-picked their language by hand.
+function applyLangToDocument(l: Lang) {
+  document.documentElement.lang = l;
+  document.documentElement.dir = l === "ar" ? "rtl" : "ltr";
+}
+
 export default function Home() {
   const [lang, setLang] = useState<Lang>("en");
   const [profile, setProfile] = useState<UserProfile | null>(null);
@@ -39,7 +48,9 @@ export default function Home() {
 
   useEffect(() => {
     const saved = localStorage.getItem("glucolens_lang") as Lang | null;
-    setLang(saved || detectBrowserLang());
+    const initialLang = saved || detectBrowserLang();
+    setLang(initialLang);
+    applyLangToDocument(initialLang);
     const p = getProfile();
     setProfile(p);
     if (!p || !p.setupComplete) setView("setup");
@@ -80,8 +91,7 @@ export default function Home() {
   function handleLangChange(l: Lang) {
     setLang(l);
     localStorage.setItem("glucolens_lang", l);
-    document.documentElement.lang = l;
-    document.documentElement.dir = l === "ar" ? "rtl" : "ltr";
+    applyLangToDocument(l);
   }
 
   function toggleTheme() {
