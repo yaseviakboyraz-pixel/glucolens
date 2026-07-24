@@ -46,6 +46,19 @@ const nextConfig: NextConfig = {
       "upgrade-insecure-requests",
     ].join("; ");
 
+    // The packaged app is no longer same-origin: iOS WKWebView runs on
+    // capacitor://localhost and Android on https://localhost, so every call to
+    // this backend is now cross-origin and the browser will block it without
+    // these headers. Origins are allow-listed and echoed back rather than using
+    // "*" — a wildcard would let any website drive this (paid) API from a
+    // visitor's browser. Note CORS is a browser rule only; it is not what stops
+    // direct abuse — the usage quota is.
+    const NATIVE_ORIGINS = [
+      "capacitor://localhost", // iOS
+      "https://localhost",     // Android
+      "http://localhost:3000", // dev live-reload (CAP_SERVER_URL)
+    ].join("|");
+
     return [
       {
         source: "/(.*)",
@@ -57,6 +70,20 @@ const nextConfig: NextConfig = {
           { key: "X-XSS-Protection", value: "1; mode=block" },
           { key: "Strict-Transport-Security", value: "max-age=63072000; includeSubDomains; preload" },
           { key: "Content-Security-Policy", value: csp },
+        ],
+      },
+      {
+        source: "/api/(.*)",
+        has: [
+          { type: "header", key: "origin", value: `(?<allowedOrigin>${NATIVE_ORIGINS})` },
+        ],
+        headers: [
+          { key: "Access-Control-Allow-Origin", value: ":allowedOrigin" },
+          { key: "Access-Control-Allow-Methods", value: "GET, POST, OPTIONS" },
+          { key: "Access-Control-Allow-Headers", value: "Content-Type, Authorization" },
+          { key: "Access-Control-Max-Age", value: "86400" },
+          // Required so shared caches don't serve one origin's CORS headers to another.
+          { key: "Vary", value: "Origin" },
         ],
       },
       {
