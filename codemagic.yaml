@@ -8,7 +8,9 @@ workflows:
         bundle_identifier: com.glucolens.app
       vars:
         APP_ID: com.glucolens.app
-      node: latest
+      # Pinned to the major used locally. "latest" would silently jump to the
+      # next Node major the day it ships and break CI while nothing changed here.
+      node: 24
     scripts:
       - name: Install dependencies
         script: npm install
@@ -48,7 +50,8 @@ workflows:
         - keystore_reference
       vars:
         PACKAGE_NAME: com.glucolens.app
-      node: latest
+      # Pinned to the major used locally — see the note in ios-workflow.
+      node: 24
     scripts:
       - name: Install dependencies
         script: npm install
