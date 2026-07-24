@@ -13,16 +13,8 @@ workflows:
       - name: Install dependencies
         script: npm install
 
-      - name: Build Next.js web app
-        script: npm run build
-
-      - name: Export static output (for Capacitor)
-        script: |
-          # Capacitor uses live URL, no static export needed
-          echo "Using remote server: https://glucolens-nine.vercel.app"
-
-      - name: Install Capacitor CLI
-        script: npm install -g @capacitor/cli
+      - name: Build static web bundle (Capacitor)
+        script: npm run build:native
 
       - name: Sync Capacitor iOS
         script: npx cap sync ios
@@ -61,11 +53,8 @@ workflows:
       - name: Install dependencies
         script: npm install
 
-      - name: Build Next.js web app
-        script: npm run build
-
-      - name: Install Capacitor CLI
-        script: npm install -g @capacitor/cli
+      - name: Build static web bundle (Capacitor)
+        script: npm run build:native
 
       - name: Sync Capacitor Android
         script: npx cap sync android
