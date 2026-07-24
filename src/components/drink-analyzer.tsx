@@ -9,6 +9,7 @@ import { claudeGIEstimate } from "@/lib/claude-fallback";
 import { saveMeal } from "@/lib/storage";
 import type { MealAnalysis } from "@/lib/claude-vision";
 import { getT, type Lang } from "@/lib/i18n";
+import { apiFetch } from "@/lib/api";
 
 interface AnalyzedDrink {
   entry: DrinkEntry;
@@ -167,7 +168,7 @@ export function DrinkAnalyzer({ lang, userType = "healthy" }: Props) {
         const url = e.target?.result as string;
         const base64 = url.includes(",") ? url.split(",")[1] : url;
 
-        const res = await fetch("/api/analyze", {
+        const res = await apiFetch("/api/analyze", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({

@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
+import { apiFetch } from "./api";
 
 const APP_VERSION = "1.0.0";
 
@@ -21,7 +22,7 @@ export function useVersionCheck() {
   useEffect(() => {
     const check = async () => {
       try {
-        const res = await fetch("/api/version", { cache: "no-store" });
+        const res = await apiFetch("/api/version", { cache: "no-store" });
         if (!res.ok) return;
         const data = await res.json();
 

@@ -7,6 +7,7 @@ import { Paywall } from "./paywall";
 import { TimingNudges } from "./timing-nudges";
 import { ShareCard } from "./share-card";
 import { getT, type Lang } from "@/lib/i18n";
+import { apiFetch } from "@/lib/api";
 import { saveMeal } from "@/lib/storage";
 import { fileToJpegBase64 } from "@/lib/image-prep";
 import type { MealAnalysis } from "@/lib/claude-vision";
@@ -40,11 +41,14 @@ function detectUrlType(url: string): "delivery" | "image" | "menu" {
 class TimeoutError extends Error {
   constructor() { super("timeout"); this.name = "TimeoutError"; }
 }
+// Routes through apiFetch so app-relative /api paths resolve to the deployed
+// backend on native (packaged) builds and stay same-origin on web. Every API
+// call in this file funnels through here, so the rule can't drift per-callsite.
 async function fetchWithTimeout(input: string, init: RequestInit, ms = 50000): Promise<Response> {
   const ctrl = new AbortController();
   const tid = setTimeout(() => ctrl.abort(), ms);
   try {
-    return await fetch(input, { ...init, signal: ctrl.signal });
+    return await apiFetch(input, { ...init, signal: ctrl.signal });
   } catch (e) {
     if (e instanceof DOMException && e.name === "AbortError") throw new TimeoutError();
     throw e;

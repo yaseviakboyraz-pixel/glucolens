@@ -2,6 +2,7 @@
 import { useState, useEffect, useRef } from "react";
 import { getMeals, getWeeklyReport, getProfile } from "@/lib/storage";
 import { getT, type Lang } from "@/lib/i18n";
+import { apiFetch } from "@/lib/api";
 
 const LANG_NAMES: Record<Lang, string> = { en:"English", tr:"Turkish", zh:"Chinese", hi:"Hindi", es:"Spanish", fr:"French", ar:"Arabic", pt:"Portuguese", ru:"Russian", de:"German" };
 
@@ -73,7 +74,7 @@ ${lastMeal ? `Last meal: ${lastMeal.analysis.food_items.map(f => f.name_tr || f.
 If they have data, comment on ONE specific insight. End with a concrete offer to help. Be personal, not generic.`;
 
     try {
-      const res = await fetch("/api/coach", {
+      const res = await apiFetch("/api/coach", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ prompt }),
@@ -139,7 +140,7 @@ ${newMessages.slice(-6).map(m => `${m.role === "user" ? "User" : "Coach"}: ${m.c
 
 Respond helpfully. If asked about a food, give GL estimate. If asked for advice, be specific to their profile data.`;
 
-      const res = await fetch("/api/coach", {
+      const res = await apiFetch("/api/coach", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ prompt: coachPrompt }),

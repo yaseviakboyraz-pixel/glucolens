@@ -1,8 +1,19 @@
 import type { NextConfig } from "next";
 
+// Two build targets from one codebase:
+//   BUILD_TARGET=capacitor -> static export into out/, bundled inside the app
+//   (default)              -> normal server build for Vercel, where /api/* lives
+// The native app must NOT depend on a live server for its UI, so it ships the
+// shell offline and calls the Vercel API over the network (see src/lib/api.ts).
+const isNativeBuild = process.env.BUILD_TARGET === "capacitor";
+
 const nextConfig: NextConfig = {
+  ...(isNativeBuild ? { output: "export" as const } : {}),
   serverExternalPackages: ["@anthropic-ai/sdk"],
   images: {
+    // Static export has no image optimization server; without this the export
+    // build fails outright on the default loader.
+    ...(isNativeBuild ? { unoptimized: true } : {}),
     remotePatterns: [
       {
         protocol: "https",

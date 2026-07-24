@@ -19,6 +19,9 @@ fbx2glb.mjs
 /.next/
 /out/
 
+# transient: scripts/build-native.mjs parks src/app/api here mid-build
+/.api-parked-during-native-build/
+
 # production
 /build
 

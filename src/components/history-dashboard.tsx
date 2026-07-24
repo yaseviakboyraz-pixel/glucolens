@@ -6,6 +6,7 @@ import {
   type MealRecord, type UserProfile,
 } from "@/lib/storage";
 import { GLChart } from "./gl-chart";
+import { apiFetch } from "@/lib/api";
 import { WaterTracker } from "./water-tracker";
 import { ActivityTracker } from "./activity-tracker";
 import { WeeklyReportCard } from "./weekly-report";
@@ -53,7 +54,7 @@ export function HistoryDashboard({ profile, lang, onNewMeal, onEditProfile }: Pr
   // PDF Export
   async function exportPDF() {
     try {
-      const res = await fetch("/api/report", {
+      const res = await apiFetch("/api/report", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

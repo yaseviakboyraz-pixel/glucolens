@@ -1,5 +1,7 @@
 // Claude Fallback — tüm sekmelerde DB'de olmayan gıdalar için gerçek zamanlı AI tahmini
 
+import { apiFetch } from "./api";
+
 export interface ClaudeFallbackResult {
   name: string;
   gi: number;
@@ -26,7 +28,7 @@ export async function claudeGIEstimate(
   lang = "en"
 ): Promise<ClaudeFallbackResult | null> {
   try {
-    const res = await fetch("/api/gi-estimate", {
+    const res = await apiFetch("/api/gi-estimate", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ food, portion_g, context, lang }),

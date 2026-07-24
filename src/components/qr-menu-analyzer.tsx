@@ -1,6 +1,7 @@
 "use client";
 import { useState, useRef, useCallback } from "react";
 import { getT, type Lang } from "@/lib/i18n";
+import { apiFetch } from "@/lib/api";
 import { scanBarcode, isNativePlatform } from "@/lib/barcode-scanner";
 
 interface Dish {
@@ -59,7 +60,7 @@ export function QRMenuAnalyzer({ lang, userType = "healthy" }: Props) {
     setError(null);
     try {
       // Fetch menu content via proxy
-      const fetchRes = await fetch("/api/menu-fetch", {
+      const fetchRes = await apiFetch("/api/menu-fetch", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ url }),
@@ -70,7 +71,7 @@ export function QRMenuAnalyzer({ lang, userType = "healthy" }: Props) {
       setStep("analyzing");
 
       // Analyze with Claude
-      const analyzeRes = await fetch("/api/menu-analyze", {
+      const analyzeRes = await apiFetch("/api/menu-analyze", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ ...fetchData, userType, lang }),
@@ -96,7 +97,7 @@ export function QRMenuAnalyzer({ lang, userType = "healthy" }: Props) {
         const base64 = url.includes(",") ? url.split(",")[1] : url;
         const contentType = file.type || "image/jpeg";
 
-        const analyzeRes = await fetch("/api/menu-analyze", {
+        const analyzeRes = await apiFetch("/api/menu-analyze", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ type: "image", base64, contentType, userType, lang }),

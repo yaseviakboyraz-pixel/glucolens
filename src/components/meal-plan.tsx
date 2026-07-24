@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import { getT, type Lang } from "@/lib/i18n";
+import { apiFetch } from "@/lib/api";
 
 interface MealItem {
   name: string;
@@ -84,7 +85,7 @@ export function MealPlanGenerator({ lang, userType = "healthy" }: Props) {
     setError(null);
     setPlan(null);
     try {
-      const res = await fetch("/api/meal-plan", {
+      const res = await apiFetch("/api/meal-plan", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ userType, preferences, lang }),

@@ -3,6 +3,7 @@ import { useState } from "react";
 import { supabase, getDeviceId } from "@/lib/supabase";
 import { signOut, type User } from "@/lib/auth";
 import { getT, type Lang } from "@/lib/i18n";
+import { apiFetch } from "@/lib/api";
 
 interface Props {
   user: User | null;
@@ -21,7 +22,7 @@ export function AccountSettings({ user, onClose, lang }: Props) {
     setError(null);
     try {
       const { data: { session } } = await supabase.auth.getSession();
-      const res = await fetch("/api/account/delete", {
+      const res = await apiFetch("/api/account/delete", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
