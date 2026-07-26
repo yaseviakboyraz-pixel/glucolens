@@ -12,6 +12,11 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Generated native payloads: `npx cap copy` mirrors the built out/ bundle
+    // into the iOS and Android projects. Linting those minified chunks buried
+    // the ~30 real src/ findings under thousands of meaningless ones.
+    "ios/App/App/public/**",
+    "android/app/src/main/assets/public/**",
   ]),
 ]);
 
