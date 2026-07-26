@@ -47,5 +47,15 @@
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<true/>
+	<key>NSCameraUsageDescription</key>
+	<string>GlucoLens uses the camera to photograph your meals and scan product barcodes so it can estimate their glycemic load.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>GlucoLens lets you pick a meal photo from your library to estimate its glycemic load.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>GlucoLens can save a shareable summary card of your meal analysis to your photo library.</string>
+	<key>NSHealthShareUsageDescription</key>
+	<string>GlucoLens reads steps and activity data from Health to give more personalized glucose-response guidance. This is optional and you can decline.</string>
+	<key>NSHealthUpdateUsageDescription</key>
+	<string>GlucoLens can write your logged nutrition data to Health so it stays alongside your other health metrics. This is optional.</string>
 </dict>
 </plist>

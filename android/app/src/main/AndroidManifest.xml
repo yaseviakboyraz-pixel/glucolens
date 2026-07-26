@@ -38,4 +38,19 @@
     <!-- Permissions -->
 
     <uses-permission android:name="android.permission.INTERNET" />
+
+    <!-- Camera: meal photos + MLKit barcode scanning -->
+    <uses-permission android:name="android.permission.CAMERA" />
+
+    <!-- Local + push notifications (meal reminders). POST_NOTIFICATIONS is
+         required on Android 13+ (API 33). -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
+    <!-- Health Connect: read activity, write logged nutrition (optional feature) -->
+    <uses-permission android:name="android.permission.health.READ_STEPS" />
+    <uses-permission android:name="android.permission.health.READ_ACTIVE_CALORIES_BURNED" />
+
+    <!-- Declares that the camera is used but NOT required, so the app stays
+         installable on devices without one (barcode/photo degrade gracefully). -->
+    <uses-feature android:name="android.hardware.camera" android:required="false" />
 </manifest>
