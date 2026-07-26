@@ -8,6 +8,7 @@ import { TimingNudges } from "./timing-nudges";
 import { ShareCard } from "./share-card";
 import { getT, type Lang } from "@/lib/i18n";
 import { apiFetch } from "@/lib/api";
+import { scanBarcode, isNativePlatform } from "@/lib/barcode-scanner";
 import { saveMeal } from "@/lib/storage";
 import { fileToJpegBase64 } from "@/lib/image-prep";
 import type { MealAnalysis } from "@/lib/claude-vision";
@@ -280,6 +281,26 @@ export function UploadAnalyzer({ userType = "healthy", lang, onAnalysisComplete 
     setUrlInput(""); setMenuResult(null); setFeedback(null);
   };
 
+  // Native QR (iOS/Android) goes through the MLKit scanner — WKWebView has no
+  // BarcodeDetector, so the web path below silently fails on device. Mirrors
+  // qr-menu-analyzer's handleNativeQR. scanBarcode()'s format list includes
+  // QrCode, so the same call reads menu QR codes too.
+  const handleNativeQR = async () => {
+    setError(null);
+    try {
+      const result = await scanBarcode(); // no video arg -> native MLKit scanner
+      if (!result) return; // cancelled or nothing found -> stay put
+      if (result.barcode.startsWith("http")) {
+        setUrlInput(result.barcode);
+        await runUrlAnalysis(result.barcode);
+      } else {
+        setError(tx.ua_qr_no_url);
+      }
+    } catch {
+      setError(tx.ua_qr_scan_fail);
+    }
+  };
+
   const runUrlAnalysis = async (url: string) => {
     if (!url.trim()) return;
     const urlType = detectUrlType(url);
@@ -530,9 +551,14 @@ export function UploadAnalyzer({ userType = "healthy", lang, onAnalysisComplete 
           {/* QR scan button */}
           <button
             onClick={() => {
-              // trigger hidden QR input
-              const el = document.getElementById("qr-scan-input") as HTMLInputElement | null;
-              el?.click();
+              // Native: MLKit scanner (WKWebView has no BarcodeDetector).
+              // Web: fall back to the hidden file input + BarcodeDetector.
+              if (isNativePlatform()) {
+                handleNativeQR();
+              } else {
+                const el = document.getElementById("qr-scan-input") as HTMLInputElement | null;
+                el?.click();
+              }
             }}
             className="w-full py-3 rounded-xl font-semibold text-white bg-gray-800 hover:bg-gray-700 border border-gray-700 transition-all flex items-center justify-center gap-2 text-sm">
             {tx.ua_qr_scan}
