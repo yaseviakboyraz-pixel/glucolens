@@ -62,10 +62,12 @@ export async function POST(req: NextRequest) {
     // UI language for the output-language directive — whitelist, default English
     const lang = VALID_LANGS.has(rawLang) ? rawLang : "en";
 
-    // Tier selection for model: Pro → quality (Sonnet), Free/unknown → cheap+fast
-    // (Haiku). Default is the cost-safe "free". The plan claim is client-supplied
-    // (spoofable, but bounded by the per-IP rate limit above); proper server-side
-    // entitlement verification is the planned hardening step.
+    // Model tier hint. NOTE: both tiers currently resolve to the same
+    // Sonnet-only QUALITY_CHAIN — Haiku was removed from the runtime after it
+    // failed on glycemic analysis quality. Cost is controlled by the usage
+    // quota (free = 5/day), not by routing free users to a weaker model.
+    // The plan claim is client-supplied (spoofable, but bounded by the per-IP
+    // rate limit above); server-side entitlement verification is planned.
     const tier: "free" | "pro" = rawPlan === "pro" ? "pro" : "free";
 
     // Image size check
@@ -102,9 +104,20 @@ export async function POST(req: NextRequest) {
     const safeMessage = safeMessages.find(s => rawMessage.includes(s)) ||
       "Analysis failed. Please try again.";
 
-    // Log the real error in all environments (prod error visibility).
-    console.error("[GlucoLens analyze]", rawMessage);
+    // "No food detected" is a correct answer about the input, not a server
+    // fault: the model ran and reported the photo has no food in it. Returning
+    // 500 for it pollutes error dashboards, can trip uptime alerting, and
+    // leaves the client unable to tell "try another photo" from "we broke".
+    const isUserInputIssue = rawMessage.includes("No food detected");
+    const status = isUserInputIssue ? 422 : 500;
 
-    return NextResponse.json({ error: safeMessage }, { status: 500 });
+    // Log real faults as errors; input issues are expected traffic.
+    if (isUserInputIssue) {
+      console.warn("[GlucoLens analyze] no food in image");
+    } else {
+      console.error("[GlucoLens analyze]", rawMessage);
+    }
+
+    return NextResponse.json({ error: safeMessage }, { status });
   }
 }
